@@ -1,0 +1,15 @@
+[package]
+name = "readable"
+version = "0.1.0"
+edition = "2021"
+authors = ["hinto.janai <hinto.janai@protonmail.com>"]
+description = "Human readable data formatting"
+documentation = "https://docs.rs/readable"
+repository = "https://github.com/hinto-janai/readable"
+readme = "README.md"
+keywords = ["human", "readable", "data", "read", "string"]
+license = "MIT"
+
+[dependencies]
+num-format = "0.4.4"
+serde = { version = "1.0.152", features = ["derive"], optional = true }
