@@ -1,6 +1,6 @@
 [package]
 name = "readable"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 authors = ["hinto.janai <hinto.janai@protonmail.com>"]
 description = "Human readable data formatting"
@@ -9,6 +9,10 @@ repository = "https://github.com/hinto-janai/readable"
 readme = "README.md"
 keywords = ["human", "readable", "data", "read", "string"]
 license = "MIT"
+
+[features]
+default = []
+ignore_nan_inf = []
 
 [dependencies]
 num-format = "0.4.4"
