@@ -1,14 +1,13 @@
 //---------------------------------------------------------------------------------------------------- Use
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
+use compact_str::{format_compact,CompactString};
 use std::fmt::Write;
 
 //---------------------------------------------------------------------------------------------------- Time
 /// Human-readable [`std::time::Duration`].
 ///
 /// **The input is always assumed to be in seconds.**
-///
-/// The inner fields are `(u64, String)` but they are not public.
 ///
 /// [`From`] input can be:
 /// - [`std::time::Duration`]
@@ -17,7 +16,7 @@ use std::fmt::Write;
 /// The lowest unit is `second`, the highest is `year`, and `week` is skipped in favor of `7 days`.
 ///
 /// # Examples
-/// | Input      | [`String`] Output  |
+/// | Input      | Output             |
 /// |------------|--------------------|
 /// | 0          | `0 seconds`
 /// | 1          | `1 second`
@@ -33,12 +32,12 @@ use std::fmt::Write;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub struct Time(u64, String);
+pub struct Time(u64, CompactString);
 
 impl std::fmt::Display for Time {
 	#[inline]
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		write!(f, "{}", &self.1.as_str())
+		write!(f, "{}", &self.1)
 	}
 }
 
@@ -87,7 +86,7 @@ impl From<u64> for Time {
 		let seconds = day_secs % 60;
 
 		let started = &mut false;
-		let mut string = String::with_capacity(8);
+		let mut string = CompactString::with_capacity(8);
 		Self::plural(&mut string, started, "year", years);
 		Self::plural(&mut string, started, "month", months);
 		Self::plural(&mut string, started, "day", days);
@@ -101,14 +100,14 @@ impl From<u64> for Time {
 
 impl Time {
 	#[inline]
-	fn plural(string: &mut String, started: &mut bool, name: &str, value: u64) {
+	fn plural(string: &mut CompactString, started: &mut bool, name: &str, value: u64) {
 		if value > 0 {
 			if *started {
-				string.write_str(", ");
+				string.push_str(", ");
 			}
 			write!(string, "{} {}", value, name);
 			if value > 1 {
-				string.write_str("s");
+				string.push('s');
 			}
 			*started = true;
 		}
@@ -123,7 +122,7 @@ impl Time {
 	#[inline]
 	/// [`Clone`]'s and returns the inner [`String`].
 	pub fn to_string(&self) -> String {
-		self.1.clone()
+		self.1.to_string()
 	}
 
 	#[inline]
@@ -135,55 +134,55 @@ impl Time {
 	#[inline]
 	/// Consumes [`Self]`, returning the inner [`String`].
 	pub fn into_string(self) -> String {
-		self.1
+		self.1.into_string()
 	}
 
 	#[inline]
 	/// Consumes [`Self`], returning the inner [`u64`] and [`String`].
 	pub fn into_raw(self) -> (u64, String) {
-		(self.0, self.1)
+		(self.0, self.1.into_string())
 	}
 
 	#[inline]
 	/// Return `(0, "0 seconds")`.
 	pub fn zero() -> Self {
-		Self(0, String::from("0 seconds"))
+		Self(0, CompactString::new("0 seconds"))
 	}
 
 	#[inline]
 	/// Return `(1, "1 second")`.
 	pub fn second() -> Self {
-		Self(1, String::from("1 second"))
+		Self(1, CompactString::new("1 second"))
 	}
 
 	#[inline]
 	/// Return `(60, "1 minute")`.
 	pub fn minute() -> Self {
-		Self(60, String::from("1 minute"))
+		Self(60, CompactString::new("1 minute"))
 	}
 
 	#[inline]
 	/// Return `(3600, "1 hour")`.
 	pub fn hour() -> Self {
-		Self(3600, String::from("1 hour"))
+		Self(3600, CompactString::new("1 hour"))
 	}
 
 	#[inline]
 	/// Return `(86400, "1 day")`.
 	pub fn day() -> Self {
-		Self(86400, String::from("1 day"))
+		Self(86400, CompactString::new("1 day"))
 	}
 
 	#[inline]
 	/// Return `(2630016, "1 month")`.
 	pub fn month() -> Self {
-		Self(2630016, String::from("1 month"))
+		Self(2630016, CompactString::new("1 month"))
 	}
 
 	#[inline]
 	/// Return `(31557600, "1 year")`.
 	pub fn year() -> Self {
-		Self(31557600, String::from("1 year"))
+		Self(31557600, CompactString::new("1 year"))
 	}
 }
 

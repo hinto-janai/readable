@@ -1,6 +1,6 @@
 [package]
 name = "readable"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 authors = ["hinto.janai <hinto.janai@protonmail.com>"]
 description = "Human readable data formatting"
@@ -15,5 +15,6 @@ default = []
 ignore_nan_inf = []
 
 [dependencies]
+compact_str = { version = "0.7.0", features = ["bytes", "serde"] }
 num-format = "0.4.4"
-serde = { version = "1.0.152", features = ["derive"], optional = true }
+serde = { version = "1.0.158", features = ["derive"], optional = true }

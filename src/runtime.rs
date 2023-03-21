@@ -1,15 +1,13 @@
 //---------------------------------------------------------------------------------------------------- Use
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
+use compact_str::{format_compact,CompactString};
 
 //---------------------------------------------------------------------------------------------------- Runtime
 /// Human readable "audio/video runtime" in `H:M:S` format.
 ///
 /// [`From`] input can either be [`f32`], [`f64`], or [`std::time::Duration`].
-///
-/// The inner fields are `(f64, String)` but they are not public.
-/// - The `f64` represents seconds.
-/// - The `String` is the human-readable version.
+/// [`f32`] and [`f64`] input are presumed to be in _seconds._
 ///
 /// # Formatting rules:
 /// 1. `seconds` always has leading `0`.
@@ -26,7 +24,7 @@ use serde::{Serialize,Deserialize};
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///
 /// # Examples
-/// | Input      | [`String`] Output  |
+/// | Input      | Output             |
 /// |------------|--------------------|
 /// | `1.0`      | `0:01`
 /// | `61.0`     | `1:01`
@@ -36,7 +34,7 @@ use serde::{Serialize,Deserialize};
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct Runtime(f64, String);
+pub struct Runtime(f64, CompactString);
 
 impl std::fmt::Display for Runtime {
 	#[inline]
@@ -49,13 +47,13 @@ impl Runtime {
 	#[inline]
 	/// Returns zero-second `(0.0, "0:00")` length.
 	pub fn zero() -> Self {
-		Self(0.0, "0:00".to_string())
+		Self(0.0, CompactString::new("0:00"))
 	}
 
 	#[inline]
 	/// Returns one-second `(1.0, "0:01")` length.
 	pub fn one() -> Self {
-		Self(1.0, "0:01".to_string())
+		Self(1.0, CompactString::new("0:01"))
 	}
 
 	#[inline]
@@ -67,7 +65,7 @@ impl Runtime {
 	#[inline]
 	/// Returns a [`Clone`] of the inner [`String`].
 	pub fn to_string(&self) -> String {
-		self.1.clone()
+		self.1.to_string()
 	}
 
 	#[inline]
@@ -79,13 +77,13 @@ impl Runtime {
 	#[inline]
 	/// Consumes [`Self`] for the inner [`String`].
 	pub fn into_string(self) -> String {
-		self.1
+		self.1.into_string()
 	}
 
 	#[inline]
 	/// Consumes [`Self`] for the inner `(f64, String)`.
 	pub fn into_raw(self) -> (f64, String) {
-		(self.0, self.1)
+		(self.0, self.1.into_string())
 	}
 }
 
@@ -125,9 +123,9 @@ impl From<f64> for Runtime {
 
 		// Format.
 		let string = if hours > 0 {
-			format!("{}:{:0>2}:{:0>2}", hours, minutes, seconds)
+			format_compact!("{}:{:0>2}:{:0>2}", hours, minutes, seconds)
 		} else {
-			format!("{}:{:0>2}", minutes, seconds)
+			format_compact!("{}:{:0>2}", minutes, seconds)
 		};
 
 		Self(runtime, string)
@@ -159,9 +157,9 @@ impl From<f32> for Runtime {
 
 		// Format.
 		let string = if hours > 0 {
-			format!("{}:{:0>2}:{:0>2}", hours, minutes, seconds)
+			format_compact!("{}:{:0>2}:{:0>2}", hours, minutes, seconds)
 		} else {
-			format!("{}:{:0>2}", minutes, seconds)
+			format_compact!("{}:{:0>2}", minutes, seconds)
 		};
 
 		Self(runtime, string)

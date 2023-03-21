@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------------------------------- Use
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
+use compact_str::{format_compact,CompactString};
 
 //---------------------------------------------------------------------------------------------------- Constants
 // The locale numbers are formatting in is English, which looks like: [1,000]
@@ -19,8 +20,6 @@ pub const NEG_INFINITY: &str = "-∞";
 /// Human readable float.
 ///
 /// Takes a floating point number as input and returns a ready-to-[`print!()`] [`Float`].
-///
-/// The inner fields are `(f64, String)` but they are not public.
 ///
 /// The default [`From`] implementation will print `3` decimal numbers.
 ///
@@ -48,7 +47,7 @@ pub const NEG_INFINITY: &str = "-∞";
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///
 /// # Examples
-/// | Input              | [`String`] Output |
+/// | Input              | Output            |
 /// |--------------------|-------------------|
 /// | `0.0`              | `0.000`
 /// | `1234.571`         | `1,234.571`
@@ -58,12 +57,12 @@ pub const NEG_INFINITY: &str = "-∞";
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct Float(f64, String);
+pub struct Float(f64, CompactString);
 
 impl std::fmt::Display for Float {
 	#[inline]
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		write!(f, "{}", &self.1.as_str())
+		write!(f, "{}", &self.1)
 	}
 }
 
@@ -72,11 +71,11 @@ macro_rules! handle_nan {
 	($float:ident) => {
 		#[cfg(not(feature = "ignore_nan_inf"))]
 		if $float == f64::NAN {
-			return Self($float, String::from("NaN"))
+			return Self($float, compact_str::CompactString::new("NaN"))
 		} else if $float == f64::INFINITY {
-			return Self($float, String::from("∞"))
+			return Self($float, compact_str::CompactString::new("∞"))
 		} else if $float == f64::NEG_INFINITY {
-			return Self($float, String::from("-∞"))
+			return Self($float, compact_str::CompactString::new("-∞"))
 		}
 	}
 }
@@ -88,7 +87,7 @@ impl Float {
 	///
 	/// The [`String`] is set to `0.000`.
 	pub fn zero() -> Self {
-		Self(0.0, String::from("0.000"))
+		Self(0.0, CompactString::new("0.000"))
 	}
 
 	#[inline]
@@ -96,7 +95,7 @@ impl Float {
 	///
 	/// The [`String`] is set to `???`.
 	pub fn unknown() -> Self {
-		Self(f64::NAN, String::from(UNKNOWN))
+		Self(f64::NAN, CompactString::new(UNKNOWN))
 	}
 
 	#[inline]
@@ -104,7 +103,7 @@ impl Float {
 	///
 	/// The [`String`] is set to `NaN`.
 	pub fn nan() -> Self {
-		Self(f64::NAN, String::from(NAN))
+		Self(f64::NAN, CompactString::new(NAN))
 	}
 
 	#[inline]
@@ -112,7 +111,7 @@ impl Float {
 	///
 	/// The [`String`] is set to `∞`.
 	pub fn inf() -> Self {
-		Self(f64::INFINITY, String::from(INFINITY))
+		Self(f64::INFINITY, CompactString::new(INFINITY))
 	}
 
 	#[inline]
@@ -120,7 +119,7 @@ impl Float {
 	///
 	/// The [`String`] is set to `-∞`.
 	pub fn neg_inf() -> Self {
-		Self(f64::INFINITY, String::from(NEG_INFINITY))
+		Self(f64::INFINITY, CompactString::new(NEG_INFINITY))
 	}
 
 	#[inline]
@@ -145,14 +144,14 @@ impl Float {
 		handle_nan!(f);
 
 		if f < 0.01 {
-			Self(0.0, String::from("0.00%"))
+			Self(0.0, CompactString::new("0.00%"))
 		} else if f >= 1000.0 {
 			let mut buf = num_format::Buffer::new();
 			buf.write_formatted(&(f as u64), &LOCALE);
-			let fract = &format!("{:.2}", f)[2..4];
-			Self(f, format!("{}.{}%", buf, fract))
+			let fract = &format_compact!("{:.2}", f.fract())[2..];
+			Self(f, format_compact!("{}.{:.2}%", buf, fract))
 		} else {
-			Self(f, format!("{:.2}%", f))
+			Self(f, format_compact!("{:.2}%", f))
 		}
 	}
 
@@ -165,7 +164,7 @@ impl Float {
 	#[inline]
 	/// Returns a [`Clone`] of the inner [`String`].
 	pub fn to_string(&self) -> String {
-		self.1.clone()
+		self.1.to_string()
 	}
 
 	#[inline]
@@ -177,13 +176,13 @@ impl Float {
 	#[inline]
 	/// Consumes [`Self]`, returning the inner [`String`].
 	pub fn into_string(self) -> String {
-		self.1
+		self.1.into_string()
 	}
 
 	#[inline]
 	/// Consumes [`Self`], returning the inner [`f64`] and [`String`].
 	pub fn into_raw(self) -> (f64, String) {
-		(self.0, self.1)
+		(self.0, self.1.into_string())
 	}
 
 	#[inline]
@@ -205,7 +204,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}", buf.as_str().to_string()))
+		Self(f, format_compact!("{}", buf.as_str().to_string()))
 	}
 
 	#[inline]
@@ -213,11 +212,11 @@ impl Float {
 	pub fn new_1_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.1}", f)[2..];
+		let fract = &format_compact!("{:.1}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -225,11 +224,11 @@ impl Float {
 	pub fn new_2_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.2}", f)[2..];
+		let fract = &format_compact!("{:.2}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -237,11 +236,11 @@ impl Float {
 	pub fn new_4_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.4}", f)[2..];
+		let fract = &format_compact!("{:.4}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -249,11 +248,11 @@ impl Float {
 	pub fn new_5_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.5}", f)[2..];
+		let fract = &format_compact!("{:.5}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -261,11 +260,11 @@ impl Float {
 	pub fn new_6_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.6}", f)[2..];
+		let fract = &format_compact!("{:.6}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -273,11 +272,11 @@ impl Float {
 	pub fn new_7_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.7}", f)[2..];
+		let fract = &format_compact!("{:.7}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -285,11 +284,11 @@ impl Float {
 	pub fn new_8_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.8}", f)[2..];
+		let fract = &format_compact!("{:.8}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -297,11 +296,11 @@ impl Float {
 	pub fn new_9_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.9}", f)[2..];
+		let fract = &format_compact!("{:.9}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -309,11 +308,11 @@ impl Float {
 	pub fn new_10_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.10}", f)[2..];
+		let fract = &format_compact!("{:.10}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -321,11 +320,11 @@ impl Float {
 	pub fn new_11_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.11}", f)[2..];
+		let fract = &format_compact!("{:.11}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -333,11 +332,11 @@ impl Float {
 	pub fn new_12_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.12}", f)[2..];
+		let fract = &format_compact!("{:.12}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -345,11 +344,11 @@ impl Float {
 	pub fn new_13_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.13}", f)[2..];
+		let fract = &format_compact!("{:.13}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -357,11 +356,11 @@ impl Float {
 	pub fn new_14_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.14}", f)[2..];
+		let fract = &format_compact!("{:.14}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -383,7 +382,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}%", buf.as_str().to_string()))
+		Self(f, format_compact!("{}%", buf.as_str().to_string()))
 	}
 
 	#[inline]
@@ -391,11 +390,11 @@ impl Float {
 	pub fn percent_1_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.1}", f.fract())[2..];
+		let fract = &format_compact!("{:.1}", f.fract())[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}%", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}%", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -403,11 +402,11 @@ impl Float {
 	pub fn percent_2_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.2}", f.fract())[2..];
+		let fract = &format_compact!("{:.2}", f.fract())[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}%", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}%", buf.as_str().to_string(), fract))
 	}
 
 	#[inline]
@@ -415,11 +414,11 @@ impl Float {
 	pub fn percent_4_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{:.4}", f.fract())[2..];
+		let fract = &format_compact!("{:.4}", f.fract())[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format!("{}.{}%", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}%", buf.as_str().to_string(), fract))
 	}
 }
 
@@ -431,7 +430,7 @@ macro_rules! impl_number {
 			fn from(number: $number) -> Self {
 				let mut buf = num_format::Buffer::new();
 				buf.write_formatted(&(number as u64), &LOCALE);
-				Self(number as f64, format!("{}.000", buf.as_str().to_string()))
+				Self(number as f64, format_compact!("{}.000", buf.as_str().to_string()))
 			}
 		}
 	}
@@ -447,18 +446,18 @@ impl From<f32> for Float {
 	fn from(number: f32) -> Self {
 		#[cfg(not(feature = "ignore_nan_inf"))]
 		if number.is_nan() {
-			return Self(number as f64, String::from(NAN))
+			return Self(number as f64, CompactString::new(NAN))
 		} else if number == f32::INFINITY {
-			return Self(number as f64, String::from(INFINITY))
+			return Self(number as f64, CompactString::new(INFINITY))
 		} else if number == f32::NEG_INFINITY {
-			return Self(number as f64, String::from(NEG_INFINITY))
+			return Self(number as f64, CompactString::new(NEG_INFINITY))
 		}
 
-		let fract = &format!("{:.3}", number.fract())[2..];
+		let fract = &format_compact!("{:.3}", number.fract())[2..];
 
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(number as u32), &LOCALE);
-		Self(number as f64, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(number as f64, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 }
 
@@ -467,18 +466,18 @@ impl From<f64> for Float {
 	fn from(number: f64) -> Self {
 		#[cfg(not(feature = "ignore_nan_inf"))]
 		if number.is_nan() {
-			return Self(number, String::from(NAN))
+			return Self(number, CompactString::new(NAN))
 		} else if number == f64::INFINITY {
-			return Self(number, String::from(INFINITY))
+			return Self(number, CompactString::new(INFINITY))
 		} else if number == f64::NEG_INFINITY {
-			return Self(number, String::from(NEG_INFINITY))
+			return Self(number, CompactString::new(NEG_INFINITY))
 		}
 
-		let fract = &format!("{:.3}", number.fract())[2..];
+		let fract = &format_compact!("{:.3}", number.fract())[2..];
 
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(number as u64), &LOCALE);
-		Self(number, format!("{}.{}", buf.as_str().to_string(), fract))
+		Self(number, format_compact!("{}.{}", buf.as_str().to_string(), fract))
 	}
 }
 

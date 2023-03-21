@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------------------------------- Use
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
+use compact_str::{format_compact,CompactString};
 
 //---------------------------------------------------------------------------------------------------- Constants
 // The locale numbers are formatting in is English, which looks like: [1,000]
@@ -13,8 +14,6 @@ const LOCALE: num_format::Locale = num_format::Locale::en;
 ///
 /// [`f32`] or [`f64`] inputs will work, but the fractional parts will be ignored.
 ///
-/// The inner fields are `(u64, String)` but they are not public.
-///
 /// # Exceptions
 /// | Exceptions                                    | [`String`] Output |
 /// |-----------------------------------------------|-------------------|
@@ -25,7 +24,7 @@ const LOCALE: num_format::Locale = num_format::Locale::en;
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///
 /// # Examples
-/// | Input       | [`String`] Output |
+/// | Input       | Output            |
 /// |-------------|-------------------|
 /// | `0`         | `0`
 /// | `1`         | `1`
@@ -38,12 +37,12 @@ const LOCALE: num_format::Locale = num_format::Locale::en;
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
-pub struct Int(u64, String);
+pub struct Int(u64, CompactString);
 
 impl std::fmt::Display for Int {
 	#[inline]
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		write!(f, "{}", &self.1.as_str())
+		write!(f, "{}", &self.1)
 	}
 }
 
@@ -51,13 +50,13 @@ impl Int {
 	#[inline]
 	/// Returns a [`Self`] with the value `0`.
 	pub fn new() -> Self {
-		Self(0, String::from("0"))
+		Self(0, CompactString::new("0"))
 	}
 
 	#[inline]
 	/// Returns a [`Self`] with the `u64` set to `0`, but the [`String`] set to `???`.
 	pub fn unknown() -> Self {
-		Self(0, String::from("???"))
+		Self(0, CompactString::new("???"))
 	}
 
 	#[inline]
@@ -69,7 +68,7 @@ impl Int {
 	#[inline]
 	/// [`Clone`]'s and returns the inner [`String`].
 	pub fn to_string(&self) -> String {
-		self.1.clone()
+		self.1.to_string()
 	}
 
 	#[inline]
@@ -81,13 +80,13 @@ impl Int {
 	#[inline]
 	/// Consumes [`Self]`, returning the inner [`String`].
 	pub fn into_string(self) -> String {
-		self.1
+		self.1.into_string()
 	}
 
 	#[inline]
 	/// Consumes [`Self`], returning the inner [`u64`] and [`String`].
 	pub fn into_raw(self) -> (u64, String) {
-		(self.0, self.1)
+		(self.0, self.1.into_string())
 	}
 }
 
@@ -99,7 +98,9 @@ macro_rules! impl_int {
 			fn from(integer: $int) -> Self {
 				let mut buf = num_format::Buffer::new();
 				buf.write_formatted(&integer, &LOCALE);
-				Self(integer as u64, buf.as_str().to_string())
+
+				// SAFETY: the buffer _should_ already be valid UTF-8.
+				Self(integer as u64, unsafe { compact_str::CompactString::from_utf8_unchecked(buf.as_bytes()) })
 			}
 		}
 	};
@@ -113,7 +114,8 @@ impl From<u64> for Int {
 	fn from(integer: u64) -> Self {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&integer, &LOCALE);
-		Self(integer, buf.as_str().to_string())
+		// SAFETY: the buffer _should_ already be valid UTF-8.
+		Self(integer, unsafe { compact_str::CompactString::from_utf8_unchecked(buf.as_bytes()) })
 	}
 }
 impl From<f32> for Int {
@@ -121,17 +123,18 @@ impl From<f32> for Int {
 	fn from(integer: f32) -> Self {
 		#[cfg(not(feature = "ignore_nan_inf"))]
 		if integer.is_nan() {
-			return Self(integer as u64, String::from(super::NAN))
+			return Self(integer as u64, CompactString::new(super::NAN))
 		} else if integer == f32::INFINITY {
-			return Self(integer as u64, String::from(super::INFINITY))
+			return Self(integer as u64, CompactString::new(super::INFINITY))
 		} else if integer == f32::NEG_INFINITY {
-			return Self(integer as u64, String::from(super::NEG_INFINITY))
+			return Self(integer as u64, CompactString::new(super::NEG_INFINITY))
 		}
 
 		let mut buf = num_format::Buffer::new();
 		let integer = integer as u64;
 		buf.write_formatted(&integer, &LOCALE);
-		Self(integer, buf.as_str().to_string())
+		// SAFETY: the buffer _should_ already be valid UTF-8.
+		Self(integer, unsafe { compact_str::CompactString::from_utf8_unchecked(buf.as_bytes()) })
 	}
 }
 impl From<f64> for Int {
@@ -139,17 +142,18 @@ impl From<f64> for Int {
 	fn from(integer: f64) -> Self {
 		#[cfg(not(feature = "ignore_nan_inf"))]
 		if integer.is_nan() {
-			return Self(integer as u64, String::from(super::NAN))
+			return Self(integer as u64, CompactString::new(super::NAN))
 		} else if integer == f64::INFINITY {
-			return Self(integer as u64, String::from(super::INFINITY))
+			return Self(integer as u64, CompactString::new(super::INFINITY))
 		} else if integer == f64::NEG_INFINITY {
-			return Self(integer as u64, String::from(super::NEG_INFINITY))
+			return Self(integer as u64, CompactString::new(super::NEG_INFINITY))
 		}
 
 		let mut buf = num_format::Buffer::new();
 		let integer = integer as u64;
 		buf.write_formatted(&integer, &LOCALE);
-		Self(integer, buf.as_str().to_string())
+		// SAFETY: the buffer _should_ already be valid UTF-8.
+		Self(integer, unsafe { compact_str::CompactString::from_utf8_unchecked(buf.as_bytes()) })
 	}
 }
 

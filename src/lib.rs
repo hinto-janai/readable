@@ -1,6 +1,10 @@
 //! Human **readable** data formatting.
 //!
-//! This crate turns various data into human-readable [`String`]'s.
+//! This crate turns various data into human-readable strings.
+//!
+//! For performance, the actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html), but a [`CompactString`](https://docs.rs/compact_str) so that any string 24 bytes (12 bytes on 32-bit) or less are _stack_ allocated instead of _heap_ allocated.
+//!
+//! The documentation will still refer to the inner string as a [`String`]. Anything returned will also be a [`String`].
 //!
 //! # Feature flags
 //! | Flag             | Purpose |
