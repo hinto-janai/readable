@@ -10,10 +10,10 @@
 //!
 //! ## Integers:
 //! ```
-//! let a = readable::Int::from(1000);
+//! let a = readable::Int::from(1000_u16);
 //! println!("{}", a);
 //!
-//! > 1,000
+//! // 1,000
 //! ```
 //!
 //! ## Floats:
@@ -23,8 +23,8 @@
 //! println!("{}", a);
 //! println!("{}", b);
 //!
-//! > 1,000.123
-//! > 1,000.12%
+//! // 1,000.123
+//! // 1,000.12%
 //! ```
 //!
 //! ## Runtime:
@@ -32,16 +32,16 @@
 //! let a = readable::Runtime::from(11111.1);
 //! println!("{}", a);
 //!
-//! > 3:05:11
+//! // 3:05:11
 //! ```
 //!
 //! ## Time:
 //! ```
 //! let a = std::time::Duration::from_secs(86399);
-//! let b = readable::Time::from(time);
+//! let b = readable::Time::from(a);
 //! println!("{}", b);
 //!
-//! > 23 hours, 59 minutes, 59 seconds
+//! // 23 hours, 59 minutes, 59 seconds
 //! ```
 
 mod int;

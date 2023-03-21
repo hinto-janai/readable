@@ -15,6 +15,15 @@ const LOCALE: num_format::Locale = num_format::Locale::en;
 ///
 /// The inner fields are `(u64, String)` but they are not public.
 ///
+/// # Exceptions
+/// | Exceptions                                    | [`String`] Output |
+/// |-----------------------------------------------|-------------------|
+/// | [`f32::NAN`] & [`f64::NAN`]                   | `NaN`
+/// | [`f32::INFINITY`] & [`f64::INFINITY`]         | `∞`
+/// | [`f32::NEG_INFINITY`] & [`f64::NEG_INFINITY`] | `-∞`
+///
+/// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
+///
 /// # Examples
 /// | Input       | [`String`] Output |
 /// |-------------|-------------------|
@@ -111,7 +120,7 @@ impl From<f32> for Int {
 	#[inline]
 	fn from(integer: f32) -> Self {
 		#[cfg(not(feature = "ignore_nan_inf"))]
-		if integer == f32::NAN {
+		if integer.is_nan() {
 			return Self(integer as u64, String::from(super::NAN))
 		} else if integer == f32::INFINITY {
 			return Self(integer as u64, String::from(super::INFINITY))
@@ -129,7 +138,7 @@ impl From<f64> for Int {
 	#[inline]
 	fn from(integer: f64) -> Self {
 		#[cfg(not(feature = "ignore_nan_inf"))]
-		if integer == f64::NAN {
+		if integer.is_nan() {
 			return Self(integer as u64, String::from(super::NAN))
 		} else if integer == f64::INFINITY {
 			return Self(integer as u64, String::from(super::INFINITY))
@@ -147,25 +156,56 @@ impl From<f64> for Int {
 //---------------------------------------------------------------------------------------------------- TESTS
 #[cfg(test)]
 mod tests {
+	use super::*;
+
 	#[test]
 	fn int() {
-		assert!(Int::from(1_000).as_str() == "1,000");
-		assert!(Int::from(65_535).as_str() == "65,535");
-		assert!(Int::from(65_536).as_str() == "65,536");
-		assert!(Int::from(100_000).as_str() == "100,000");
-		assert!(Int::from(1_000_000).as_str() == "1,000,000");
-		assert!(Int::from(10_000_000).as_str() == "10,000,000");
-		assert!(Int::from(100_000_000).as_str() == "100,000,000");
-		assert!(Int::from(1_000_000_000).as_str() == "1,000,000,000");
-		assert!(Int::from(4_294_967_295).as_str() == "4,294,967,295");
-		assert!(Int::from(4_294_967_296).as_str() == "4,294,967,296");
-		assert!(Int::from(10_000_000_000).as_str() == "10,000,000,000");
-		assert!(Int::from(100_000_000_000).as_str() == "100,000,000,000");
-		assert!(Int::from(1_000_000_000_000).as_str() == "1,000,000,000,000");
-		assert!(Int::from(10_000_000_000_000).as_str() == "10,000,000,000,000");
-		assert!(Int::from(100_000_000_000_000).as_str() == "100,000,000,000,000");
-		assert!(Int::from(1_000_000_000_000_000).as_str() == "1,000,000,000,000,000");
-		assert!(Int::from(10_000_000_000_000_000).as_str() == "10,000,000,000,000,000");
-		assert!(Int::from(18_446_744_073_709_551_615).as_str() == "18,446,744,073,709,551,615");
+		assert!(Int::from(1_000_u64).as_str() == "1,000");
+		assert!(Int::from(65_535_u64).as_str() == "65,535");
+		assert!(Int::from(65_536_u64).as_str() == "65,536");
+		assert!(Int::from(100_000_u64).as_str() == "100,000");
+		assert!(Int::from(1_000_000_u64).as_str() == "1,000,000");
+		assert!(Int::from(10_000_000_u64).as_str() == "10,000,000");
+		assert!(Int::from(100_000_000_u64).as_str() == "100,000,000");
+		assert!(Int::from(1_000_000_000_u64).as_str() == "1,000,000,000");
+		assert!(Int::from(4_294_967_295_u64).as_str() == "4,294,967,295");
+		assert!(Int::from(4_294_967_296_u64).as_str() == "4,294,967,296");
+		assert!(Int::from(10_000_000_000_u64).as_str() == "10,000,000,000");
+		assert!(Int::from(100_000_000_000_u64).as_str() == "100,000,000,000");
+		assert!(Int::from(1_000_000_000_000_u64).as_str() == "1,000,000,000,000");
+		assert!(Int::from(10_000_000_000_000_u64).as_str() == "10,000,000,000,000");
+		assert!(Int::from(100_000_000_000_000_u64).as_str() == "100,000,000,000,000");
+		assert!(Int::from(1_000_000_000_000_000_u64).as_str() == "1,000,000,000,000,000");
+		assert!(Int::from(10_000_000_000_000_000_u64).as_str() == "10,000,000,000,000,000");
+		assert!(Int::from(18_446_744_073_709_551_615_u64).as_str() == "18,446,744,073,709,551,615");
+	}
+
+	#[test]
+	fn float() {
+		assert!(Int::from(1_000.0).as_str() == "1,000");
+		assert!(Int::from(65_535.0).as_str() == "65,535");
+		assert!(Int::from(65_536.0).as_str() == "65,536");
+		assert!(Int::from(100_000.0).as_str() == "100,000");
+		assert!(Int::from(1_000_000.0).as_str() == "1,000,000");
+		assert!(Int::from(10_000_000.0).as_str() == "10,000,000");
+		assert!(Int::from(100_000_000.0).as_str() == "100,000,000");
+		assert!(Int::from(1_000_000_000.0).as_str() == "1,000,000,000");
+		assert!(Int::from(4_294_967_295.0).as_str() == "4,294,967,295");
+		assert!(Int::from(4_294_967_296.0).as_str() == "4,294,967,296");
+		assert!(Int::from(10_000_000_000.0).as_str() == "10,000,000,000");
+		assert!(Int::from(100_000_000_000.0).as_str() == "100,000,000,000");
+		assert!(Int::from(1_000_000_000_000.0).as_str() == "1,000,000,000,000");
+		assert!(Int::from(10_000_000_000_000.0).as_str() == "10,000,000,000,000");
+		assert!(Int::from(100_000_000_000_000.0).as_str() == "100,000,000,000,000");
+		assert!(Int::from(1_000_000_000_000_000.0).as_str() == "1,000,000,000,000,000");
+		assert!(Int::from(10_000_000_000_000_000.0).as_str() == "10,000,000,000,000,000");
+		assert!(Int::from(18_446_744_073_709_551_615.0).as_str() == "18,446,744,073,709,551,615");
+	}
+
+	#[test]
+	fn special() {
+		assert!(Int::from(f64::NAN).as_str()          == crate::NAN);
+		assert!(Int::from(f64::INFINITY).as_str()     == crate::INFINITY);
+		assert!(Int::from(f64::NEG_INFINITY).as_str() == crate::NEG_INFINITY);
 	}
 }

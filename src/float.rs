@@ -27,28 +27,25 @@ pub const NEG_INFINITY: &str = "-∞";
 /// This can be changed by using different functions when initially
 /// creating the [`Float`], or converting an existing [`Float`], for example:
 /// ```
+/// # use readable::Float;
 /// let f2 = Float::new_2_point(3.0);
 /// let f6 = Float::new_6_point(3.0);
-/// let f9 = Float::new_9_point(f3.to_f64);
+/// let f9 = Float::new_9_point(f2.to_f64());
 ///
-/// println!("{}\n{}\n{}", f3, f6, f9);
+/// println!("{}\n{}\n{}", f2, f6, f9);
 ///
-/// > 3.000
-/// > 3.000000
-/// > 3.000000000
+/// // 3.00
+/// // 3.000000
+/// // 3.000000000
 ///```
+/// # Exceptions
+/// | Exceptions                                    | [`String`] Output |
+/// |-----------------------------------------------|-------------------|
+/// | [`f32::NAN`] & [`f64::NAN`]                   | `NaN`
+/// | [`f32::INFINITY`] & [`f64::INFINITY`]         | `∞`
+/// | [`f32::NEG_INFINITY`] & [`f64::NEG_INFINITY`] | `-∞`
 ///
-/// All conversions take into account:
-/// - [`f64::NAN`]
-/// - [`f64::INFINITY`]
-/// - [`f64::NEG_INFINITY`]
-///
-/// and will produce the output:
-/// - `NaN`
-/// - `∞`
-/// - `-∞`
-///
-/// To disable these checks, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
+/// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///
 /// # Examples
 /// | Input              | [`String`] Output |
@@ -150,8 +147,10 @@ impl Float {
 		if f < 0.01 {
 			Self(0.0, String::from("0.00%"))
 		} else if f >= 1000.0 {
-			let fract = &format!("{}", f)[2..4];
-			Self(f, format!("{}.{}%", f as u64, fract))
+			let mut buf = num_format::Buffer::new();
+			buf.write_formatted(&(f as u64), &LOCALE);
+			let fract = &format!("{:.2}", f)[2..4];
+			Self(f, format!("{}.{}%", buf, fract))
 		} else {
 			Self(f, format!("{:.2}%", f))
 		}
@@ -214,7 +213,7 @@ impl Float {
 	pub fn new_1_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..3];
+		let fract = &format!("{:.1}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -226,7 +225,7 @@ impl Float {
 	pub fn new_2_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..4];
+		let fract = &format!("{:.2}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -238,7 +237,7 @@ impl Float {
 	pub fn new_4_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..6];
+		let fract = &format!("{:.4}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -250,7 +249,7 @@ impl Float {
 	pub fn new_5_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..7];
+		let fract = &format!("{:.5}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -262,7 +261,7 @@ impl Float {
 	pub fn new_6_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..8];
+		let fract = &format!("{:.6}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -274,7 +273,7 @@ impl Float {
 	pub fn new_7_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..9];
+		let fract = &format!("{:.7}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -286,7 +285,7 @@ impl Float {
 	pub fn new_8_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..10];
+		let fract = &format!("{:.8}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -298,7 +297,7 @@ impl Float {
 	pub fn new_9_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..11];
+		let fract = &format!("{:.9}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -310,7 +309,7 @@ impl Float {
 	pub fn new_10_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..12];
+		let fract = &format!("{:.10}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -322,7 +321,7 @@ impl Float {
 	pub fn new_11_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..13];
+		let fract = &format!("{:.11}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -334,7 +333,7 @@ impl Float {
 	pub fn new_12_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..14];
+		let fract = &format!("{:.12}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -346,7 +345,7 @@ impl Float {
 	pub fn new_13_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..15];
+		let fract = &format!("{:.13}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -358,7 +357,7 @@ impl Float {
 	pub fn new_14_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..16];
+		let fract = &format!("{:.14}", f)[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -392,7 +391,7 @@ impl Float {
 	pub fn percent_1_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..3];
+		let fract = &format!("{:.1}", f.fract())[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -404,7 +403,7 @@ impl Float {
 	pub fn percent_2_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..4];
+		let fract = &format!("{:.2}", f.fract())[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -416,7 +415,7 @@ impl Float {
 	pub fn percent_4_point(f: f64) -> Self {
 		handle_nan!(f);
 
-		let fract = &format!("{}", f)[2..6];
+		let fract = &format!("{:.4}", f.fract())[2..];
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
@@ -442,11 +441,12 @@ impl_number!(u16);
 impl_number!(u32);
 impl_number!(u64);
 impl_number!(usize);
+
 impl From<f32> for Float {
 	#[inline]
 	fn from(number: f32) -> Self {
 		#[cfg(not(feature = "ignore_nan_inf"))]
-		if number == f32::NAN {
+		if number.is_nan() {
 			return Self(number as f64, String::from(NAN))
 		} else if number == f32::INFINITY {
 			return Self(number as f64, String::from(INFINITY))
@@ -454,7 +454,7 @@ impl From<f32> for Float {
 			return Self(number as f64, String::from(NEG_INFINITY))
 		}
 
-		let fract = &format!("{}", number)[2..5];
+		let fract = &format!("{:.3}", number.fract())[2..];
 
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(number as u32), &LOCALE);
@@ -466,7 +466,7 @@ impl From<f64> for Float {
 	#[inline]
 	fn from(number: f64) -> Self {
 		#[cfg(not(feature = "ignore_nan_inf"))]
-		if number == f64::NAN {
+		if number.is_nan() {
 			return Self(number, String::from(NAN))
 		} else if number == f64::INFINITY {
 			return Self(number, String::from(INFINITY))
@@ -474,7 +474,7 @@ impl From<f64> for Float {
 			return Self(number, String::from(NEG_INFINITY))
 		}
 
-		let fract = &format!("{}", number)[2..5];
+		let fract = &format!("{:.3}", number.fract())[2..];
 
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(number as u64), &LOCALE);
@@ -483,9 +483,66 @@ impl From<f64> for Float {
 }
 
 //---------------------------------------------------------------------------------------------------- TESTS
-//#[cfg(test)]
-//mod tests {
-//  #[test]
-//  fn __TEST__() {
-//  }
-//}
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn special() {
+		assert!(Float::zero().as_str()    == "0.000");
+		assert!(Float::unknown().as_str() == UNKNOWN);
+		assert!(Float::nan().as_str()     == NAN);
+		assert!(Float::inf().as_str()     == INFINITY);
+		assert!(Float::neg_inf().as_str() == NEG_INFINITY);
+
+		assert!(Float::from(0.0).as_str() == "0.000");
+		assert!(Float::from(f64::NAN).as_str() == NAN);
+		assert!(Float::from(f64::INFINITY).as_str() == INFINITY);
+		assert!(Float::from(f64::NEG_INFINITY).as_str() == NEG_INFINITY);
+	}
+
+	#[test]
+	fn float() {
+		assert!(Float::new_0_point( 0.1).as_str()              == "0");
+		assert!(Float::new_1_point( 0.1).as_str()              == "0.1");
+		assert!(Float::new_2_point( 0.01).as_str()             == "0.01");
+		assert!(Float::from(        0.001).as_str()            == "0.001");
+		assert!(Float::new_4_point( 0.0001).as_str()           == "0.0001");
+		assert!(Float::new_5_point( 0.00001).as_str()          == "0.00001");
+		assert!(Float::new_6_point( 0.000001).as_str()         == "0.000001");
+		assert!(Float::new_7_point( 0.0000001).as_str()        == "0.0000001");
+		assert!(Float::new_8_point( 0.00000001).as_str()       == "0.00000001");
+		assert!(Float::new_9_point( 0.000000001).as_str()      == "0.000000001");
+		assert!(Float::new_10_point(0.0000000001).as_str()     == "0.0000000001");
+		assert!(Float::new_11_point(0.00000000001).as_str()    == "0.00000000001");
+		assert!(Float::new_12_point(0.000000000001).as_str()   == "0.000000000001");
+		assert!(Float::new_13_point(0.0000000000001).as_str()  == "0.0000000000001");
+		assert!(Float::new_14_point(0.00000000000001).as_str() == "0.00000000000001");
+	}
+
+	#[test]
+	fn percent() {
+		assert!(Float::percent(0.0).as_str()       == "0.00%");
+		assert!(Float::percent(0.001).as_str()     == "0.00%");
+		assert!(Float::percent(0.1).as_str()       == "0.10%");
+		assert!(Float::percent(1.0).as_str()       == "1.00%");
+		assert!(Float::percent(50.0).as_str()      == "50.00%");
+		assert!(Float::percent(100.0).as_str()     == "100.00%");
+		assert!(Float::percent(150.0).as_str()     == "150.00%");
+		assert!(Float::percent(1_000.0).as_str()   == "1,000.00%");
+		assert!(Float::percent(250_000.0).as_str() == "250,000.00%");
+	}
+
+	#[test]
+	fn percent_dot() {
+		assert!(Float::percent_1_point(0.0).as_str()        == "0.0%");
+		assert!(Float::percent_1_point(1_000.1234).as_str() == "1,000.1%");
+		assert!(Float::percent_2_point(1_000.1234).as_str() == "1,000.12%");
+		assert!(Float::percent_4_point(1_000.1234).as_str() == "1,000.1234%");
+
+		assert!(Float::percent_1_point(0.1).as_str()            == "0.1%");
+		assert!(Float::percent_1_point(10_000.1234).as_str()    == "10,000.1%");
+		assert!(Float::percent_2_point(100_000.1234).as_str()   == "100,000.12%");
+		assert!(Float::percent_4_point(1_000_000.1234).as_str() == "1,000,000.1234%");
+	}
+}

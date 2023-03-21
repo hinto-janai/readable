@@ -11,10 +11,19 @@ use serde::{Serialize,Deserialize};
 /// - The `f64` represents seconds.
 /// - The `String` is the human-readable version.
 ///
-/// Formatting rules:
+/// # Formatting rules:
 /// 1. `seconds` always has leading `0`.
 /// 2. `minutes` only has a leading zero if `hours` isn't `0`.
 /// 3. `hours` never has a leading `0`.
+///
+/// # Exceptions
+/// | Exceptions                                    | [`String`] Output |
+/// |-----------------------------------------------|-------------------|
+/// | [`f32::NAN`] & [`f64::NAN`]                   | `NaN`
+/// | [`f32::INFINITY`] & [`f64::INFINITY`]         | `∞`
+/// | [`f32::NEG_INFINITY`] & [`f64::NEG_INFINITY`] | `-∞`
+///
+/// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///
 /// # Examples
 /// | Input      | [`String`] Output  |
@@ -162,6 +171,8 @@ impl From<f32> for Runtime {
 //---------------------------------------------------------------------------------------------------- TESTS
 #[cfg(test)]
 mod tests {
+	use super::*;
+
 	#[test]
 	fn runtime() {
 		// Always round down.
