@@ -15,11 +15,10 @@ use compact_str::{format_compact,CompactString};
 /// 3. `hours` never has a leading `0`.
 ///
 /// # Exceptions
-/// | Exceptions                                    | [`String`] Output |
-/// |-----------------------------------------------|-------------------|
-/// | [`f32::NAN`] & [`f64::NAN`]                   | `NaN`
-/// | [`f32::INFINITY`] & [`f64::INFINITY`]         | `∞`
-/// | [`f32::NEG_INFINITY`] & [`f64::NEG_INFINITY`] | `-∞`
+/// | Exceptions                                | [`String`] Output |
+/// |-------------------------------------------|-------------------|
+/// | [`f64::NAN`]                              | `NaN`
+/// | [`f64::INFINITY`] & [`f64::NEG_INFINITY`] | `∞`
 ///
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///

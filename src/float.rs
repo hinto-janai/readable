@@ -10,11 +10,8 @@ pub const UNKNOWN:      &str = "???";
 /// Returned when encountering a [`f64::NAN`].
 pub const NAN:          &str = "NaN";
 
-/// Returned when encountering a [`f64::INFINITY`].
+/// Returned when encountering a [`f64::INFINITY`] or [`f64::NEG_INFINITY`].
 pub const INFINITY:     &str = "∞";
-
-/// Returned when encountering a [`f64::NEG_INFINITY`].
-pub const NEG_INFINITY: &str = "-∞";
 
 //---------------------------------------------------------------------------------------------------- Float
 /// Human readable float.
@@ -38,11 +35,10 @@ pub const NEG_INFINITY: &str = "-∞";
 /// // 3.000000000
 ///```
 /// # Exceptions
-/// | Exceptions                                    | [`String`] Output |
-/// |-----------------------------------------------|-------------------|
-/// | [`f32::NAN`] & [`f64::NAN`]                   | `NaN`
-/// | [`f32::INFINITY`] & [`f64::INFINITY`]         | `∞`
-/// | [`f32::NEG_INFINITY`] & [`f64::NEG_INFINITY`] | `-∞`
+/// | Exceptions                                | [`String`] Output |
+/// |-------------------------------------------|-------------------|
+/// | [`f64::NAN`]                              | `NaN`
+/// | [`f64::INFINITY`] & [`f64::NEG_INFINITY`] | `∞`
 ///
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///
@@ -70,12 +66,15 @@ impl std::fmt::Display for Float {
 macro_rules! handle_nan {
 	($float:ident) => {
 		#[cfg(not(feature = "ignore_nan_inf"))]
-		if $float == f64::NAN {
-			return Self($float, compact_str::CompactString::new("NaN"))
-		} else if $float == f64::INFINITY {
-			return Self($float, compact_str::CompactString::new("∞"))
-		} else if $float == f64::NEG_INFINITY {
-			return Self($float, compact_str::CompactString::new("-∞"))
+		{
+			let fpcat = $float.classify();
+			use std::num::FpCategory;
+			match fpcat {
+				FpCategory::Normal   => (),
+				FpCategory::Nan      => return Self($float, CompactString::new(crate::NAN)),
+				FpCategory::Infinite => return Self($float, CompactString::new(crate::INFINITY)),
+				_ => (),
+			}
 		}
 	}
 }
@@ -112,14 +111,6 @@ impl Float {
 	/// The [`String`] is set to `∞`.
 	pub fn inf() -> Self {
 		Self(f64::INFINITY, CompactString::new(INFINITY))
-	}
-
-	#[inline]
-	/// Returns a [`Self`] with the [`f64`] value of [`f64::INFINITY`].
-	///
-	/// The [`String`] is set to `-∞`.
-	pub fn neg_inf() -> Self {
-		Self(f64::INFINITY, CompactString::new(NEG_INFINITY))
 	}
 
 	#[inline]
@@ -439,12 +430,15 @@ impl From<f32> for Float {
 	#[inline]
 	fn from(number: f32) -> Self {
 		#[cfg(not(feature = "ignore_nan_inf"))]
-		if number.is_nan() {
-			return Self(number as f64, CompactString::new(NAN))
-		} else if number == f32::INFINITY {
-			return Self(number as f64, CompactString::new(INFINITY))
-		} else if number == f32::NEG_INFINITY {
-			return Self(number as f64, CompactString::new(NEG_INFINITY))
+		{
+			let fpcat = number.classify();
+			use std::num::FpCategory;
+			match fpcat {
+				FpCategory::Normal   => (),
+				FpCategory::Nan      => return Self(number as f64, CompactString::new(NAN)),
+				FpCategory::Infinite => return Self(number as f64, CompactString::new(INFINITY)),
+				_ => (),
+			}
 		}
 
 		let fract = &format_compact!("{:.3}", number.fract())[2..];
@@ -459,12 +453,15 @@ impl From<f64> for Float {
 	#[inline]
 	fn from(number: f64) -> Self {
 		#[cfg(not(feature = "ignore_nan_inf"))]
-		if number.is_nan() {
-			return Self(number, CompactString::new(NAN))
-		} else if number == f64::INFINITY {
-			return Self(number, CompactString::new(INFINITY))
-		} else if number == f64::NEG_INFINITY {
-			return Self(number, CompactString::new(NEG_INFINITY))
+		{
+			let fpcat = number.classify();
+			use std::num::FpCategory;
+			match fpcat {
+				FpCategory::Normal   => (),
+				FpCategory::Nan      => return Self(number, CompactString::new(NAN)),
+				FpCategory::Infinite => return Self(number, CompactString::new(INFINITY)),
+				_ => (),
+			}
 		}
 
 		let fract = &format_compact!("{:.3}", number.fract())[2..];
@@ -486,12 +483,11 @@ mod tests {
 		assert!(Float::unknown().as_str() == UNKNOWN);
 		assert!(Float::nan().as_str()     == NAN);
 		assert!(Float::inf().as_str()     == INFINITY);
-		assert!(Float::neg_inf().as_str() == NEG_INFINITY);
 
 		assert!(Float::from(0.0).as_str() == "0.000");
 		assert!(Float::from(f64::NAN).as_str() == NAN);
 		assert!(Float::from(f64::INFINITY).as_str() == INFINITY);
-		assert!(Float::from(f64::NEG_INFINITY).as_str() == NEG_INFINITY);
+		assert!(Float::from(f64::NEG_INFINITY).as_str() == INFINITY);
 	}
 
 	#[test]

@@ -80,7 +80,7 @@ dependencies = [
 
 [[package]]
 name = "readable"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "compact_str",
  "num-format",

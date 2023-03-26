@@ -2,6 +2,7 @@
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
 use compact_str::{format_compact,CompactString};
+use super::{NAN,INFINITY};
 
 //---------------------------------------------------------------------------------------------------- Constants
 // The locale numbers are formatting in is English, which looks like: [1,000]
@@ -15,11 +16,10 @@ const LOCALE: num_format::Locale = num_format::Locale::en;
 /// [`f32`] or [`f64`] inputs will work, but the fractional parts will be ignored.
 ///
 /// # Exceptions
-/// | Exceptions                                    | [`String`] Output |
-/// |-----------------------------------------------|-------------------|
-/// | [`f32::NAN`] & [`f64::NAN`]                   | `NaN`
-/// | [`f32::INFINITY`] & [`f64::INFINITY`]         | `∞`
-/// | [`f32::NEG_INFINITY`] & [`f64::NEG_INFINITY`] | `-∞`
+/// | Exceptions                                | [`String`] Output |
+/// |-------------------------------------------|-------------------|
+/// | [`f64::NAN`]                              | `NaN`
+/// | [`f64::INFINITY`] & [`f64::NEG_INFINITY`] | `∞`
 ///
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///
@@ -116,12 +116,15 @@ impl From<f32> for Int {
 	#[inline]
 	fn from(integer: f32) -> Self {
 		#[cfg(not(feature = "ignore_nan_inf"))]
-		if integer.is_nan() {
-			return Self(integer as u64, CompactString::new(super::NAN))
-		} else if integer == f32::INFINITY {
-			return Self(integer as u64, CompactString::new(super::INFINITY))
-		} else if integer == f32::NEG_INFINITY {
-			return Self(integer as u64, CompactString::new(super::NEG_INFINITY))
+		{
+			let fpcat = integer.classify();
+			use std::num::FpCategory;
+			match fpcat {
+				FpCategory::Normal   => (),
+				FpCategory::Nan      => return Self(integer as u64, CompactString::new(NAN)),
+				FpCategory::Infinite => return Self(integer as u64, CompactString::new(INFINITY)),
+				_ => (),
+			}
 		}
 
 		let mut buf = num_format::Buffer::new();
@@ -135,12 +138,15 @@ impl From<f64> for Int {
 	#[inline]
 	fn from(integer: f64) -> Self {
 		#[cfg(not(feature = "ignore_nan_inf"))]
-		if integer.is_nan() {
-			return Self(integer as u64, CompactString::new(super::NAN))
-		} else if integer == f64::INFINITY {
-			return Self(integer as u64, CompactString::new(super::INFINITY))
-		} else if integer == f64::NEG_INFINITY {
-			return Self(integer as u64, CompactString::new(super::NEG_INFINITY))
+		{
+			let fpcat = integer.classify();
+			use std::num::FpCategory;
+			match fpcat {
+				FpCategory::Normal   => (),
+				FpCategory::Nan      => return Self(integer as u64, CompactString::new(NAN)),
+				FpCategory::Infinite => return Self(integer as u64, CompactString::new(INFINITY)),
+				_ => (),
+			}
 		}
 
 		let mut buf = num_format::Buffer::new();
@@ -204,6 +210,6 @@ mod tests {
 	fn special() {
 		assert!(Int::from(f64::NAN).as_str()          == crate::NAN);
 		assert!(Int::from(f64::INFINITY).as_str()     == crate::INFINITY);
-		assert!(Int::from(f64::NEG_INFINITY).as_str() == crate::NEG_INFINITY);
+		assert!(Int::from(f64::NEG_INFINITY).as_str() == crate::INFINITY);
 	}
 }
