@@ -66,12 +66,6 @@ impl Int {
 	}
 
 	#[inline]
-	/// [`Clone`]'s and returns the inner [`String`].
-	pub fn to_string(&self) -> String {
-		self.1.to_string()
-	}
-
-	#[inline]
 	/// Returns the inner [`u64`].
 	pub fn to_u64(&self) -> u64 {
 		self.0

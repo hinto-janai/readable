@@ -1,6 +1,6 @@
-# This builds everything.
+# This runs `cargo clippy` on everything.
 
-name: Build
+name: Clippy
 
 on:
   push:
@@ -23,9 +23,9 @@ jobs:
         path: |
           ~/.cargo
           target
-        key: build
+        key: clippy
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-    - name: Build
-      run: cargo build --all-features
+    - name: Clippy
+      run: cargo clippy --all-features

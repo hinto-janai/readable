@@ -1,6 +1,6 @@
-# This builds everything.
+# This tests everything.
 
-name: Build
+name: Test
 
 on:
   push:
@@ -23,9 +23,9 @@ jobs:
         path: |
           ~/.cargo
           target
-        key: build
+        key: test
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-    - name: Build
-      run: cargo build --all-features
+    - name: Test
+      run: cargo test --all-features

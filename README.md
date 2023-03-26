@@ -1,7 +1,5 @@
 # Readable
-![Build](https://github.com/hinto-janai/readable/actions/workflows/build.yml/badge.svg)
-[![crates.io](https://img.shields.io/crates/v/readable.svg)](https://crates.io/crates/readable)
-[![docs.rs](https://docs.rs/readable/badge.svg)](https://docs.rs/readable)
+![Build](https://github.com/hinto-janai/readable/actions/workflows/build.yml/badge.svg) ![Test](https://github.com/hinto-janai/readable/actions/workflows/test.yml/badge.svg) [![crates.io](https://img.shields.io/crates/v/readable.svg)](https://crates.io/crates/readable) [![docs.rs](https://docs.rs/readable/badge.svg)](https://docs.rs/readable)
 
 Human **readable** data formatting.
 

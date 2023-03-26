@@ -162,12 +162,6 @@ impl Float {
 	}
 
 	#[inline]
-	/// Returns a [`Clone`] of the inner [`String`].
-	pub fn to_string(&self) -> String {
-		self.1.to_string()
-	}
-
-	#[inline]
 	/// Returns the inner [`f64`].
 	pub fn to_f64(&self) -> f64 {
 		self.0

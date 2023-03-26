@@ -1,6 +1,6 @@
-# This builds everything.
+# This runs `cargo audit` on everything.
 
-name: Build
+name: Audit
 
 on:
   push:
@@ -23,9 +23,12 @@ jobs:
         path: |
           ~/.cargo
           target
-        key: build
+        key: audit
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-    - name: Build
-      run: cargo build --all-features
+    - name: Install dependencies
+      run: |
+        cargo install cargo-audit
+    - name: Audit
+      run: cargo audit

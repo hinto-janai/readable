@@ -1,6 +1,8 @@
-# This builds everything.
+# This documents everything, but not the dependencies.
+#
+# It also fails on warnings instead of hard errors.
 
-name: Build
+name: Doc
 
 on:
   push:
@@ -23,9 +25,9 @@ jobs:
         path: |
           ~/.cargo
           target
-        key: build
+        key: doc
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-    - name: Build
-      run: cargo build --all-features
+    - name: Doc
+      run: RUSTFLAGS='-D warnings' cargo doc --workspace --no-deps --all-features
