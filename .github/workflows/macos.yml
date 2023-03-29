@@ -1,6 +1,6 @@
-# This builds everything.
+# This clippys, docs, tests, builds.
 
-name: Build
+name: macOS
 
 on:
   push:
@@ -12,10 +12,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
+  macos:
+    runs-on: macos-latest
     steps:
     - name: Cache
       uses: actions/cache@v3.2.3
@@ -23,9 +21,15 @@ jobs:
         path: |
           ~/.cargo
           target
-        key: build
+        key: macos
     - uses: actions/checkout@v3
       with:
         submodules: recursive
+    - name: Clippy
+      run: cargo clippy --all-features
+    - name: Doc
+      run: RUSTFLAGS='-D warnings' cargo doc --workspace --no-deps --all-features
+    - name: Test
+      run: cargo test --all-features
     - name: Build
       run: cargo build --all-features

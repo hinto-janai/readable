@@ -1,6 +1,6 @@
-# This runs `cargo clippy` on everything.
+# This runs `miri`
 
-name: Clippy
+name: Miri
 
 on:
   push:
@@ -12,10 +12,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  miri:
     runs-on: ubuntu-latest
-
     steps:
     - name: Cache
       uses: actions/cache@v3.2.3
@@ -23,9 +21,13 @@ jobs:
         path: |
           ~/.cargo
           target
-        key: clippy
+        key: miri
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-    - name: Clippy
-      run: cargo clippy --all-features
+    - name: Miri
+      run: |
+        rustup toolchain install nightly --component miri
+        rustup override set nightly
+        cargo miri setup
+        cargo miri test --release --all-features

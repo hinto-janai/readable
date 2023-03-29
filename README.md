@@ -1,5 +1,5 @@
 # Readable
-![Build](https://github.com/hinto-janai/readable/actions/workflows/build.yml/badge.svg) ![Test](https://github.com/hinto-janai/readable/actions/workflows/test.yml/badge.svg) [![crates.io](https://img.shields.io/crates/v/readable.svg)](https://crates.io/crates/readable) [![docs.rs](https://docs.rs/readable/badge.svg)](https://docs.rs/readable)
+[![Windows](https://github.com/hinto-janai/readable/actions/workflows/windows.yml/badge.svg)](https://github.com/hinto-janai/readable/actions/workflows/windows.yml) [![macOS](https://github.com/hinto-janai/readable/actions/workflows/macos.yml/badge.svg)](https://github.com/hinto-janai/readable/actions/workflows/macos.yml) [![Linux](https://github.com/hinto-janai/readable/actions/workflows/linux.yml/badge.svg)](https://github.com/hinto-janai/readable/actions/workflows/linux.yml) [![crates.io](https://img.shields.io/crates/v/readable.svg)](https://crates.io/crates/readable) [![docs.rs](https://docs.rs/readable/badge.svg)](https://docs.rs/readable)
 
 Human **readable** data formatting.
 
@@ -7,7 +7,7 @@ This crate turns various data into human-readable strings.
 
 For performance, the actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html), but a [`CompactString`](https://docs.rs/compact_str) so that any string 24 bytes (12 bytes on 32-bit) or less are _stack_ allocated instead of _heap_ allocated.
 
-The documentation will still refer to the inner string as a [`String`]. Anything returned will also be a [`String`].
+The documentation will still refer to the inner string as a `String`. Anything returned will also be a `String`.
 
 ## Feature flags
 | Flag             | Purpose |

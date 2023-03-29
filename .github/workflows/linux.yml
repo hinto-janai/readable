@@ -1,6 +1,6 @@
-# This tests everything.
+# This clippys, docs, tests, builds.
 
-name: Test
+name: Linux
 
 on:
   push:
@@ -12,10 +12,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  linux:
     runs-on: ubuntu-latest
-
     steps:
     - name: Cache
       uses: actions/cache@v3.2.3
@@ -23,9 +21,15 @@ jobs:
         path: |
           ~/.cargo
           target
-        key: test
+        key: linux
     - uses: actions/checkout@v3
       with:
         submodules: recursive
+    - name: Clippy
+      run: cargo clippy --all-features
+    - name: Doc
+      run: RUSTFLAGS='-D warnings' cargo doc --workspace --no-deps --all-features
     - name: Test
       run: cargo test --all-features
+    - name: Build
+      run: cargo build --all-features
