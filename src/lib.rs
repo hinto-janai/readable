@@ -12,12 +12,20 @@
 //! | `serde`          | Enable [`serde`](https://docs.rs/serde) on all types
 //! | `ignore_nan_inf` | Disable checking [`f64`]'s for [`f64::NAN`], [`f64::INFINITY`], and [`f64::NEG_INFINITY`]
 //!
-//! ## Integers:
+//! ## Unsigned integers:
 //! ```
-//! let a = readable::Int::from(1000_u16);
+//! let a = readable::Unsigned::from(1000_u16);
 //! println!("{}", a);
 //!
 //! // 1,000
+//! ```
+//!
+//! ## Signed integers:
+//! ```
+//! let a = readable::Int::from(-1000);
+//! println!("{}", a);
+//!
+//! // -1,000
 //! ```
 //!
 //! ## Floats:
@@ -47,6 +55,9 @@
 //!
 //! // 23 hours, 59 minutes, 59 seconds
 //! ```
+
+mod unsigned;
+pub use unsigned::*;
 
 mod int;
 pub use int::*;

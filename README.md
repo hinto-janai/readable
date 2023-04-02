@@ -16,12 +16,20 @@ The documentation will still refer to the inner string as a `String`. Anything r
 | `ignore_nan_inf` | Disable checking `f64`'s for `f64::NAN`, `f64::INFINITY`, and `f64::NEG_INFINITY`
 
 ## Examples
-#### Integers
+#### Unsigned Integers
+```rust
+let a = readable::Unsigned::from(1000);
+println!("{}", a);
+
+> 1,000
+```
+
+#### Signed Integers
 ```rust
 let a = readable::Int::from(1000);
 println!("{}", a);
 
-> 1,000
+> -1,000
 ```
 
 #### Floats
