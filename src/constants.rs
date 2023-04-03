@@ -1,12 +1,42 @@
+//---------------------------------------------------------------------------------------------------- Use
+use crate::{
+	int::Int,
+	unsigned::Unsigned,
+	float::Float,
+	percent::Percent,
+	runtime::Runtime,
+};
+
 //---------------------------------------------------------------------------------------------------- Constants
-// The locale numbers are formatting in is English, which looks like: [1,000]
-pub(crate) const LOCALE: num_format::Locale = num_format::Locale::en;
+/// The locale numbers are formatted in (English). This looks like: `1,000`
+const LOCALE: num_format::Locale = num_format::Locale::en;
 
-/// Returned when using an `*_unknown()` function.
-pub const UNKNOWN:      &str = "???";
+/// Returned when using an `*::unknown()` function
+pub const UNKNOWN: &str = "???";
 
-/// Returned when encountering a [`f64::NAN`].
-pub const NAN:          &str = "NaN";
+/// Returned when using [`Float::unknown`]
+pub const UNKNOWN_FLOAT: &str = "?.???";
 
-/// Returned when encountering a [`f64::INFINITY`] or [`f64::NEG_INFINITY`].
-pub const INFINITY:     &str = "∞";
+/// Returned when using [`Percent::unknown`]
+pub const UNKNOWN_PERCENT: &str = "?.??%";
+
+/// Returned when using [`Runtime::unknown`]
+pub const UNKNOWN_RUNTIME: &str = "?:??";
+
+/// Returned when encountering a [`f32::NAN`] or [`f64::NAN`]
+pub const NAN: &str = "NaN";
+
+/// Returned when encountering an `INFINITY` variant of an `f32/f64`.
+pub const INFINITY: &str = "∞";
+
+/// Returned when using [`Int::zero`] or [`Unsigned::zero`]
+pub const ZERO: &str = "0";
+
+/// Returned when using [`Float::zero`]
+pub const ZERO_FLOAT: &str = "0.000";
+
+/// Returned when using [`Percent::zero`]
+pub const ZERO_PERCENT: &str = "0.00%";
+
+/// Returned when using [`Runtime::zero`]
+pub const ZERO_RUNTIME: &str = "0:00";

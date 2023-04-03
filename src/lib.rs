@@ -14,46 +14,50 @@
 //!
 //! ## Unsigned integers:
 //! ```
-//! let a = readable::Unsigned::from(1000_u16);
-//! println!("{}", a);
+//! let a = readable::Unsigned::from(1000_u64);
 //!
-//! // 1,000
+//! assert!(a == 1000_u64);
+//! assert!(a == "1,000");
 //! ```
 //!
 //! ## Signed integers:
 //! ```
 //! let a = readable::Int::from(-1000);
-//! println!("{}", a);
 //!
-//! // -1,000
+//! assert!(a == -1000);
+//! assert!(a == "-1,000");
 //! ```
 //!
 //! ## Floats:
 //! ```
 //! let a = readable::Float::from(1000.123);
-//! let b = readable::Float::percent(1000.123);
-//! println!("{}", a);
-//! println!("{}", b);
 //!
-//! // 1,000.123
-//! // 1,000.12%
+//! assert!(a == 1000.123);
+//! assert!(a == "1,000.123");
+//! ```
+//!
+//! ## Percents:
+//! ```
+//! let a = readable::Percent::from(1000.123);
+//!
+//! assert!(a == 1000.123);
+//! assert!(a == "1,000.12%");
 //! ```
 //!
 //! ## Runtime:
 //! ```
 //! let a = readable::Runtime::from(11111.1);
-//! println!("{}", a);
 //!
-//! // 3:05:11
+//! assert!(a == 11111.1);
+//! assert!(a == "3:05:11");
 //! ```
 //!
 //! ## Time:
 //! ```
-//! let a = std::time::Duration::from_secs(86399);
-//! let b = readable::Time::from(a);
-//! println!("{}", b);
+//! let a = readable::Time::from(86399_u64);
 //!
-//! // 23 hours, 59 minutes, 59 seconds
+//! assert!(a == 86399_u64);
+//! assert!(a == "23 hours, 59 minutes, 59 seconds");
 //! ```
 //! ## Comparison
 //! All types implement `Display`, `PartialEq`, `PartialEq<&str>` and `PartialEq` for their inner number primitive.
@@ -82,8 +86,9 @@
 //!
 //! assert!(a == b);
 //! ```
-//! This compare both the `u64` AND `String` inside `a` and `b`.
+//! This compares both the `u64` AND `String` inside `a` and `b`.
 
+pub(crate) mod inner;
 pub(crate) mod macros;
 
 pub mod constants;
@@ -97,6 +102,9 @@ pub use int::*;
 
 mod float;
 pub use float::*;
+
+mod percent;
+pub use percent::*;
 
 mod time;
 pub use time::*;

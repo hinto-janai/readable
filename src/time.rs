@@ -16,26 +16,71 @@ use crate::macros::*;
 ///
 /// The lowest unit is `second`, the highest is `year`, and `week` is skipped in favor of `7 days`.
 ///
-/// # Examples
-/// | Input      | Output             |
-/// |------------|--------------------|
-/// | 0          | `0 seconds`
-/// | 1          | `1 second`
-/// | 59         | `59 seconds`
-/// | 3599       | `59 minutes, 59 seconds`
-/// | 86399      | `23 hours, 59 minutes, 59 seconds`
-/// | 604799     | `6 days, 23 hours, 59 minutes, 59 seconds`
-/// | 3234815    | `1 month, 6 days, 23 hours, 59 minutes, 59 seconds`
-/// | 63115200   | `2 years`
+/// ## Performance
+/// [`Clone`] is expensive.
+/// ```rust,compile_fail
+/// # use readable::Time;
+/// let a = Time::from(100.0);
 ///
+/// // Move 'a'
+/// let b = a;
+///
+/// // We can't use 'a', it moved into 'b'.
+/// // We must `.clone()`.
+/// assert!(a == 100.0);
+/// ```
+///
+/// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
+/// but a [`CompactString`](https://docs.rs/compact_str) so that any string 24 bytes (12 bytes on 32-bit) or less are _stack_ allocated instead of _heap_ allocated.
+///
+/// The documentation will still refer to the inner string as a `String`. Anything returned will also be a `String`.
+///
+/// ## Examples
+/// ```rust
+/// # use readable::Time;
+/// assert!(Time::from(0_u64)        == "0 seconds");
+/// assert!(Time::from(1_u64)        == "1 second");
+/// assert!(Time::from(2_u64)        == "2 seconds");
+/// assert!(Time::from(59_u64)       == "59 seconds");
+/// assert!(Time::from(60_u64)       == "1 minute");
+/// assert!(Time::from(61_u64)       == "1 minute, 1 second");
+/// assert!(Time::from(62_u64)       == "1 minute, 2 seconds");
+/// assert!(Time::from(120_u64)      == "2 minutes");
+/// assert!(Time::from(121_u64)      == "2 minutes, 1 second");
+/// assert!(Time::from(122_u64)      == "2 minutes, 2 seconds");
+/// assert!(Time::from(179_u64)      == "2 minutes, 59 seconds");
+/// assert!(Time::from(3599_u64)     == "59 minutes, 59 seconds");
+/// assert!(Time::from(3600_u64)     == "1 hour");
+/// assert!(Time::from(3601_u64)     == "1 hour, 1 second");
+/// assert!(Time::from(3602_u64)     == "1 hour, 2 seconds");
+/// assert!(Time::from(3660_u64)     == "1 hour, 1 minute");
+/// assert!(Time::from(3720_u64)     == "1 hour, 2 minutes");
+/// assert!(Time::from(86399_u64)    == "23 hours, 59 minutes, 59 seconds");
+/// assert!(Time::from(86400_u64)    == "1 day");
+/// assert!(Time::from(86401_u64)    == "1 day, 1 second");
+/// assert!(Time::from(86402_u64)    == "1 day, 2 seconds");
+/// assert!(Time::from(86460_u64)    == "1 day, 1 minute");
+/// assert!(Time::from(86520_u64)    == "1 day, 2 minutes");
+/// assert!(Time::from(90000_u64)    == "1 day, 1 hour");
+/// assert!(Time::from(93600_u64)    == "1 day, 2 hours");
+/// assert!(Time::from(604799_u64)   == "6 days, 23 hours, 59 minutes, 59 seconds");
+/// assert!(Time::from(604800_u64)   == "7 days");
+/// assert!(Time::from(2630016_u64)  == "1 month");
+/// assert!(Time::from(3234815_u64)  == "1 month, 6 days, 23 hours, 59 minutes, 59 seconds");
+/// assert!(Time::from(5260032_u64)  == "2 months");
+/// assert!(Time::from(31557600_u64) == "1 year");
+/// assert!(Time::from(63115200_u64) == "2 years");
+/// assert_eq!(
+///     Time::from(u64::MAX),
+///     "584542046090 years, 7 months, 15 days, 17 hours, 5 minutes, 3 seconds",
+/// );
+/// ```
 /// # Credit
 /// This code is forked from `https://docs.rs/humantime`, edited to remove sub-second time, change spacing and some words.
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Time(u64, CompactString);
-
-impl_traits!(Time, u64);
 
 // Implementation Macro.
 macro_rules! impl_number {
@@ -49,10 +94,100 @@ macro_rules! impl_number {
 	}
 }
 
+impl_traits!(Time, u64);
 impl_number!(u8);
 impl_number!(u16);
 impl_number!(u32);
 impl_number!(usize);
+
+impl Time {
+	impl_common!(u64);
+	impl_usize!();
+
+	#[inline]
+	fn plural(string: &mut CompactString, started: &mut bool, name: &str, value: u64) {
+		if value > 0 {
+			if *started {
+				string.push_str(", ");
+			}
+			write!(string, "{} {}", value, name);
+			if value > 1 {
+				string.push('s');
+			}
+			*started = true;
+		}
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::Time;
+	/// assert!(Time::zero() == 0_u64);
+	/// assert!(Time::zero() == "0 seconds");
+	/// ```
+	pub fn zero() -> Self {
+		Self(0, CompactString::new("0 seconds"))
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::Time;
+	/// assert!(Time::second() == 1_u64);
+	/// assert!(Time::second() == "1 second");
+	/// ```
+	pub fn second() -> Self {
+		Self(1, CompactString::new("1 second"))
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::Time;
+	/// assert!(Time::minute() == 60_u64);
+	/// assert!(Time::minute() == "1 minute");
+	/// ```
+	pub fn minute() -> Self {
+		Self(60, CompactString::new("1 minute"))
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::Time;
+	/// assert!(Time::hour() == 3600_u64);
+	/// assert!(Time::hour() == "1 hour");
+	/// ```
+	pub fn hour() -> Self {
+		Self(3600, CompactString::new("1 hour"))
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::Time;
+	/// assert!(Time::day() == 86400_u64);
+	/// assert!(Time::day() == "1 day");
+	/// ```
+	pub fn day() -> Self {
+		Self(86400, CompactString::new("1 day"))
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::Time;
+	/// assert!(Time::month() == 2630016_u64);
+	/// assert!(Time::month() == "1 month");
+	/// ```
+	pub fn month() -> Self {
+		Self(2630016, CompactString::new("1 month"))
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::Time;
+	/// assert!(Time::year() == 31557600_u64);
+	/// assert!(Time::year() == "1 year");
+	/// ```
+	pub fn year() -> Self {
+		Self(31557600, CompactString::new("1 year"))
+	}
+}
 
 impl From<std::time::Duration> for Time {
 	fn from(duration: std::time::Duration) -> Self {
@@ -67,13 +202,13 @@ impl From<&std::time::Duration> for Time {
 }
 
 impl From<u64> for Time {
-	fn from(seconds: u64) -> Self {
-		if seconds == 0 {
+	fn from(secs: u64) -> Self {
+		if secs == 0 {
 			return Self::zero()
 		}
 
-		let years = seconds / 31_557_600;  // 365.25d
-		let ydays = seconds % 31_557_600;
+		let years = secs / 31_557_600;  // 365.25d
+		let ydays = secs % 31_557_600;
 		let months = ydays / 2_630_016;  // 30.44d
 		let mdays = ydays % 2_630_016;
 		let days = mdays / 86400;
@@ -91,99 +226,7 @@ impl From<u64> for Time {
 		Self::plural(&mut string, started, "minute", minutes);
 		Self::plural(&mut string, started, "second", seconds);
 
-		Self(seconds, string)
-	}
-}
-
-impl Time {
-	#[inline]
-	fn plural(string: &mut CompactString, started: &mut bool, name: &str, value: u64) {
-		if value > 0 {
-			if *started {
-				string.push_str(", ");
-			}
-			write!(string, "{} {}", value, name);
-			if value > 1 {
-				string.push('s');
-			}
-			*started = true;
-		}
-	}
-
-	#[inline]
-	/// Return a borrowed [`str`] without consuming [`Self`].
-	pub fn as_str(&self) -> &str {
-		self.1.as_str()
-	}
-
-	#[inline]
-	/// Returns the inner [`u64`].
-	pub fn u64(&self) -> u64 {
-		self.0
-	}
-
-	#[inline]
-	#[cfg(target_pointer_width = "64")]
-	/// Returns the inner [`u64`] as a [`usize`].
-	///
-	/// # Notes
-	/// This function is only available on 64-bit platforms.
-	pub fn usize(&self) -> usize {
-		self.0 as usize
-	}
-
-	#[inline]
-	/// Consumes [`Self]`, returning the inner [`String`].
-	pub fn into_string(self) -> String {
-		self.1.into_string()
-	}
-
-	#[inline]
-	/// Consumes [`Self`], returning the inner [`u64`] and [`String`].
-	pub fn into_raw(self) -> (u64, String) {
-		(self.0, self.1.into_string())
-	}
-
-	#[inline]
-	/// Return `(0, "0 seconds")`.
-	pub fn zero() -> Self {
-		Self(0, CompactString::new("0 seconds"))
-	}
-
-	#[inline]
-	/// Return `(1, "1 second")`.
-	pub fn second() -> Self {
-		Self(1, CompactString::new("1 second"))
-	}
-
-	#[inline]
-	/// Return `(60, "1 minute")`.
-	pub fn minute() -> Self {
-		Self(60, CompactString::new("1 minute"))
-	}
-
-	#[inline]
-	/// Return `(3600, "1 hour")`.
-	pub fn hour() -> Self {
-		Self(3600, CompactString::new("1 hour"))
-	}
-
-	#[inline]
-	/// Return `(86400, "1 day")`.
-	pub fn day() -> Self {
-		Self(86400, CompactString::new("1 day"))
-	}
-
-	#[inline]
-	/// Return `(2630016, "1 month")`.
-	pub fn month() -> Self {
-		Self(2630016, CompactString::new("1 month"))
-	}
-
-	#[inline]
-	/// Return `(31557600, "1 year")`.
-	pub fn year() -> Self {
-		Self(31557600, CompactString::new("1 year"))
+		Self(secs, string)
 	}
 }
 
@@ -191,45 +234,4 @@ impl Time {
 #[cfg(test)]
 mod tests {
 	use super::*;
-
-	#[test]
-	fn time() {
-		use std::time::Duration;
-		assert!(Time::from(Duration::from_secs(0))        == "0 seconds");
-		assert!(Time::from(Duration::from_secs(1))        == "1 second");
-		assert!(Time::from(Duration::from_secs(2))        == "2 seconds");
-		assert!(Time::from(Duration::from_secs(59))       == "59 seconds");
-		assert!(Time::from(Duration::from_secs(60))       == "1 minute");
-		assert!(Time::from(Duration::from_secs(61))       == "1 minute, 1 second");
-		assert!(Time::from(Duration::from_secs(62))       == "1 minute, 2 seconds");
-		assert!(Time::from(Duration::from_secs(120))      == "2 minutes");
-		assert!(Time::from(Duration::from_secs(121))      == "2 minutes, 1 second");
-		assert!(Time::from(Duration::from_secs(122))      == "2 minutes, 2 seconds");
-		assert!(Time::from(Duration::from_secs(179))      == "2 minutes, 59 seconds");
-		assert!(Time::from(Duration::from_secs(3599))     == "59 minutes, 59 seconds");
-		assert!(Time::from(Duration::from_secs(3600))     == "1 hour");
-		assert!(Time::from(Duration::from_secs(3601))     == "1 hour, 1 second");
-		assert!(Time::from(Duration::from_secs(3602))     == "1 hour, 2 seconds");
-		assert!(Time::from(Duration::from_secs(3660))     == "1 hour, 1 minute");
-		assert!(Time::from(Duration::from_secs(3720))     == "1 hour, 2 minutes");
-		assert!(Time::from(Duration::from_secs(86399))    == "23 hours, 59 minutes, 59 seconds");
-		assert!(Time::from(Duration::from_secs(86400))    == "1 day");
-		assert!(Time::from(Duration::from_secs(86401))    == "1 day, 1 second");
-		assert!(Time::from(Duration::from_secs(86402))    == "1 day, 2 seconds");
-		assert!(Time::from(Duration::from_secs(86460))    == "1 day, 1 minute");
-		assert!(Time::from(Duration::from_secs(86520))    == "1 day, 2 minutes");
-		assert!(Time::from(Duration::from_secs(90000))    == "1 day, 1 hour");
-		assert!(Time::from(Duration::from_secs(93600))    == "1 day, 2 hours");
-		assert!(Time::from(Duration::from_secs(604799))   == "6 days, 23 hours, 59 minutes, 59 seconds");
-		assert!(Time::from(Duration::from_secs(604800))   == "7 days");
-		assert!(Time::from(Duration::from_secs(2630016))  == "1 month");
-		assert!(Time::from(Duration::from_secs(3234815))  == "1 month, 6 days, 23 hours, 59 minutes, 59 seconds");
-		assert!(Time::from(Duration::from_secs(5260032))  == "2 months");
-		assert!(Time::from(Duration::from_secs(31557600)) == "1 year");
-		assert!(Time::from(Duration::from_secs(63115200)) == "2 years");
-		assert_eq!(
-			Time::from(Duration::from_secs(18446744073709551615)),
-			"584542046090 years, 7 months, 15 days, 17 hours, 5 minutes, 3 seconds",
-		);
-	}
 }

@@ -19,5 +19,5 @@ ignore_nan_inf = []
 
 [dependencies]
 compact_str = { version = "0.7.0", features = ["bytes", "serde"] }
-num-format = "0.4.4"
-serde = { version = "1.0.159", features = ["derive"], optional = true }
+num-format  = { version = "0.4.4", features = ["with-serde"] }
+serde       = { version = "1.0.159", features = ["derive"], optional = true }

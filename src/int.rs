@@ -2,7 +2,7 @@
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
 
-use compact_str::CompactString;
+use crate::inner::*;
 use crate::macros::*;
 use crate::constants::*;
 
@@ -11,149 +11,66 @@ use crate::constants::*;
 ///
 /// [`From`] takes an signed integer as input and returns a ready-to-[`print!()`] [`Int`].
 ///
-/// [`f32`] or [`f64`] inputs will work, but the fractional parts will be ignored.
+/// [`f32`] or [`f64`] inputs will work, but:
+/// - Fractional parts will be ignored
 ///
-/// # Exceptions
-/// | Exceptions                                | [`String`] Output |
-/// |-------------------------------------------|-------------------|
-/// | [`f64::NAN`]                              | `NaN`
-/// | [`f64::INFINITY`] & [`f64::NEG_INFINITY`] | `∞`
+/// ## Performance
+/// [`Copy`] available, [`Clone`] is cheap.
+///
+/// The inner type is either a `&'static str` or a buffer
+/// allocated on the stack, both are able to be cheaply `Copy`-ied:
+/// ```rust
+/// # use readable::Int;
+/// let a = Int::from(100_000);
+///
+/// // Copy 'a'
+/// let b = a;
+///
+/// // We can still use 'a'
+/// assert!(a == 100_000);
+/// ```
+///
+/// ## Exceptions
+/// - [`f64::NAN`] outputs [`NAN`]
+/// - [`f64::INFINITY`] outputs [`INFINITY`]
 ///
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///
-/// # Examples
-/// | Input        | Output            |
-/// |--------------|-------------------|
-/// | `0`          | `0`
-/// | `1`          | `1`
-/// | `-1`         | `-1`
-/// | `999`        | `999`
-/// | `-1000`      | `-1,000`
-/// | `1234567`    | `1,234,567`
-/// | `-100000000` | `-100,000,000`
-/// | `1.123`      | `1`
-/// | `-2000.123`  | `-2,000`
+/// ## Examples
+/// ```rust
+/// # use readable::Int;
+/// // From u32.
+/// assert!(Int::from(1_000_u32)     == "1,000");
+/// assert!(Int::from(100_000_u32)   == "100,000");
+/// assert!(Int::from(1_000_000_u32) == "1,000,000");
+///
+/// // From signed integers.
+/// assert!(Int::from(-1_000)   == "-1,000");
+/// assert!(Int::from(-100_000) == "-100,000");
+/// assert!(Int::from(-100_000) == "-100,000");
+///
+/// // From floats.
+/// assert!(Int::from(-1.0)        == "-1");
+/// assert!(Int::from(1_000.123)   == "1,000");
+/// assert!(Int::from(100_000.123) == "100,000");
+/// assert!(Int::from(100_000.123) == "100,000");
+/// ```
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
-pub struct Int(i64, CompactString);
-
-impl_traits!(Int, i64);
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub struct Int(i64, Inner);
 
 impl Int {
-	#[inline]
-	/// Returns a [`Self`] with the value `0`.
-	pub fn new() -> Self {
-		Self(0, CompactString::new("0"))
-	}
-
-	#[inline]
-	/// Returns a [`Self`] with the `i64` set to `0`, but the [`String`] set to `???`.
-	pub fn unknown() -> Self {
-		Self(0, CompactString::new(UNKNOWN))
-	}
-
-	#[inline]
-	/// Return a borrowed [`str`] without consuming [`Self`].
-	pub fn as_str(&self) -> &str {
-		self.1.as_str()
-	}
-
-	#[inline]
-	/// Returns the inner [`i64`].
-	pub fn i64(&self) -> i64 {
-		self.0
-	}
-
-	#[inline]
-	#[cfg(target_pointer_width = "64")]
-	/// Returns the inner [`i64`] as a [`isize`].
-	///
-	/// # Notes
-	/// This function is only available on 64-bit platforms.
-	pub fn isize(&self) -> isize {
-		self.0 as isize
-	}
-
-	#[inline]
-	/// Consumes [`Self]`, returning the inner [`String`].
-	pub fn into_string(self) -> String {
-		self.1.into_string()
-	}
-
-	#[inline]
-	/// Consumes [`Self`], returning the inner [`i64`] and [`String`].
-	pub fn into_raw(self) -> (i64, String) {
-		(self.0, self.1.into_string())
-	}
+	impl_inner!(i64);
+	impl_common!(i64);
+	impl_isize!();
 }
 
-// Implementation Macro.
-macro_rules! impl_int {
-	($int:ty) => {
-		impl From<$int> for Int {
-			#[inline]
-			fn from(integer: $int) -> Self {
-				let i = integer as i64;
-				Self(i, buf!(i))
-			}
-		}
-	};
-}
-
-impl_int!(u8);
-impl_int!(u16);
-impl_int!(u32);
-impl_int!(i8);
-impl_int!(i16);
-impl_int!(i32);
-
-impl From<i64> for Int {
-	#[inline]
-	fn from(integer: i64) -> Self {
-		Self(integer, buf!(integer))
-	}
-}
-
-impl From<f32> for Int {
-	#[inline]
-	fn from(integer: f32) -> Self {
-		#[cfg(not(feature = "ignore_nan_inf"))]
-		{
-			let fpcat = integer.classify();
-			use std::num::FpCategory;
-			match fpcat {
-				FpCategory::Normal   => (),
-				FpCategory::Nan      => return Self(integer as i64, CompactString::new(NAN)),
-				FpCategory::Infinite => return Self(integer as i64, CompactString::new(INFINITY)),
-				_ => (),
-			}
-		}
-
-		let i = integer as i64;
-		Self(i, buf!(i))
-	}
-}
-
-impl From<f64> for Int {
-	#[inline]
-	fn from(integer: f64) -> Self {
-		#[cfg(not(feature = "ignore_nan_inf"))]
-		{
-			let fpcat = integer.classify();
-			use std::num::FpCategory;
-			match fpcat {
-				FpCategory::Normal   => (),
-				FpCategory::Nan      => return Self(integer as i64, CompactString::new(NAN)),
-				FpCategory::Infinite => return Self(integer as i64, CompactString::new(INFINITY)),
-				_ => (),
-			}
-		}
-
-		let i = integer as i64;
-		Self(i, buf!(i))
-	}
-}
+impl_traits!(Int, i64);
+impl_from!(i8, i16, i32, i64, isize, Int);
+impl_from_single!(u8, i64, Int);
+impl_from_single!(u16, i64, Int);
+impl_from_single!(u32, i64, Int);
 
 //---------------------------------------------------------------------------------------------------- TESTS
 #[cfg(test)]

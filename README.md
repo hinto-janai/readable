@@ -5,59 +5,58 @@ Human **readable** data formatting.
 
 This crate turns various data into human-readable strings.
 
-For performance, the actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html), but a [`CompactString`](https://docs.rs/compact_str) so that any string 24 bytes (12 bytes on 32-bit) or less are _stack_ allocated instead of _heap_ allocated.
-
-The documentation will still refer to the inner string as a `String`. Anything returned will also be a `String`.
-
 ## Feature flags
 | Flag             | Purpose |
 |------------------|---------|
 | `serde`          | Enable [`serde`](https://docs.rs/serde) on all types
 | `ignore_nan_inf` | Disable checking `f64`'s for `f64::NAN`, `f64::INFINITY`, and `f64::NEG_INFINITY`
 
-## Examples
-#### Unsigned Integers
+## Unsigned integers:
 ```rust
-let a = readable::Unsigned::from(1000);
-println!("{}", a);
+let a = readable::Unsigned::from(1000_u64);
 
-> 1,000
+assert!(a == 1000_u64);
+assert!(a == "1,000");
 ```
 
-#### Signed Integers
+## Signed integers:
 ```rust
 let a = readable::Int::from(-1000);
-println!("{}", a);
 
-> -1,000
+assert!(a == -1000);
+assert!(a == "-1,000");
 ```
 
-#### Floats
+## Floats:
 ```rust
 let a = readable::Float::from(1000.123);
-let b = readable::Float::percent(1000.123);
-println!("{}", a);
-println!("{}", b);
 
-> 1,000.123
-> 1,000.12%
+assert!(a == 1000.123);
+assert!(a == "1,000.123");
 ```
 
-#### Runtime
+## Percents:
+```rust
+let a = readable::Percent::from(1000.123);
+
+assert!(a == 1000.123);
+assert!(a == "1,000.12%");
+```
+
+## Runtime:
 ```rust
 let a = readable::Runtime::from(11111.1);
-println!("{}", a);
 
-> 3:05:11
+assert!(a == 11111.1);
+assert!(a == "3:05:11");
 ```
 
-#### Time
+## Time:
 ```rust
-let a = std::time::Duration::from_secs(86399);
-let b = readable::Time::from(a);
-println!("{}", b);
+let a = readable::Time::from(86399_u64);
 
-> 23 hours, 59 minutes, 59 seconds
+assert!(a == 86399_u64);
+assert!(a == "23 hours, 59 minutes, 59 seconds");
 ```
 
 ## Comparison
@@ -87,4 +86,4 @@ let b = readable::Unsigned::from(1000);
 
 assert!(a == b);
 ```
-This compare both the `u64` AND `String` inside `a` and `b`.
+This compares both the `u64` AND `String` inside `a` and `b`.
