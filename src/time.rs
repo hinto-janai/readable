@@ -118,8 +118,18 @@ impl Time {
 
 	#[inline]
 	/// Returns the inner [`u64`].
-	pub fn to_u64(&self) -> u64 {
+	pub fn u64(&self) -> u64 {
 		self.0
+	}
+
+	#[inline]
+	#[cfg(target_pointer_width = "64")]
+	/// Returns the inner [`u64`] as a [`usize`].
+	///
+	/// # Notes
+	/// This function is only available on 64-bit platforms.
+	pub fn usize(&self) -> usize {
+		self.0 as usize
 	}
 
 	#[inline]

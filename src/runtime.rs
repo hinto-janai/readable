@@ -65,7 +65,7 @@ impl Runtime {
 
 	#[inline]
 	/// Returns a [`Copy`] of the inner [`f64`].
-	pub fn to_f64(&self) -> f64 {
+	pub fn f64(&self) -> f64 {
 		self.0
 	}
 

@@ -18,7 +18,7 @@ use crate::macros::*;
 /// # use readable::Float;
 /// let f2 = Float::new_2_point(3.0);
 /// let f6 = Float::new_6_point(3.0);
-/// let f9 = Float::new_9_point(f2.to_f64());
+/// let f9 = Float::new_9_point(f2.f64());
 ///
 /// println!("{}\n{}\n{}", f2, f6, f9);
 ///
@@ -121,7 +121,7 @@ impl Float {
 
 	#[inline]
 	/// Returns the inner [`f64`].
-	pub fn to_f64(&self) -> f64 {
+	pub fn f64(&self) -> f64 {
 		self.0
 	}
 

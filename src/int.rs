@@ -61,8 +61,18 @@ impl Int {
 
 	#[inline]
 	/// Returns the inner [`i64`].
-	pub fn to_i64(&self) -> i64 {
+	pub fn i64(&self) -> i64 {
 		self.0
+	}
+
+	#[inline]
+	#[cfg(target_pointer_width = "64")]
+	/// Returns the inner [`i64`] as a [`isize`].
+	///
+	/// # Notes
+	/// This function is only available on 64-bit platforms.
+	pub fn isize(&self) -> isize {
+		self.0 as isize
 	}
 
 	#[inline]
