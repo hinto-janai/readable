@@ -32,8 +32,6 @@ jobs:
         RUSTFLAGS: '-D warnings'
       run: cargo doc --workspace --no-deps --all-features
     - name: Test
-      # GitHub actions has weird behavior with `f64::NAN`.
-      # This test works normally locally.
-      run: cargo test --all-features -- --skip "float::tests::special" --skip "int::tests::special" --skip "unsigned::tests::special"
+      run: cargo test --all-features
     - name: Build
       run: cargo build --all-features
