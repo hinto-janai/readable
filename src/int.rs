@@ -1,12 +1,10 @@
 //---------------------------------------------------------------------------------------------------- Use
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
-use compact_str::{format_compact,CompactString};
-use super::{NAN,INFINITY};
 
-//---------------------------------------------------------------------------------------------------- Constants
-// The locale numbers are formatting in is English, which looks like: [1,000]
-const LOCALE: num_format::Locale = num_format::Locale::en;
+use compact_str::CompactString;
+use crate::macros::*;
+use crate::constants::*;
 
 //---------------------------------------------------------------------------------------------------- Int
 /// Human readable signed integer.
@@ -40,12 +38,7 @@ const LOCALE: num_format::Locale = num_format::Locale::en;
 #[derive(Debug, Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Int(i64, CompactString);
 
-impl std::fmt::Display for Int {
-	#[inline]
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		write!(f, "{}", &self.1)
-	}
-}
+impl_traits!(Int, i64);
 
 impl Int {
 	#[inline]
@@ -57,7 +50,7 @@ impl Int {
 	#[inline]
 	/// Returns a [`Self`] with the `i64` set to `0`, but the [`String`] set to `???`.
 	pub fn unknown() -> Self {
-		Self(0, CompactString::new("???"))
+		Self(0, CompactString::new(UNKNOWN))
 	}
 
 	#[inline]
@@ -91,30 +84,27 @@ macro_rules! impl_int {
 		impl From<$int> for Int {
 			#[inline]
 			fn from(integer: $int) -> Self {
-				let mut buf = num_format::Buffer::new();
-				buf.write_formatted(&integer, &LOCALE);
-
-				// SAFETY: the buffer _should_ already be valid UTF-8.
-				Self(integer as i64, unsafe { compact_str::CompactString::from_utf8_unchecked(buf.as_bytes()) })
+				let i = integer as i64;
+				Self(i, buf!(i))
 			}
 		}
 	};
 }
+
 impl_int!(u8);
 impl_int!(u16);
 impl_int!(u32);
 impl_int!(i8);
 impl_int!(i16);
 impl_int!(i32);
+
 impl From<i64> for Int {
 	#[inline]
 	fn from(integer: i64) -> Self {
-		let mut buf = num_format::Buffer::new();
-		buf.write_formatted(&integer, &LOCALE);
-		// SAFETY: the buffer _should_ already be valid UTF-8.
-		Self(integer, unsafe { compact_str::CompactString::from_utf8_unchecked(buf.as_bytes()) })
+		Self(integer, buf!(integer))
 	}
 }
+
 impl From<f32> for Int {
 	#[inline]
 	fn from(integer: f32) -> Self {
@@ -130,13 +120,11 @@ impl From<f32> for Int {
 			}
 		}
 
-		let mut buf = num_format::Buffer::new();
-		let integer = integer as i64;
-		buf.write_formatted(&integer, &LOCALE);
-		// SAFETY: the buffer _should_ already be valid UTF-8.
-		Self(integer, unsafe { compact_str::CompactString::from_utf8_unchecked(buf.as_bytes()) })
+		let i = integer as i64;
+		Self(i, buf!(i))
 	}
 }
+
 impl From<f64> for Int {
 	#[inline]
 	fn from(integer: f64) -> Self {
@@ -152,11 +140,8 @@ impl From<f64> for Int {
 			}
 		}
 
-		let mut buf = num_format::Buffer::new();
-		let integer = integer as i64;
-		buf.write_formatted(&integer, &LOCALE);
-		// SAFETY: the buffer _should_ already be valid UTF-8.
-		Self(integer, unsafe { compact_str::CompactString::from_utf8_unchecked(buf.as_bytes()) })
+		let i = integer as i64;
+		Self(i, buf!(i))
 	}
 }
 
@@ -167,75 +152,75 @@ mod tests {
 
 	#[test]
 	fn unsigned() {
-		assert!(Int::from(1_000_i64).as_str() == "1,000");
-		assert!(Int::from(65_535_i64).as_str() == "65,535");
-		assert!(Int::from(65_536_i64).as_str() == "65,536");
-		assert!(Int::from(100_000_i64).as_str() == "100,000");
-		assert!(Int::from(1_000_000_i64).as_str() == "1,000,000");
-		assert!(Int::from(10_000_000_i64).as_str() == "10,000,000");
-		assert!(Int::from(100_000_000_i64).as_str() == "100,000,000");
-		assert!(Int::from(1_000_000_000_i64).as_str() == "1,000,000,000");
-		assert!(Int::from(4_294_967_295_i64).as_str() == "4,294,967,295");
-		assert!(Int::from(4_294_967_296_i64).as_str() == "4,294,967,296");
-		assert!(Int::from(10_000_000_000_i64).as_str() == "10,000,000,000");
-		assert!(Int::from(100_000_000_000_i64).as_str() == "100,000,000,000");
-		assert!(Int::from(1_000_000_000_000_i64).as_str() == "1,000,000,000,000");
-		assert!(Int::from(10_000_000_000_000_i64).as_str() == "10,000,000,000,000");
-		assert!(Int::from(100_000_000_000_000_i64).as_str() == "100,000,000,000,000");
-		assert!(Int::from(1_000_000_000_000_000_i64).as_str() == "1,000,000,000,000,000");
-		assert!(Int::from(10_000_000_000_000_000_i64).as_str() == "10,000,000,000,000,000");
+		assert!(Int::from(1_000_i64) == "1,000");
+		assert!(Int::from(65_535_i64) == "65,535");
+		assert!(Int::from(65_536_i64) == "65,536");
+		assert!(Int::from(100_000_i64) == "100,000");
+		assert!(Int::from(1_000_000_i64) == "1,000,000");
+		assert!(Int::from(10_000_000_i64) == "10,000,000");
+		assert!(Int::from(100_000_000_i64) == "100,000,000");
+		assert!(Int::from(1_000_000_000_i64) == "1,000,000,000");
+		assert!(Int::from(4_294_967_295_i64) == "4,294,967,295");
+		assert!(Int::from(4_294_967_296_i64) == "4,294,967,296");
+		assert!(Int::from(10_000_000_000_i64) == "10,000,000,000");
+		assert!(Int::from(100_000_000_000_i64) == "100,000,000,000");
+		assert!(Int::from(1_000_000_000_000_i64) == "1,000,000,000,000");
+		assert!(Int::from(10_000_000_000_000_i64) == "10,000,000,000,000");
+		assert!(Int::from(100_000_000_000_000_i64) == "100,000,000,000,000");
+		assert!(Int::from(1_000_000_000_000_000_i64) == "1,000,000,000,000,000");
+		assert!(Int::from(10_000_000_000_000_000_i64) == "10,000,000,000,000,000");
 	}
 
 	#[test]
 	fn int() {
-		assert!(Int::from(-1_000_i64).as_str() == "-1,000");
-		assert!(Int::from(-65_535_i64).as_str() == "-65,535");
-		assert!(Int::from(-65_536_i64).as_str() == "-65,536");
-		assert!(Int::from(-100_000_i64).as_str() == "-100,000");
-		assert!(Int::from(-1_000_000_i64).as_str() == "-1,000,000");
-		assert!(Int::from(-10_000_000_i64).as_str() == "-10,000,000");
-		assert!(Int::from(-100_000_000_i64).as_str() == "-100,000,000");
-		assert!(Int::from(-1_000_000_000_i64).as_str() == "-1,000,000,000");
-		assert!(Int::from(-4_294_967_295_i64).as_str() == "-4,294,967,295");
-		assert!(Int::from(-4_294_967_296_i64).as_str() == "-4,294,967,296");
-		assert!(Int::from(-10_000_000_000_i64).as_str() == "-10,000,000,000");
-		assert!(Int::from(-100_000_000_000_i64).as_str() == "-100,000,000,000");
-		assert!(Int::from(-1_000_000_000_000_i64).as_str() == "-1,000,000,000,000");
-		assert!(Int::from(-10_000_000_000_000_i64).as_str() == "-10,000,000,000,000");
-		assert!(Int::from(-100_000_000_000_000_i64).as_str() == "-100,000,000,000,000");
-		assert!(Int::from(-1_000_000_000_000_000_i64).as_str() == "-1,000,000,000,000,000");
-		assert!(Int::from(-10_000_000_000_000_000_i64).as_str() == "-10,000,000,000,000,000");
+		assert!(Int::from(-1_000_i64) == "-1,000");
+		assert!(Int::from(-65_535_i64) == "-65,535");
+		assert!(Int::from(-65_536_i64) == "-65,536");
+		assert!(Int::from(-100_000_i64) == "-100,000");
+		assert!(Int::from(-1_000_000_i64) == "-1,000,000");
+		assert!(Int::from(-10_000_000_i64) == "-10,000,000");
+		assert!(Int::from(-100_000_000_i64) == "-100,000,000");
+		assert!(Int::from(-1_000_000_000_i64) == "-1,000,000,000");
+		assert!(Int::from(-4_294_967_295_i64) == "-4,294,967,295");
+		assert!(Int::from(-4_294_967_296_i64) == "-4,294,967,296");
+		assert!(Int::from(-10_000_000_000_i64) == "-10,000,000,000");
+		assert!(Int::from(-100_000_000_000_i64) == "-100,000,000,000");
+		assert!(Int::from(-1_000_000_000_000_i64) == "-1,000,000,000,000");
+		assert!(Int::from(-10_000_000_000_000_i64) == "-10,000,000,000,000");
+		assert!(Int::from(-100_000_000_000_000_i64) == "-100,000,000,000,000");
+		assert!(Int::from(-1_000_000_000_000_000_i64) == "-1,000,000,000,000,000");
+		assert!(Int::from(-10_000_000_000_000_000_i64) == "-10,000,000,000,000,000");
 
-		assert!(Int::from(i64::MIN).as_str() == "-9,223,372,036,854,775,808");
-		assert!(Int::from(i64::MAX).as_str() == "9,223,372,036,854,775,807");
+		assert!(Int::from(i64::MIN) == "-9,223,372,036,854,775,808");
+		assert!(Int::from(i64::MAX) == "9,223,372,036,854,775,807");
 	}
 
 	#[test]
 	fn float() {
-		assert!(Int::from(-1_000.0).as_str() == "-1,000");
-		assert!(Int::from(-65_535.0).as_str() == "-65,535");
-		assert!(Int::from(-65_536.0).as_str() == "-65,536");
-		assert!(Int::from(-100_000.0).as_str() == "-100,000");
-		assert!(Int::from(-1_000_000.0).as_str() == "-1,000,000");
-		assert!(Int::from(-10_000_000.0).as_str() == "-10,000,000");
-		assert!(Int::from(-100_000_000.0).as_str() == "-100,000,000");
-		assert!(Int::from(-1_000_000_000.0).as_str() == "-1,000,000,000");
-		assert!(Int::from(-4_294_967_295.0).as_str() == "-4,294,967,295");
-		assert!(Int::from(-4_294_967_296.0).as_str() == "-4,294,967,296");
-		assert!(Int::from(-10_000_000_000.0).as_str() == "-10,000,000,000");
-		assert!(Int::from(-100_000_000_000.0).as_str() == "-100,000,000,000");
-		assert!(Int::from(-1_000_000_000_000.0).as_str() == "-1,000,000,000,000");
-		assert!(Int::from(-10_000_000_000_000.0).as_str() == "-10,000,000,000,000");
-		assert!(Int::from(-100_000_000_000_000.0).as_str() == "-100,000,000,000,000");
-		assert!(Int::from(-1_000_000_000_000_000.0).as_str() == "-1,000,000,000,000,000");
-		assert!(Int::from(i64::MIN as f64).as_str() == "-9,223,372,036,854,775,808");
-		assert!(Int::from(i64::MAX as f64).as_str() == "9,223,372,036,854,775,807");
+		assert!(Int::from(-1_000.0) == "-1,000");
+		assert!(Int::from(-65_535.0) == "-65,535");
+		assert!(Int::from(-65_536.0) == "-65,536");
+		assert!(Int::from(-100_000.0) == "-100,000");
+		assert!(Int::from(-1_000_000.0) == "-1,000,000");
+		assert!(Int::from(-10_000_000.0) == "-10,000,000");
+		assert!(Int::from(-100_000_000.0) == "-100,000,000");
+		assert!(Int::from(-1_000_000_000.0) == "-1,000,000,000");
+		assert!(Int::from(-4_294_967_295.0) == "-4,294,967,295");
+		assert!(Int::from(-4_294_967_296.0) == "-4,294,967,296");
+		assert!(Int::from(-10_000_000_000.0) == "-10,000,000,000");
+		assert!(Int::from(-100_000_000_000.0) == "-100,000,000,000");
+		assert!(Int::from(-1_000_000_000_000.0) == "-1,000,000,000,000");
+		assert!(Int::from(-10_000_000_000_000.0) == "-10,000,000,000,000");
+		assert!(Int::from(-100_000_000_000_000.0) == "-100,000,000,000,000");
+		assert!(Int::from(-1_000_000_000_000_000.0) == "-1,000,000,000,000,000");
+		assert!(Int::from(i64::MIN as f64) == "-9,223,372,036,854,775,808");
+		assert!(Int::from(i64::MAX as f64) == "9,223,372,036,854,775,807");
 	}
 
 	#[test]
 	fn special() {
-		assert!(Int::from(f64::NAN).as_str()          == crate::NAN);
-		assert!(Int::from(f64::INFINITY).as_str()     == crate::INFINITY);
-		assert!(Int::from(f64::NEG_INFINITY).as_str() == crate::INFINITY);
+		assert!(Int::from(f64::NAN)          == crate::NAN);
+		assert!(Int::from(f64::INFINITY)     == crate::INFINITY);
+		assert!(Int::from(f64::NEG_INFINITY) == crate::INFINITY);
 	}
 }

@@ -2,16 +2,8 @@
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
 use compact_str::{format_compact,CompactString};
-
-//---------------------------------------------------------------------------------------------------- Constants
-// The locale numbers are formatting in is English, which looks like: [1,000]
-const LOCALE: num_format::Locale = num_format::Locale::en;
-pub const UNKNOWN:      &str = "???";
-/// Returned when encountering a [`f64::NAN`].
-pub const NAN:          &str = "NaN";
-
-/// Returned when encountering a [`f64::INFINITY`] or [`f64::NEG_INFINITY`].
-pub const INFINITY:     &str = "∞";
+use crate::constants::*;
+use crate::macros::*;
 
 //---------------------------------------------------------------------------------------------------- Float
 /// Human readable float.
@@ -54,31 +46,6 @@ pub const INFINITY:     &str = "∞";
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Float(f64, CompactString);
-
-impl std::fmt::Display for Float {
-	#[inline]
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		write!(f, "{}", &self.1)
-	}
-}
-
-// "Handle NaN/Infinite" Macro.
-macro_rules! handle_nan {
-	($float:ident) => {
-		#[cfg(not(feature = "ignore_nan_inf"))]
-		{
-			let fpcat = $float.classify();
-			use std::num::FpCategory;
-			match fpcat {
-				FpCategory::Normal   => (),
-				FpCategory::Nan      => return Self($float, CompactString::new(crate::NAN)),
-				FpCategory::Infinite => return Self($float, CompactString::new(crate::INFINITY)),
-				_ => (),
-			}
-		}
-	}
-}
-pub(crate) use handle_nan;
 
 impl Float {
 	#[inline]
@@ -189,7 +156,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}", buf.as_str().to_string()))
+		Self(f, format_compact!("{}", buf.as_str()))
 	}
 
 	#[inline]
@@ -201,7 +168,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -213,7 +180,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -225,7 +192,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -237,7 +204,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -249,7 +216,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -261,7 +228,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -273,7 +240,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -285,7 +252,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -297,7 +264,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -309,7 +276,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -321,7 +288,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -333,7 +300,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -345,7 +312,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -367,7 +334,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}%", buf.as_str().to_string()))
+		Self(f, format_compact!("{}%", buf.as_str()))
 	}
 
 	#[inline]
@@ -379,7 +346,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}%", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}%", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -391,7 +358,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}%", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}%", buf.as_str(), fract))
 	}
 
 	#[inline]
@@ -403,7 +370,7 @@ impl Float {
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(f as u64), &LOCALE);
 
-		Self(f, format_compact!("{}.{}%", buf.as_str().to_string(), fract))
+		Self(f, format_compact!("{}.{}%", buf.as_str(), fract))
 	}
 }
 
@@ -415,7 +382,7 @@ macro_rules! impl_number {
 			fn from(number: $number) -> Self {
 				let mut buf = num_format::Buffer::new();
 				buf.write_formatted(&(number as u64), &LOCALE);
-				Self(number as f64, format_compact!("{}.000", buf.as_str().to_string()))
+				Self(number as f64, format_compact!("{}.000", buf.as_str()))
 			}
 		}
 	}
@@ -445,7 +412,7 @@ impl From<f32> for Float {
 
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(number as u32), &LOCALE);
-		Self(number as f64, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(number as f64, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 }
 
@@ -468,9 +435,11 @@ impl From<f64> for Float {
 
 		let mut buf = num_format::Buffer::new();
 		buf.write_formatted(&(number as u64), &LOCALE);
-		Self(number, format_compact!("{}.{}", buf.as_str().to_string(), fract))
+		Self(number, format_compact!("{}.{}", buf.as_str(), fract))
 	}
 }
+
+impl_traits!(Float, f64);
 
 //---------------------------------------------------------------------------------------------------- TESTS
 #[cfg(test)]
@@ -479,59 +448,59 @@ mod tests {
 
 	#[test]
 	fn special() {
-		assert!(Float::zero().as_str()    == "0.000");
-		assert!(Float::unknown().as_str() == UNKNOWN);
-		assert!(Float::nan().as_str()     == NAN);
-		assert!(Float::inf().as_str()     == INFINITY);
+		assert!(Float::zero()    == "0.000");
+		assert!(Float::unknown() == UNKNOWN);
+		assert!(Float::nan()     == NAN);
+		assert!(Float::inf()     == INFINITY);
 
-		assert!(Float::from(0.0).as_str() == "0.000");
-		assert!(Float::from(f64::NAN).as_str() == NAN);
-		assert!(Float::from(f64::INFINITY).as_str() == INFINITY);
-		assert!(Float::from(f64::NEG_INFINITY).as_str() == INFINITY);
+		assert!(Float::from(0.0) == "0.000");
+		assert!(Float::from(f64::NAN) == NAN);
+		assert!(Float::from(f64::INFINITY) == INFINITY);
+		assert!(Float::from(f64::NEG_INFINITY) == INFINITY);
 	}
 
 	#[test]
 	fn float() {
-		assert!(Float::new_0_point( 0.1).as_str()              == "0");
-		assert!(Float::new_1_point( 0.1).as_str()              == "0.1");
-		assert!(Float::new_2_point( 0.01).as_str()             == "0.01");
-		assert!(Float::from(        0.001).as_str()            == "0.001");
-		assert!(Float::new_4_point( 0.0001).as_str()           == "0.0001");
-		assert!(Float::new_5_point( 0.00001).as_str()          == "0.00001");
-		assert!(Float::new_6_point( 0.000001).as_str()         == "0.000001");
-		assert!(Float::new_7_point( 0.0000001).as_str()        == "0.0000001");
-		assert!(Float::new_8_point( 0.00000001).as_str()       == "0.00000001");
-		assert!(Float::new_9_point( 0.000000001).as_str()      == "0.000000001");
-		assert!(Float::new_10_point(0.0000000001).as_str()     == "0.0000000001");
-		assert!(Float::new_11_point(0.00000000001).as_str()    == "0.00000000001");
-		assert!(Float::new_12_point(0.000000000001).as_str()   == "0.000000000001");
-		assert!(Float::new_13_point(0.0000000000001).as_str()  == "0.0000000000001");
-		assert!(Float::new_14_point(0.00000000000001).as_str() == "0.00000000000001");
+		assert!(Float::new_0_point( 0.1)              == "0");
+		assert!(Float::new_1_point( 0.1)              == "0.1");
+		assert!(Float::new_2_point( 0.01)             == "0.01");
+		assert!(Float::from(        0.001)            == "0.001");
+		assert!(Float::new_4_point( 0.0001)           == "0.0001");
+		assert!(Float::new_5_point( 0.00001)          == "0.00001");
+		assert!(Float::new_6_point( 0.000001)         == "0.000001");
+		assert!(Float::new_7_point( 0.0000001)        == "0.0000001");
+		assert!(Float::new_8_point( 0.00000001)       == "0.00000001");
+		assert!(Float::new_9_point( 0.000000001)      == "0.000000001");
+		assert!(Float::new_10_point(0.0000000001)     == "0.0000000001");
+		assert!(Float::new_11_point(0.00000000001)    == "0.00000000001");
+		assert!(Float::new_12_point(0.000000000001)   == "0.000000000001");
+		assert!(Float::new_13_point(0.0000000000001)  == "0.0000000000001");
+		assert!(Float::new_14_point(0.00000000000001) == "0.00000000000001");
 	}
 
 	#[test]
 	fn percent() {
-		assert!(Float::percent(0.0).as_str()       == "0.00%");
-		assert!(Float::percent(0.001).as_str()     == "0.00%");
-		assert!(Float::percent(0.1).as_str()       == "0.10%");
-		assert!(Float::percent(1.0).as_str()       == "1.00%");
-		assert!(Float::percent(50.0).as_str()      == "50.00%");
-		assert!(Float::percent(100.0).as_str()     == "100.00%");
-		assert!(Float::percent(150.0).as_str()     == "150.00%");
-		assert!(Float::percent(1_000.0).as_str()   == "1,000.00%");
-		assert!(Float::percent(250_000.0).as_str() == "250,000.00%");
+		assert!(Float::percent(0.0)       == "0.00%");
+		assert!(Float::percent(0.001)     == "0.00%");
+		assert!(Float::percent(0.1)       == "0.10%");
+		assert!(Float::percent(1.0)       == "1.00%");
+		assert!(Float::percent(50.0)      == "50.00%");
+		assert!(Float::percent(100.0)     == "100.00%");
+		assert!(Float::percent(150.0)     == "150.00%");
+		assert!(Float::percent(1_000.0)   == "1,000.00%");
+		assert!(Float::percent(250_000.0) == "250,000.00%");
 	}
 
 	#[test]
 	fn percent_dot() {
-		assert!(Float::percent_1_point(0.0).as_str()        == "0.0%");
-		assert!(Float::percent_1_point(1_000.1234).as_str() == "1,000.1%");
-		assert!(Float::percent_2_point(1_000.1234).as_str() == "1,000.12%");
-		assert!(Float::percent_4_point(1_000.1234).as_str() == "1,000.1234%");
+		assert!(Float::percent_1_point(0.0)        == "0.0%");
+		assert!(Float::percent_1_point(1_000.1234) == "1,000.1%");
+		assert!(Float::percent_2_point(1_000.1234) == "1,000.12%");
+		assert!(Float::percent_4_point(1_000.1234) == "1,000.1234%");
 
-		assert!(Float::percent_1_point(0.1).as_str()            == "0.1%");
-		assert!(Float::percent_1_point(10_000.1234).as_str()    == "10,000.1%");
-		assert!(Float::percent_2_point(100_000.1234).as_str()   == "100,000.12%");
-		assert!(Float::percent_4_point(1_000_000.1234).as_str() == "1,000,000.1234%");
+		assert!(Float::percent_1_point(0.1)            == "0.1%");
+		assert!(Float::percent_1_point(10_000.1234)    == "10,000.1%");
+		assert!(Float::percent_2_point(100_000.1234)   == "100,000.12%");
+		assert!(Float::percent_4_point(1_000_000.1234) == "1,000,000.1234%");
 	}
 }

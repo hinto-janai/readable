@@ -26,7 +26,7 @@ println!("{}", a);
 
 #### Signed Integers
 ```rust
-let a = readable::Int::from(1000);
+let a = readable::Int::from(-1000);
 println!("{}", a);
 
 > -1,000
@@ -54,8 +54,37 @@ println!("{}", a);
 #### Time
 ```rust
 let a = std::time::Duration::from_secs(86399);
-let b = readable::Time::from(time);
+let b = readable::Time::from(a);
 println!("{}", b);
 
 > 23 hours, 59 minutes, 59 seconds
 ```
+
+## Comparison
+All types implement `Display`, `PartialEq`, `PartialEq<&str>` and `PartialEq` for their inner number primitive.
+
+Example 1:
+```rust
+let a = std::time::Duration::from_secs(86399);
+let b = readable::Time::from(a);
+
+assert!(b == "23 hours, 59 minutes, 59 seconds");
+```
+This is comparing `b`'s inner `String`.
+
+Example 2:
+```rust
+let a = readable::Int::from(-1000);
+
+assert!(a == -1000);
+```
+This is comparing `a`'s inner `i64`.
+
+Example 3:
+```rust
+let a = readable::Unsigned::from(1000);
+let b = readable::Unsigned::from(1000);
+
+assert!(a == b);
+```
+This compare both the `u64` AND `String` inside `a` and `b`.
