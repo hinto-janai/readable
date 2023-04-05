@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------------------------------- Use
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
+
 use compact_str::{format_compact,CompactString};
 use crate::constants::*;
 use crate::macros::*;
