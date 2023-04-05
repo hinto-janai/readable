@@ -1,4 +1,4 @@
-//---------------------------------------------------------------------------------------------------- Use
+//---------------------------------------------------------------------------------------------------- num_format::Buffer.
 // Creates a num_format::Buffer, turns it into a compact_str::CompactString, and returns it.
 macro_rules! buf {
 	($number:expr) => {
@@ -11,6 +11,56 @@ macro_rules! buf {
 }
 pub(crate) use buf;
 
+//---------------------------------------------------------------------------------------------------- Internal Buffer.
+// Implement a private module `Buffer` type
+// with a variable amount of array space.
+macro_rules! buffer {
+	($max_length:expr, $unknown_buffer:expr) => {
+		#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+		#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
+		struct Buffer {
+			// Bytes representing a valid UTF-8 string.
+			buf: [u8; $max_length],
+			// How many bytes we're taking up.
+			len: usize,
+		}
+
+		impl Buffer {
+			#[inline(always)]
+			fn unknown() -> Self {
+				Self {
+					buf: $unknown_buffer,
+					len: 10,
+				}
+			}
+
+			#[inline(always)]
+			fn as_bytes(&self) -> &[u8] {
+				&self.buf[..self.len]
+			}
+
+			#[inline(always)]
+			fn as_str(&self) -> &str {
+				// SAFETY:
+				// This is intended to format numbers, which are valid UTF-8.
+				unsafe { ::std::str::from_utf8_unchecked(self.as_bytes()) }
+			}
+
+			#[inline(always)]
+			fn to_string(&self) -> String {
+				self.as_str().to_string()
+			}
+
+		    #[inline(always)]
+		    fn len(&self) -> usize {
+				self.len
+		    }
+		}
+	}
+}
+pub(crate) use buffer;
+
+//---------------------------------------------------------------------------------------------------- NaN.
 // "Handle NaN/Infinite" Macro.
 macro_rules! handle_nan {
 	($float:ident) => {
@@ -43,6 +93,7 @@ macro_rules! handle_nan_string {
 }
 pub(crate) use handle_nan_string;
 
+//---------------------------------------------------------------------------------------------------- Impl.
 // `From`.
 macro_rules! impl_from_single {
 	($from:ident, $to:ident, $s:ident) => {
@@ -220,7 +271,7 @@ pub(crate) use impl_from;
 
 // Implement common functions.
 macro_rules! impl_common {
-	($num:ident) => {
+	($num:ty) => {
 		#[inline]
 		/// Return a borrowed [`str`] without consuming [`Self`].
 		pub fn as_str(&self) -> &str {
@@ -320,10 +371,17 @@ pub(crate) use impl_inner;
 
 // Implement traits.
 macro_rules! impl_traits {
-	($s:ident, $num:ident) => {
+	($s:ty, $num:ty) => {
 		impl std::fmt::Display for $s {
 			fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 				write!(f, "{}", &self.1.as_str())
+			}
+		}
+
+		impl std::default::Default for $s {
+			/// Calls [`Self::zero`]
+			fn default() -> Self {
+				Self::zero()
 			}
 		}
 
