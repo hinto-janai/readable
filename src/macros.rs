@@ -40,6 +40,11 @@ macro_rules! buffer {
 			}
 
 			#[inline(always)]
+			fn is_empty(&self) -> bool {
+				self.len == 0
+			}
+
+			#[inline(always)]
 			fn as_str(&self) -> &str {
 				// SAFETY:
 				// This is intended to format numbers, which are valid UTF-8.
@@ -48,6 +53,11 @@ macro_rules! buffer {
 
 			#[inline(always)]
 			fn to_string(&self) -> String {
+				self.as_str().to_string()
+			}
+
+			#[inline(always)]
+			fn into_string(self) -> String {
 				self.as_str().to_string()
 			}
 
@@ -295,9 +305,33 @@ macro_rules! impl_common {
 		}
 
 		#[inline]
+		/// If the inner [`String`] is empty or not
+		pub fn is_empty(&self) -> bool {
+			self.1.is_empty()
+		}
+
+		#[inline]
 		/// Return a borrowed [`str`] without consuming [`Self`].
 		pub fn as_str(&self) -> &str {
 			self.1.as_str()
+		}
+
+		#[inline]
+		/// Return the bytes of the inner [`String`]
+		pub fn as_bytes(&self) -> &[u8] {
+			self.1.as_bytes()
+		}
+
+		#[inline]
+		/// Return the bytes of the inner [`String`] as a [`Vec`]
+		pub fn to_vec(&self) -> Vec<u8> {
+			Vec::from(self.1.as_bytes())
+		}
+
+		#[inline]
+		/// Return the bytes of the inner [`String`] as a [`Vec`], consuming [`Self`]
+		pub fn into_vec(self) -> Vec<u8> {
+			Vec::from(self.1.as_bytes())
 		}
 
 		#[inline]
@@ -307,15 +341,15 @@ macro_rules! impl_common {
 		}
 
 		#[inline]
-		/// Consumes [`Self]`, returning the inner [`String`].
+		/// Consumes [`Self`], returning the inner [`String`].
 		pub fn into_string(self) -> String {
-			self.1.to_string()
+			self.1.into_string()
 		}
 
 		#[inline]
 		/// Consumes [`Self`], returning the inner parts.
 		pub fn into_raw(self) -> ($num, String) {
-			(self.0, self.1.to_string())
+			(self.0, self.1.into_string())
 		}
 	}
 }
@@ -418,6 +452,30 @@ macro_rules! impl_traits {
 			#[inline(always)]
 			fn borrow(&self) -> &str {
 				self.1.as_str()
+			}
+		}
+
+		impl std::ops::Deref for $s {
+			type Target = str;
+
+			fn deref(&self) -> &Self::Target {
+				&self.1.as_str()
+			}
+		}
+
+		impl std::ops::Index<std::ops::Range<usize>> for $s {
+			type Output = [u8];
+
+			fn index(&self, range: std::ops::Range<usize>) -> &Self::Output {
+				&self.as_bytes()[range]
+			}
+		}
+
+		impl std::ops::Index<usize> for $s {
+			type Output = u8;
+
+			fn index(&self, byte: usize) -> &Self::Output {
+				&self.as_bytes()[byte]
 			}
 		}
 

@@ -87,6 +87,21 @@ impl Inner {
 	}
 
 	#[inline(always)]
+	pub(crate) fn is_empty(&self) -> bool {
+		self.as_str().is_empty()
+	}
+
+	#[inline(always)]
+	pub(crate) fn into_string(&self) -> String {
+		self.as_str().to_string()
+	}
+
+	#[inline(always)]
+	pub(crate) fn as_bytes(&self) -> &[u8] {
+		self.as_str().as_bytes()
+	}
+
+	#[inline(always)]
 	pub(crate) fn len(&self) -> usize {
 		self.as_str().len()
 	}
