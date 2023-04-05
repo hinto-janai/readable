@@ -27,7 +27,7 @@ use crate::macros::*;
 ///```
 ///
 /// ## Performance
-/// [`Clone`] is expensive:
+/// [`Clone`] may be expensive:
 /// ```rust,compile_fail
 /// # use readable::Float;
 /// let a = Float::from(100.0);

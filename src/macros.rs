@@ -15,7 +15,7 @@ pub(crate) use buf;
 // Implement a private module `Buffer` type
 // with a variable amount of array space.
 macro_rules! buffer {
-	($max_length:expr, $unknown_buffer:expr) => {
+	($max_length:expr, $unknown_buffer:expr, $unknown_len:expr) => {
 		#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 		#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 		struct Buffer {
@@ -30,7 +30,7 @@ macro_rules! buffer {
 			fn unknown() -> Self {
 				Self {
 					buf: $unknown_buffer,
-					len: 10,
+					len: $unknown_len,
 				}
 			}
 
@@ -92,6 +92,22 @@ macro_rules! handle_nan_string {
 	}
 }
 pub(crate) use handle_nan_string;
+
+// "Handle NaN/Infinite" Macro for `Runtime`.
+macro_rules! handle_nan_runtime {
+	($float:ident) => {
+//		#[cfg(not(feature = "ignore_nan_inf"))]
+		{
+			match $float.classify() {
+				::std::num::FpCategory::Normal   => (),
+				::std::num::FpCategory::Nan      => return Self::unknown(),
+				::std::num::FpCategory::Infinite => return Self::unknown(),
+				_ => (),
+			}
+		}
+	}
+}
+pub(crate) use handle_nan_runtime;
 
 //---------------------------------------------------------------------------------------------------- Impl.
 // `From`.
@@ -272,6 +288,12 @@ pub(crate) use impl_from;
 // Implement common functions.
 macro_rules! impl_common {
 	($num:ty) => {
+		#[inline]
+		/// The length of the inner [`String`]
+		pub fn len(&self) -> usize {
+			self.1.len()
+		}
+
 		#[inline]
 		/// Return a borrowed [`str`] without consuming [`Self`].
 		pub fn as_str(&self) -> &str {

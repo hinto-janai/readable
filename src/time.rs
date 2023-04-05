@@ -17,7 +17,7 @@ use crate::macros::*;
 /// The lowest unit is `second`, the highest is `year`, and `week` is skipped in favor of `7 days`.
 ///
 /// ## Performance
-/// [`Clone`] is expensive.
+/// [`Clone`] may be expensive.
 /// ```rust,compile_fail
 /// # use readable::Time;
 /// let a = Time::from(100.0);

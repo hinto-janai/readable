@@ -196,14 +196,14 @@ fn day_ok(d: u8) -> bool {
 ///
 /// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
 /// ```rust
-/// # use readable::Unsigned;
-/// let a = Unsigned::from(100_000_u64);
+/// # use readable::Date;
+/// let a = Date::from_str("2014-04-22", '.').unwrap();
 ///
 /// // Copy 'a'
 /// let b = a;
 ///
 /// // We can still use 'a'
-/// assert!(a == 100_000_u64);
+/// assert!(a == "2014.04.22");
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
@@ -709,9 +709,9 @@ impl_traits!(Date, (u16, u8, u8));
 
 //---------------------------------------------------------------------------------------------------- Date Buffer.
 // "9999-12-31".len() == 10
-const MAX_DATE_LEN: usize = 10;
+const MAX_BUF_LEN: usize = 10;
 
-buffer!(MAX_DATE_LEN, UNKNOWN_DATE_BUFFER);
+buffer!(MAX_BUF_LEN, UNKNOWN_DATE_BUFFER, UNKNOWN_DATE.len());
 
 impl Buffer {
 	#[inline]

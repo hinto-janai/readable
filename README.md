@@ -5,6 +5,8 @@ Human **readable** data formatting.
 
 This crate turns various data into human-readable strings.
 
+Most of the internal strings are implemented as fixed length, stack allocated arrays that are [`Copy`](https://doc.rust-lang.org/stable/std/marker/trait.Copy.html)-able.
+
 ## Feature flags
 | Flag             | Purpose |
 |------------------|---------|
@@ -57,6 +59,14 @@ let a = readable::Time::from(86399_u64);
 
 assert!(a == 86399_u64);
 assert!(a == "23 hours, 59 minutes, 59 seconds");
+```
+
+## Date:
+```rust
+let a = readable::Date::from_str("2014-12-31", '.').unwrap();
+
+assert!(a == (2014, 12, 31));
+assert!(a == "2014.12.31");
 ```
 
 ## Comparison

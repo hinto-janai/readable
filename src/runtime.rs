@@ -8,8 +8,22 @@ use crate::constants::*;
 //---------------------------------------------------------------------------------------------------- Runtime
 /// Human readable "audio/video runtime" in `H:M:S` format.
 ///
-/// [`From`] input can either be [`f32`], [`f64`], or [`std::time::Duration`].
-/// [`f32`] and [`f64`] input are presumed to be in _seconds._
+/// [`From`] input can be:
+/// - [`u8`]
+/// - [`u16`]
+/// - [`u32`]
+/// - [`u64`]
+/// - [`usize`]
+/// - [`f32`]
+/// - [`f64`]
+/// - [`std::time::Duration`].
+///
+/// Integer inputs are presumed to be in _seconds._
+///
+/// ## Errors:
+/// The max input is `359999.0` seconds, or: `99:59:59`.
+///
+/// If the input is larger than [`MAX_RUNTIME_FLOAT`], [`UNKNOWN_RUNTIME`] is returned.
 ///
 /// ## Formatting rules:
 /// 1. `seconds` always has leading `0`.
@@ -17,27 +31,29 @@ use crate::constants::*;
 /// 3. `hours` never has a leading `0`.
 ///
 /// ## Performance
-/// [`Clone`] is expensive.
-/// ```rust,compile_fail
-/// # use readable::Runtime;
-/// let a = Runtime::from(100.0);
-///
-/// // Move 'a'
-/// let b = a;
-///
-/// // We can't use 'a', it moved into 'b'.
-/// // We must `.clone()`.
-/// assert!(a == 100.0);
-/// ```
+/// [`Copy`] available, [`Clone`] is cheap.
 ///
 /// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
-/// but a [`CompactString`](https://docs.rs/compact_str) so that any string 24 bytes (12 bytes on 32-bit) or less are _stack_ allocated instead of _heap_ allocated.
+/// but a 8 byte array buffer, literally: `[u8; 8]`.
 ///
-/// The documentation will still refer to the inner string as a `String`. Anything returned will also be a `String`.
+/// Since the max valid runtime is: `99:59:59` (8 characters, `35996400` seconds), a 8 byte
+/// buffer is used and enables this type to have [`Copy`].
+///
+/// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
+/// ```rust
+/// # use readable::Runtime;
+/// let a = Runtime::from(100_000_u64);
+///
+/// // Copy 'a', use 'b'.
+/// let b = a;
+///
+/// // We can still use 'a'
+/// assert!(a == 100_000.0);
+/// ```
 ///
 /// ## Exceptions
-/// - [`f64::NAN`] outputs [`NAN`]
-/// - [`f64::INFINITY`] outputs [`INFINITY`]
+/// - [`f64::NAN`] outputs [`UNKNOWN_RUNTIME`]
+/// - [`f64::INFINITY`] outputs [`UNKNOWN_RUNTIME`]
 ///
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///
@@ -59,30 +75,18 @@ use crate::constants::*;
 /// assert!(Runtime::from(1.9) == "0:01");
 /// assert!(Runtime::from(2.0) == "0:02");
 ///
-/// assert!(Runtime::from(f32::MIN) == "0:00");
-/// assert!(Runtime::from(f64::MIN) == "0:00");
-/// assert!(Runtime::from(f32::MAX) == "18446744073709551615:24:00");
-/// assert!(Runtime::from(f64::MAX) == "18446744073709551615:56:08");
+/// assert!(Runtime::from(f32::NAN) == "?:??");
+/// assert!(Runtime::from(f64::INFINITY) == "?:??");
 /// ```
-
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct Runtime(f64, CompactString);
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
+pub struct Runtime(f64, Buffer);
 
 impl_traits!(Runtime, f64);
 
 impl Runtime {
 	impl_common!(f64);
-
-	#[inline]
-	/// ```rust
-	/// # use readable::Runtime;
-	/// assert!(Runtime::zero() == 0.0);
-	/// assert!(Runtime::zero() == "0:00");
-	/// ```
-	pub fn zero() -> Self {
-		Self(0.0, CompactString::new(ZERO_RUNTIME))
-	}
+	impl_usize!();
 
 	#[inline]
 	/// ```rust
@@ -91,7 +95,17 @@ impl Runtime {
 	/// assert!(Runtime::unknown() == "?:??");
 	/// ```
 	pub fn unknown() -> Self {
-		Self(0.0, CompactString::new(UNKNOWN_RUNTIME))
+		Self(ZERO_RUNTIME_FLOAT, Buffer::unknown())
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::Runtime;
+	/// assert!(Runtime::zero() == 0.0);
+	/// assert!(Runtime::zero() == "0:00");
+	/// ```
+	pub fn zero() -> Self {
+		Self(ZERO_RUNTIME_FLOAT, Buffer::zero())
 	}
 
 	#[inline]
@@ -102,7 +116,7 @@ impl Runtime {
 	/// assert!(Runtime::second() == Runtime::from(1.0));
 	/// ```
 	pub fn second() -> Self {
-		Self(1.0, CompactString::new("0:01"))
+		Self(SECOND_RUNTIME_FLOAT, Buffer::second())
 	}
 
 	#[inline]
@@ -113,7 +127,7 @@ impl Runtime {
 	/// assert!(Runtime::minute() == Runtime::from(60.0));
 	/// ```
 	pub fn minute() -> Self {
-		Self(60.0, CompactString::new("1:00"))
+		Self(MINUTE_RUNTIME_FLOAT, Buffer::minute())
 	}
 
 	#[inline]
@@ -124,29 +138,27 @@ impl Runtime {
 	/// assert!(Runtime::hour() == Runtime::from(3600.0));
 	/// ```
 	pub fn hour() -> Self {
-		Self(3600.0, CompactString::new("1:00:00"))
+		Self(HOUR_RUNTIME_FLOAT, Buffer::hour())
 	}
-}
 
-impl From<std::time::Duration> for Runtime {
 	#[inline]
-	fn from(duration: std::time::Duration) -> Self {
-		Self::from(duration.as_secs_f64())
+	/// ```rust
+	/// # use readable::Runtime;
+	/// dbg!("{}", Runtime::from(359999.0));
+	/// assert!(Runtime::max() == 359999.0);
+	/// assert!(Runtime::max() == "99:59:59");
+	/// assert!(Runtime::max() == Runtime::from(359999.0));
+	/// ```
+	pub fn max() -> Self {
+		Self(MAX_RUNTIME_FLOAT, Buffer::max())
 	}
-}
 
-impl From<&std::time::Duration> for Runtime {
-	#[inline]
-	fn from(duration: &std::time::Duration) -> Self {
-		Self::from(duration.as_secs_f64())
-	}
-}
-
-impl From<f64> for Runtime {
-	fn from(runtime: f64) -> Self {
-		// Handle NaN/Inf.
-		handle_nan_string!(runtime);
-
+	// Private function used in float `From`.
+	//
+	// INVARIANT:
+	// `handle_nan_runtime!()` should be
+	// called before this function.
+	fn priv_from(runtime: f64) -> Self {
 		// Zero length.
 		if runtime == 0.0 || runtime == f64::MIN {
 			return Self::zero()
@@ -157,6 +169,11 @@ impl From<f64> for Runtime {
 			return Self::second()
 		}
 
+		// Return unknown if over max.
+		if runtime > MAX_RUNTIME_FLOAT {
+			return Self::unknown()
+		}
+
 		// Cast to `u64` (implicitly rounds down).
 	    let seconds = (runtime % 60.0) as u64;
 	    let minutes = ((runtime / 60.0) % 60.0) as u64;
@@ -169,41 +186,119 @@ impl From<f64> for Runtime {
 			format_compact!("{}:{:0>2}", minutes, seconds)
 		};
 
-		Self(runtime, string)
+		Self(runtime, Buffer::from_unchecked(string.as_bytes()))
+	}
+}
+
+impl From<std::time::Duration> for Runtime {
+	#[inline]
+	fn from(runtime: std::time::Duration) -> Self {
+		let f = runtime.as_secs_f64();
+		handle_nan_runtime!(f);
+		Self::priv_from(f)
+	}
+}
+
+impl From<&std::time::Duration> for Runtime {
+	#[inline]
+	fn from(runtime: &std::time::Duration) -> Self {
+		let f = runtime.as_secs_f64();
+		handle_nan_runtime!(f);
+		Self::priv_from(f)
+	}
+}
+
+impl From<f64> for Runtime {
+	fn from(runtime: f64) -> Self {
+		// Handle NaN/Inf.
+		handle_nan_runtime!(runtime);
+		Self::priv_from(runtime)
 	}
 }
 
 impl From<f32> for Runtime {
 	fn from(runtime: f32) -> Self {
 		// Handle NaN/Inf.
-		handle_nan_string!(runtime);
+		handle_nan_runtime!(runtime);
+		Self::priv_from(runtime as f64)
+	}
+}
 
-		// Zero length.
-		if runtime == 0.0 || runtime == f32::MIN {
-			return Self::zero()
+macro_rules! impl_int {
+	($from:ty) => {
+		impl From<$from> for Runtime {
+			fn from(runtime: $from) -> Self {
+				Self::priv_from(runtime as f64)
+			}
 		}
+	}
+}
+impl_int!(u8);
+impl_int!(u16);
+impl_int!(u32);
+impl_int!(u64);
+impl_int!(usize);
 
-		// Round up to one second length.
-		if runtime < 1.0 {
-			return Self::second()
+//---------------------------------------------------------------------------------------------------- Buffer
+// "99:59:59".len() == 8
+const MAX_BUF_LEN: usize = 8;
+
+buffer!(MAX_BUF_LEN, UNKNOWN_RUNTIME_BUFFER, UNKNOWN_RUNTIME.len());
+
+impl Buffer {
+	#[inline(always)]
+	fn zero() -> Self {
+		Self {
+			buf: ZERO_RUNTIME_BUFFER,
+			len: 4,
 		}
+	}
 
-		// `f32` -> `f64`.
-		let runtime = runtime as f64;
+	#[inline(always)]
+	fn second() -> Self {
+		Self {
+			buf: SECOND_RUNTIME_BUFFER,
+			len: 4,
+		}
+	}
 
-		// Cast to `u64` (implicitly rounds down).
-	    let seconds = (runtime % 60.0) as u64;
-	    let minutes = ((runtime / 60.0) % 60.0) as u64;
-	    let hours   = ((runtime / 60.0) / 60.0) as u64;
+	#[inline(always)]
+	fn minute() -> Self {
+		Self {
+			buf: MINUTE_RUNTIME_BUFFER,
+			len: 4,
+		}
+	}
 
-		// Format.
-		let string = if hours > 0 {
-			format_compact!("{}:{:0>2}:{:0>2}", hours, minutes, seconds)
-		} else {
-			format_compact!("{}:{:0>2}", minutes, seconds)
-		};
+	#[inline(always)]
+	fn hour() -> Self {
+		Self {
+			buf: HOUR_RUNTIME_BUFFER,
+			len: 7,
+		}
+	}
 
-		Self(runtime, string)
+	#[inline(always)]
+	fn max() -> Self {
+		Self {
+			buf: MAX_RUNTIME_BUFFER,
+			len: MAX_BUF_LEN,
+		}
+	}
+
+	#[inline]
+	// INVARIANT:
+	// Assumes input is `1-8` bytes.
+	fn from_unchecked(byte: &[u8]) -> Self {
+		let len = byte.len();
+
+		let mut buf = [0_u8; 8];
+		buf[..len].copy_from_slice(&byte[..len]);
+
+		Self {
+			buf,
+			len,
+		}
 	}
 }
 
@@ -214,13 +309,47 @@ mod tests {
 	use crate::constants::*;
 
 	#[test]
-	fn special() {
-		assert!(Runtime::from(f32::NAN)          == NAN);
-		assert!(Runtime::from(f32::INFINITY)     == INFINITY);
-		assert!(Runtime::from(f32::NEG_INFINITY) == INFINITY);
+	fn all_uint() {
+		for i in 0..MAX_RUNTIME_UINT {
+			let rt = Runtime::from(i);
+			println!("rt:{} - i: {}", rt, i);
+			assert!(rt == i as f64);
+			assert!(rt == i as f64);
+			println!("{}", rt);
+		}
+	}
 
-		assert!(Runtime::from(f64::NAN)          == NAN);
-		assert!(Runtime::from(f64::INFINITY)     == INFINITY);
-		assert!(Runtime::from(f64::NEG_INFINITY) == INFINITY);
+	#[test]
+	fn all_floats() {
+		let mut f = 1.0;
+		while f <= MAX_RUNTIME_FLOAT {
+			let rt = Runtime::from(f);
+			println!("rt:{} - f: {}", rt, f);
+			assert!(rt == f);
+			f += 0.1;
+		}
+	}
+
+	#[test]
+	fn overflow_float() {
+		assert!(Runtime::from(MAX_RUNTIME_FLOAT + 1.0) == 0.0);
+		assert!(Runtime::from(MAX_RUNTIME_FLOAT + 1.0) == "?:??");
+	}
+
+	#[test]
+	fn overflow_uint() {
+		assert!(Runtime::from(MAX_RUNTIME_UINT + 1) == 0.0);
+		assert!(Runtime::from(MAX_RUNTIME_UINT + 1) == "?:??");
+	}
+
+	#[test]
+	fn special() {
+		assert!(Runtime::from(f32::NAN)          == UNKNOWN_RUNTIME);
+		assert!(Runtime::from(f32::INFINITY)     == UNKNOWN_RUNTIME);
+		assert!(Runtime::from(f32::NEG_INFINITY) == UNKNOWN_RUNTIME);
+
+		assert!(Runtime::from(f64::NAN)          == UNKNOWN_RUNTIME);
+		assert!(Runtime::from(f64::INFINITY)     == UNKNOWN_RUNTIME);
+		assert!(Runtime::from(f64::NEG_INFINITY) == UNKNOWN_RUNTIME);
 	}
 }

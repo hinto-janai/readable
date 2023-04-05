@@ -59,6 +59,15 @@
 //! assert!(a == 86399_u64);
 //! assert!(a == "23 hours, 59 minutes, 59 seconds");
 //! ```
+//!
+//! ## Date:
+//! ```rust
+//! let a = readable::Date::from_str("2014-12-31", '.').unwrap();
+//!
+//! assert!(a == (2014, 12, 31));
+//! assert!(a == "2014.12.31");
+//! ```
+//!
 //! ## Comparison
 //! All types implement `Display`, `PartialEq`, `PartialEq<&str>` and `PartialEq` for their inner number primitive.
 //!

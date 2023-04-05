@@ -87,6 +87,11 @@ impl Inner {
 	}
 
 	#[inline(always)]
+	pub(crate) fn len(&self) -> usize {
+		self.as_str().len()
+	}
+
+	#[inline(always)]
 	pub(crate) fn is_zero(&self) -> bool {
 		self == &Self::Zero
 	}
