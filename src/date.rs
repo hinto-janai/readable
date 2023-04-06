@@ -295,6 +295,24 @@ impl Date {
 	}
 
 	#[inline]
+	/// Return the inner year (1000-9999)
+	pub fn year(&self) -> u16 {
+		self.0.0
+	}
+
+	#[inline]
+	/// Return the inner month (1-12)
+	pub fn month(&self) -> u8 {
+		self.0.1
+	}
+
+	#[inline]
+	/// Return the inner day (1-31)
+	pub fn day(&self) -> u8 {
+		self.0.2
+	}
+
+	#[inline]
 	/// Returns `true` if the inner year is valid.
 	/// ```rust
 	/// # use readable::Date;
