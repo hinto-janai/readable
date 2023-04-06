@@ -36,7 +36,7 @@ pub const UNKNOWN_RUNTIME: &str = "?:??";
 /// UTF-8 byte encoding of [`UNKNOWN_DATE`], aka: `?:??`
 ///
 /// ```rust
-///	# use readable::*;
+/// # use readable::*;
 /// assert!(UNKNOWN_RUNTIME.as_bytes()[..4] == UNKNOWN_RUNTIME_BUFFER[..4]);
 /// ```
 pub const UNKNOWN_RUNTIME_BUFFER: [u8; 8] = [63, 58, 63, 63, 0, 0, 0, 0];
@@ -47,7 +47,7 @@ pub const UNKNOWN_DATE: &str = "????-??-??";
 /// UTF-8 byte encoding of [`UNKNOWN_DATE`], aka: `????-??-??`
 ///
 /// ```rust
-///	# use readable::*;
+/// # use readable::*;
 /// assert!(UNKNOWN_DATE.as_bytes() == UNKNOWN_DATE_BUFFER);
 /// ```
 pub const UNKNOWN_DATE_BUFFER: [u8; 10] = [63, 63, 63, 63, 45, 63, 63, 45, 63, 63];
@@ -63,7 +63,7 @@ pub const ZERO_RUNTIME: &str = "0:00";
 /// UTF-8 byte encoding of [`ZERO_RUNTIME`]
 ///
 /// ```rust
-///	# use readable::*;
+/// # use readable::*;
 /// assert!(ZERO_RUNTIME.as_bytes()[..3] == ZERO_RUNTIME_BUFFER[..3]);
 /// ```
 pub const ZERO_RUNTIME_BUFFER: [u8; 8] = [48, 58, 48, 48, 0, 0, 0, 0];
@@ -73,7 +73,7 @@ pub const SECOND_RUNTIME: &str = "0:01";
 /// UTF-8 byte encoding of [`SECOND_RUNTIME`]
 ///
 /// ```rust
-///	# use readable::*;
+/// # use readable::*;
 /// assert!(SECOND_RUNTIME.as_bytes()[..4] == SECOND_RUNTIME_BUFFER[..4]);
 /// ```
 pub const SECOND_RUNTIME_BUFFER: [u8; 8] = [48, 58, 48, 49, 0, 0, 0, 0];
@@ -83,7 +83,7 @@ pub const MINUTE_RUNTIME: &str = "1:00";
 /// UTF-8 byte encoding of [`MINUTE_RUNTIME`]
 ///
 /// ```rust
-///	# use readable::*;
+/// # use readable::*;
 /// assert!(MINUTE_RUNTIME.as_bytes()[..4] == MINUTE_RUNTIME_BUFFER[..4]);
 /// ```
 pub const MINUTE_RUNTIME_BUFFER: [u8; 8] = [49, 58, 48, 48, 0, 0, 0, 0];
@@ -93,7 +93,7 @@ pub const HOUR_RUNTIME: &str = "1:00:00";
 /// UTF-8 byte encoding of [`HOUR_RUNTIME`]
 ///
 /// ```rust
-///	# use readable::*;
+/// # use readable::*;
 /// assert!(HOUR_RUNTIME.as_bytes()[..7] == HOUR_RUNTIME_BUFFER[..7]);
 /// ```
 pub const HOUR_RUNTIME_BUFFER: [u8; 8] = [49, 58, 48, 48, 58, 48, 48, 0];
@@ -118,7 +118,7 @@ pub const MAX_RUNTIME: &str = "99:59:59";
 /// UTF-8 byte encoding of [`MAX_RUNTIME`]
 ///
 /// ```rust
-///	# use readable::*;
+/// # use readable::*;
 /// assert!(MAX_RUNTIME.as_bytes() == MAX_RUNTIME_BUFFER);
 /// ```
 pub const MAX_RUNTIME_BUFFER: [u8; 8] = [57, 57, 58, 53, 57, 58, 53, 57];

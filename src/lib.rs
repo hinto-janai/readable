@@ -97,7 +97,7 @@
 
 pub(crate) mod inner;
 pub(crate) mod macros;
-pub(crate) mod utf8;
+//pub(crate) mod utf8;
 
 mod constants;
 pub use constants::*;
