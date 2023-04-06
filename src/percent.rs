@@ -113,7 +113,7 @@ impl Percent {
 	/// | 100.1  | `100%`
 	pub fn new_0_point(f: f64) -> Self {
 		handle_nan_string!(f);
-		Self(f, format_compact!("{}%", buf!(f as u64)))
+		Self(f, format_compact!("{}%", num!(f as u64)))
 	}
 
 	#[inline]
@@ -122,7 +122,7 @@ impl Percent {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.1}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}%", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}%", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -131,7 +131,7 @@ impl Percent {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.3}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}%", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}%", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -140,7 +140,7 @@ impl Percent {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.4}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}%", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}%", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -149,7 +149,7 @@ impl Percent {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.5}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}%", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}%", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -158,7 +158,7 @@ impl Percent {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.6}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}%", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}%", num!(f as u64), fract))
 	}
 }
 
@@ -168,7 +168,7 @@ macro_rules! impl_number {
 		impl From<$number> for Percent {
 			#[inline]
 			fn from(number: $number) -> Self {
-				Self(number as f64, format_compact!("{}.00%", buf!(number)))
+				Self(number as f64, format_compact!("{}.00%", num!(number)))
 			}
 		}
 	}
@@ -201,7 +201,7 @@ impl From<f32> for Percent {
 		}
 
 		let fract = &format_compact!("{:.2}", number.fract())[2..];
-		Self(number as f64, format_compact!("{}.{}%", buf!(number as u64), fract))
+		Self(number as f64, format_compact!("{}.{}%", num!(number as u64), fract))
 	}
 }
 
@@ -222,7 +222,7 @@ impl From<f64> for Percent {
 
 		let fract = &format_compact!("{:.2}", number.fract())[2..];
 
-		Self(number, format_compact!("{}.{}%", buf!(number as u64), fract))
+		Self(number, format_compact!("{}.{}%", num!(number as u64), fract))
 	}
 }
 

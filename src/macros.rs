@@ -1,15 +1,15 @@
 //---------------------------------------------------------------------------------------------------- num_format::Buffer.
 // Creates a num_format::Buffer, turns it into a compact_str::CompactString, and returns it.
-macro_rules! buf {
+macro_rules! num {
 	($number:expr) => {
 		{
-			let mut buf = ::num_format::Buffer::new();
-			buf.write_formatted(&$number, &num_format::Locale::en);
-			buf
+			let mut num = ::num_format::Buffer::new();
+			num.write_formatted(&$number, &::num_format::Locale::en);
+			num
 		}
 	}
 }
-pub(crate) use buf;
+pub(crate) use num;
 
 //---------------------------------------------------------------------------------------------------- Internal Buffer.
 // Implement a private module `Buffer` type
@@ -127,7 +127,7 @@ macro_rules! impl_from_single {
 			#[inline]
 			fn from(number: $from) -> Self {
 				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 
@@ -135,7 +135,7 @@ macro_rules! impl_from_single {
 			#[inline]
 			fn from(number: &$from) -> Self {
 				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 	}
@@ -149,13 +149,13 @@ macro_rules! impl_from {
 		impl From<$to> for $s {
 			#[inline]
 			fn from(number: $to) -> Self {
-				Self(number, crate::inner::Inner::Buf(buf!(number)))
+				Self(number, crate::inner::Inner::Buf(crate::macros::num!(number)))
 			}
 		}
 		impl From<&$to> for $s {
 			#[inline]
 			fn from(number: &$to) -> Self {
-				Self(*number, crate::inner::Inner::Buf(buf!(*number)))
+				Self(*number, crate::inner::Inner::Buf(crate::macros::num!(*number)))
 			}
 		}
 
@@ -164,28 +164,28 @@ macro_rules! impl_from {
 			#[inline]
 			fn from(number: $from_8) -> Self {
 				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 		impl From<$from_16> for $s {
 			#[inline]
 			fn from(number: $from_16) -> Self {
 				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 		impl From<$from_32> for $s {
 			#[inline]
 			fn from(number: $from_32) -> Self {
 				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 		impl From<$from_size> for $s {
 			#[inline]
 			fn from(number: $from_size) -> Self {
 				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 		// Borrowed
@@ -193,28 +193,28 @@ macro_rules! impl_from {
 			#[inline]
 			fn from(number: &$from_8) -> Self {
 				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 		impl From<&$from_16> for $s {
 			#[inline]
 			fn from(number: &$from_16) -> Self {
 				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 		impl From<&$from_32> for $s {
 			#[inline]
 			fn from(number: &$from_32) -> Self {
 				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 		impl From<&$from_size> for $s {
 			#[inline]
 			fn from(number: &$from_size) -> Self {
 				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 
@@ -233,7 +233,7 @@ macro_rules! impl_from {
 				}
 
 				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 
@@ -251,7 +251,7 @@ macro_rules! impl_from {
 				}
 
 				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 
@@ -270,7 +270,7 @@ macro_rules! impl_from {
 				}
 
 				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 
@@ -288,7 +288,7 @@ macro_rules! impl_from {
 				}
 
 				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(buf!(n)))
+				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
 			}
 		}
 	}

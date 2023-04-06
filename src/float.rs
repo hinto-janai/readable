@@ -114,7 +114,7 @@ impl Float {
 	/// | 100.1  | `100`
 	pub fn new_0_point(f: f64) -> Self {
 		handle_nan_string!(f);
-		Self(f, format_compact!("{}", buf!(f as u64)))
+		Self(f, format_compact!("{}", num!(f as u64)))
 	}
 
 	#[inline]
@@ -123,7 +123,7 @@ impl Float {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.1}", f)[2..];
-		Self(f, format_compact!("{}.{}", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -132,7 +132,7 @@ impl Float {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.2}", f)[2..];
-		Self(f, format_compact!("{}.{}", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -141,7 +141,7 @@ impl Float {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.4}", f)[2..];
-		Self(f, format_compact!("{}.{}", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -150,7 +150,7 @@ impl Float {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.5}", f)[2..];
-		Self(f, format_compact!("{}.{}", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -159,7 +159,7 @@ impl Float {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.6}", f)[2..];
-		Self(f, format_compact!("{}.{}", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -168,7 +168,7 @@ impl Float {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.7}", f)[2..];
-		Self(f, format_compact!("{}.{}", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -177,7 +177,7 @@ impl Float {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.8}", f)[2..];
-		Self(f, format_compact!("{}.{}", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -186,7 +186,7 @@ impl Float {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.9}", f)[2..];
-		Self(f, format_compact!("{}.{}", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -195,7 +195,7 @@ impl Float {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.10}", f)[2..];
-		Self(f, format_compact!("{}.{}", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -204,7 +204,7 @@ impl Float {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.11}", f)[2..];
-		Self(f, format_compact!("{}.{}", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -213,7 +213,7 @@ impl Float {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.12}", f)[2..];
-		Self(f, format_compact!("{}.{}", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -222,7 +222,7 @@ impl Float {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.13}", f)[2..];
-		Self(f, format_compact!("{}.{}", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
 	#[inline]
@@ -231,7 +231,7 @@ impl Float {
 		handle_nan_string!(f);
 
 		let fract = &format_compact!("{:.14}", f)[2..];
-		Self(f, format_compact!("{}.{}", buf!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 }
 
@@ -241,7 +241,7 @@ macro_rules! impl_number {
 		impl From<$number> for Float {
 			#[inline]
 			fn from(number: $number) -> Self {
-				Self(number as f64, format_compact!("{}.000", buf!(number)))
+				Self(number as f64, format_compact!("{}.000", num!(number)))
 			}
 		}
 	}
@@ -275,7 +275,7 @@ impl From<f32> for Float {
 
 		let fract = &format_compact!("{:.3}", number.fract())[2..];
 
-		Self(number as f64, format_compact!("{}.{}", buf!(number as u64).as_str(), fract))
+		Self(number as f64, format_compact!("{}.{}", num!(number as u64).as_str(), fract))
 	}
 }
 
@@ -296,7 +296,7 @@ impl From<f64> for Float {
 
 		let fract = &format_compact!("{:.3}", number.fract())[2..];
 
-		Self(number, format_compact!("{}.{}", buf!(number as u64).as_str(), fract))
+		Self(number, format_compact!("{}.{}", num!(number as u64).as_str(), fract))
 	}
 }
 
