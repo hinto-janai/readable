@@ -15,7 +15,7 @@ use crate::constants::*;
 /// - Signed floats will turn into `0`
 /// - Fractional parts will be ignored
 ///
-/// ## Performance
+/// ## Cloning
 /// [`Copy`] available, [`Clone`] is cheap.
 ///
 /// The inner type is either a `&'static str` or a buffer

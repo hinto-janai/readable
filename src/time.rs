@@ -16,18 +16,19 @@ use crate::macros::*;
 ///
 /// The lowest unit is `second`, the highest is `year`, and `week` is skipped in favor of `7 days`.
 ///
-/// ## Performance
-/// [`Clone`] may be expensive.
-/// ```rust,compile_fail
+/// ## Cloning
+/// [`Clone`] may be expensive:
+/// ```rust
 /// # use readable::Time;
-/// let a = Time::from(100.0);
+/// // Cheap (stack allocated string).
+/// let a = Time::from(60_u8);
+/// assert!(a == "1 minute");
+/// let b = a.clone();
 ///
-/// // Move 'a'
-/// let b = a;
-///
-/// // We can't use 'a', it moved into 'b'.
-/// // We must `.clone()`.
-/// assert!(a == 100.0);
+/// // Expensive (heap allocated string).
+/// let a = Time::from(3234815_u64);
+/// assert!(a == "1 month, 6 days, 23 hours, 59 minutes, 59 seconds");
+/// let b = a.clone();
 /// ```
 ///
 /// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
@@ -208,7 +209,7 @@ impl From<std::time::Instant> for Time {
 }
 
 impl From<&std::time::Instant> for Time {
-	fn from(duration: &std::time::Instant) -> Self {
+	fn from(instant: &std::time::Instant) -> Self {
 		Self::from(instant.elapsed().as_secs())
 	}
 }

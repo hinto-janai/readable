@@ -14,7 +14,7 @@ use crate::constants::*;
 /// [`f32`] or [`f64`] inputs will work, but:
 /// - Fractional parts will be ignored
 ///
-/// ## Performance
+/// ## Cloning
 /// [`Copy`] available, [`Clone`] is cheap.
 ///
 /// The inner type is either a `&'static str` or a buffer

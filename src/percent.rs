@@ -28,7 +28,19 @@ use crate::macros::*;
 /// assert!(f3 == "3.000%");
 /// assert!(f4 == "3.0000%");
 ///```
-/// ## Performance
+/// ## Cloning
+/// [`Clone`] may be expensive:
+/// ```rust
+/// # use readable::Percent;
+/// // Probably cheap (stack allocated string).
+/// let a = Percent::from(100.0);
+/// let b = a.clone();
+///
+/// // Probably expensive (heap allocated string).
+/// let a = Percent::from(f64::MAX);
+/// let b = a.clone();
+/// ```
+///
 /// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
 /// but a [`CompactString`](https://docs.rs/compact_str) so that any string 24 bytes (12 bytes on 32-bit) or less are _stack_ allocated instead of _heap_ allocated.
 ///

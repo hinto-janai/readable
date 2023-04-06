@@ -88,24 +88,30 @@ lazy_static::lazy_static! {
 
 //---------------------------------------------------------------------------------------------------- Functions.
 #[inline(always)]
-fn year_ok(y: u16) -> bool {
+fn ok_year(y: u16) -> bool {
 	y >= 1000 && y <= 9999
 }
 
 #[inline(always)]
-fn month_ok(m: u8) -> bool {
+fn ok_month(m: u8) -> bool {
 	m >= 1 && m <= 12
 }
 
 #[inline(always)]
-fn day_ok(d: u8) -> bool {
+fn ok_day(d: u8) -> bool {
 	d >= 1 && d <= 31
 }
 
+#[inline(always)]
+fn ok(y:u16, m: u8, d: u8) -> bool {
+	ok_year(y) && ok_month(m) && ok_day(d)
+}
+
 //---------------------------------------------------------------------------------------------------- `Date`
-/// A _real, recent_ date that is human readable date in `YEAR-MONTH-DAY` format
+/// A _recent_ date that is human readable date in `YEAR-MONTH-DAY` format
 ///
 /// The inner "integer" type is a tuple of:
+///
 /// `u16` - Year between `1000-9999`
 /// `u8` - Month between `1-12`
 /// `u8` - Day between `1-31`
@@ -121,9 +127,8 @@ fn day_ok(d: u8) -> bool {
 /// - The year must be `1000-9999`
 /// - The month must be `1-12`
 /// - The day must be `1-31`
-/// - _The date must actually exist_
 ///
-/// Example - `u16, u8, u8` as the `year, month, day` and `-` as the separator:
+/// Example - `u16, u8, u8` input and `-` as the separator:
 /// ```
 /// # use readable::Date;
 /// let (y, m, d) = (2020_u16, 12_u8, 1_u8);
@@ -140,23 +145,70 @@ fn day_ok(d: u8) -> bool {
 /// ## String parsing and format
 /// To parse an abitrary string into a [`Date`], use: [`Date::from_str`].
 ///
-/// You can input a string separated any single [`char`], e.g:
-/// - `-` - `2020-12-31`
-/// - `/` - `2020/12/31`
-/// - `.` - `2020.12.31`
-/// - `_` - `2020_12_31`
+/// You can input a string that is _just_ numbers, or separated by a single byte, e.g:
 ///
-/// OR a date with no separation:
-/// - `20201231` == `2020-12-31`
-/// - `2020131` == `2020-1-31`
-/// - `202012` == `2020-12`
+/// ```rust
+/// # use readable::Date;
+/// let array = [
+///     Date::from_str("2020-12-31", '-').unwrap(),
+///     Date::from_str("2020/12/31", '-').unwrap(),
+///     Date::from_str("2020.12.31", '-').unwrap(),
+///     Date::from_str("2020_12_31", '-').unwrap(),
+///     Date::from_str("2020 12 31", '-').unwrap(),
+///     Date::from_str("20201231",   '-').unwrap(),
+/// ];
 ///
-/// The parsing function will attempt these in order, before returning [`UNKNOWN_DATE`]
+/// for date in array {
+///     assert!(date == (2020, 12, 31));
+///     assert!(date == "2020-12-31");
+/// }
+/// ```
+///
+/// Be careful with single characters that are not actually `1` byte:
+/// ```rust,
+/// # use readable::Date;
+/// let unknown = Date::unknown();
+///
+/// assert!("❤️".len()  == 6);
+/// assert!("年".len() == 3);
+/// assert!("で".len() == 3);
+///
+/// assert!(Date::from_str("2020❤️12❤️31",   '-') == Err(unknown));
+/// assert!(Date::from_str("2020年12月31", '-') == Err(unknown));
+/// assert!(Date::from_str("2020で12す31", '-') == Err(unknown));
+/// ```
+///
+/// Given an ambiguous date, the parsing function will prioritize:
+///
 /// - `YEAR_MONTH_DAY`
 /// - `MONTH_DAY_YEAR`
 /// - `DAY_MONTH_YEAR`
 ///
+/// Example:
+/// ```rust
+/// # use readable::Date;
+/// // This could be:
+/// //   - 1111-11-11 (YMD)
+/// //   - 11-11-1111 (MDY)
+/// //   - 11-11-1111 (DMY)
+/// let ambiguous = "11111111";
+/// // Although, we prioritize YMD.
+/// assert!(Date::from_str(ambiguous, '-').unwrap() == "1111-11-11");
+///
+/// // This could be:
+/// //   - MDY
+/// //   - DMY
+/// let ambiguous = "12-12-1111";
+/// // We prioritize MDY over DMY.
+/// assert!(Date::from_str(ambiguous, '-').unwrap() == "1111-12-12");
+///
+/// // This cannot be MDY, so it must be DMY.
+/// let dmy = "13-11-1111";
+/// assert!(Date::from_str(dmy, '-').unwrap() == "1111-11-13");
+/// ```
+///
 /// Some errors can occur during string parsing:
+///
 /// - Year is less than `1000`, a signed number, or greater than [`u16::MAX`]
 /// - Month is not in-between `1-12`
 /// - Day is not in-between `1-31`
@@ -181,7 +233,7 @@ fn day_ok(d: u8) -> bool {
 /// let d3 = Date::from_str("-1231", '-').unwrap();
 /// ```
 ///
-/// ## Performance
+/// ## Cloning
 /// [`Copy`] available, [`Clone`] is cheap.
 ///
 /// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
@@ -243,6 +295,48 @@ impl Date {
 	}
 
 	#[inline]
+	/// Returns `true` if the inner year is valid.
+	/// ```rust
+	/// # use readable::Date;
+	/// let a = Date::from_y(2022).unwrap();
+	/// let b = Date::unknown();
+	///
+	/// assert!(a.ok_year());
+	/// assert!(!b.ok_year());
+	/// ```
+	pub fn ok_year(&self) -> bool {
+		ok_year(self.0.0)
+	}
+
+	#[inline]
+	/// Returns `true` if the inner month is valid.
+	/// ```rust
+	/// # use readable::Date;
+	/// let a = Date::from_ym(2022, 12, '-').unwrap();
+	/// let b = Date::unknown();
+	///
+	/// assert!(a.ok_month());
+	/// assert!(!b.ok_month());
+	/// ```
+	pub fn ok_month(&self) -> bool {
+		ok_month(self.0.1)
+	}
+
+	#[inline]
+	/// Returns `true` if the inner day is valid.
+	/// ```rust
+	/// # use readable::Date;
+	/// let a = Date::from_ymd(2022, 12, 31, '-').unwrap();
+	/// let b = Date::unknown();
+	///
+	/// assert!(a.ok_day());
+	/// assert!(!b.ok_day());
+	/// ```
+	pub fn ok_day(&self) -> bool {
+		ok_day(self.0.2)
+	}
+
+	#[inline]
 	/// Returns `true` if the inner `(year, month, day)` are all valid.
 	/// ```rust
 	/// # use readable::Date;
@@ -253,52 +347,7 @@ impl Date {
 	/// assert!(!b.ok());
 	/// ```
 	pub fn ok(&self) -> bool {
-		self.year_ok() && self.month_ok() && self.day_ok()
-	}
-
-	#[inline]
-	/// Returns `true` if the inner year is valid.
-	/// ```rust
-	/// # use readable::Date;
-	/// let a = Date::from_y(2022).unwrap();
-	/// let b = Date::unknown();
-	///
-	/// assert!(a.year_ok());
-	/// assert!(!b.year_ok());
-	/// ```
-	pub fn year_ok(&self) -> bool {
-		let y = self.0.0;
-		y > 999 && y < 10_000
-	}
-
-	#[inline]
-	/// Returns `true` if the inner month is valid.
-	/// ```rust
-	/// # use readable::Date;
-	/// let a = Date::from_ym(2022, 12, '-').unwrap();
-	/// let b = Date::unknown();
-	///
-	/// assert!(a.month_ok());
-	/// assert!(!b.month_ok());
-	/// ```
-	pub fn month_ok(&self) -> bool {
-		let m = self.0.1;
-		m > 0 && m < 13
-	}
-
-	#[inline]
-	/// Returns `true` if the inner day is valid.
-	/// ```rust
-	/// # use readable::Date;
-	/// let a = Date::from_ymd(2022, 12, 31, '-').unwrap();
-	/// let b = Date::unknown();
-	///
-	/// assert!(a.day_ok());
-	/// assert!(!b.day_ok());
-	/// ```
-	pub fn day_ok(&self) -> bool {
-		let d = self.0.2;
-		d > 0 && d < 32
+		ok(self.0.0, self.0.1, self.0.2)
 	}
 
 	#[inline]
@@ -310,7 +359,7 @@ impl Date {
 	/// If an [`Err`] is returned, it will contain a [`Date`]
 	/// set with [`UNKNOWN_DATE`] which looks like: `????-??-??`.
 	pub fn from_y(year: u16) -> Result<Self, Self> {
-		if year_ok(year) {
+		if ok_year(year) {
 			Ok(Self::priv_y(year))
 		} else {
 			Err(Self::unknown())
@@ -330,7 +379,7 @@ impl Date {
 	/// If an [`Err`] is returned, it will contain a [`Date`]
 	/// set with [`UNKNOWN_DATE`] which looks like: `????-??-??`.
 	pub fn from_ym(year: u16, month: u8, separator: char) -> Result<Self, Self> {
-		if year_ok(year) && month_ok(month) {
+		if ok_year(year) && ok_month(month) {
 			Ok(Self::priv_ym(year, month, separator))
 		} else {
 			Err(Self::unknown())
@@ -351,7 +400,7 @@ impl Date {
 	/// If an [`Err`] is returned, it will contain a [`Date`]
 	/// set with [`UNKNOWN_DATE`] which looks like: `????-??-??`.
 	pub fn from_ymd(year: u16, month: u8, day: u8, separator: char) -> Result<Self, Self> {
-		if year_ok(year) && month_ok(month) && day_ok(day) {
+		if ok(year, month, day) {
 			Ok(Self::priv_ymd(year, month, day, separator))
 		} else {
 			Err(Self::unknown())
@@ -366,7 +415,7 @@ impl Date {
 	///
 	/// [`UNKNOWN_DATE`] will be returned silently if an error occurs.
 	pub fn from_y_silent(year: u16) -> Self {
-		if year_ok(year) {
+		if ok_year(year) {
 			Self::priv_y(year)
 		} else {
 			Self::unknown()
@@ -385,7 +434,7 @@ impl Date {
 	///
 	/// [`UNKNOWN_DATE`] will be returned silently if an error occurs.
 	pub fn from_ym_silent(year: u16, month: u8, separator: char) -> Self {
-		if year_ok(year) && month_ok(month) {
+		if ok_year(year) && ok_month(month) {
 			Self::priv_ym(year, month, separator)
 		} else {
 			Self::unknown()
@@ -405,7 +454,7 @@ impl Date {
 	///
 	/// [`UNKNOWN_DATE`] will be returned silently if an error occurs.
 	pub fn from_ymd_silent(year: u16, month: u8, day: u8, separator: char) -> Self {
-		if year_ok(year) && month_ok(month) && day_ok(day) {
+		if ok(year, month, day) {
 			Self::priv_ymd(year, month, day, separator)
 		} else {
 			Self::unknown()

@@ -31,7 +31,7 @@ use crate::constants::*;
 /// 2. `minutes` only has a leading zero if `hours` isn't `0`.
 /// 3. `hours` never has a leading `0`.
 ///
-/// ## Performance
+/// ## Cloning
 /// [`Copy`] available, [`Clone`] is cheap.
 ///
 /// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),

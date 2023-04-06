@@ -11,6 +11,8 @@ use crate::macros::*;
 ///
 /// Takes a floating point number as input and returns a ready-to-[`print!()`] [`Float`].
 ///
+/// The fractional floating point may or may not be rounded up/down in the [`String`].
+///
 /// The default [`Float::from`] implementation will print `3` decimal numbers.
 ///
 /// This can be changed by using different functions when initially
@@ -26,18 +28,17 @@ use crate::macros::*;
 /// assert!(f9 == 3.000000000);
 ///```
 ///
-/// ## Performance
+/// ## Cloning
 /// [`Clone`] may be expensive:
-/// ```rust,compile_fail
+/// ```rust
 /// # use readable::Float;
+/// // Probably cheap (stack allocated string).
 /// let a = Float::from(100.0);
+/// let b = a.clone();
 ///
-/// // Move 'a'
-/// let b = a;
-///
-/// // We can't use 'a', it moved into 'b'.
-/// // We must `.clone()`.
-/// assert!(a == 100.0);
+/// // Probably expensive (heap allocated string).
+/// let a = Float::from(f64::MAX);
+/// let b = a.clone();
 /// ```
 ///
 /// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
@@ -52,11 +53,15 @@ use crate::macros::*;
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///
 /// # Examples
-/// | Input              | Output            |
-/// |--------------------|-------------------|
-/// | `0.0`              | `0.000`
-/// | `1234.571`         | `1,234.571`
-/// | `1234.571`         | `1,234.571000`
+/// ```rust
+/// # use readable::Float;
+/// assert!(Float::from(0.0)              == "0.000");
+///
+/// // This gets rounded up to '.568'
+/// assert!(Float::from(1234.5678)        == "1,234.568");
+/// // To prevent that, use 4 point.
+/// assert!(Float::new_4_point(1234.5678) == "1,234.5678");
+/// ```
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -122,7 +127,7 @@ impl Float {
 	pub fn new_1_point(f: f64) -> Self {
 		handle_nan_string!(f);
 
-		let fract = &format_compact!("{:.1}", f)[2..];
+		let fract = &format_compact!("{:.1}", f.fract())[2..];
 		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
@@ -131,7 +136,7 @@ impl Float {
 	pub fn new_2_point(f: f64) -> Self {
 		handle_nan_string!(f);
 
-		let fract = &format_compact!("{:.2}", f)[2..];
+		let fract = &format_compact!("{:.2}", f.fract())[2..];
 		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
@@ -140,7 +145,7 @@ impl Float {
 	pub fn new_4_point(f: f64) -> Self {
 		handle_nan_string!(f);
 
-		let fract = &format_compact!("{:.4}", f)[2..];
+		let fract = &format_compact!("{:.4}", f.fract())[2..];
 		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
@@ -149,7 +154,7 @@ impl Float {
 	pub fn new_5_point(f: f64) -> Self {
 		handle_nan_string!(f);
 
-		let fract = &format_compact!("{:.5}", f)[2..];
+		let fract = &format_compact!("{:.5}", f.fract())[2..];
 		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
@@ -158,7 +163,7 @@ impl Float {
 	pub fn new_6_point(f: f64) -> Self {
 		handle_nan_string!(f);
 
-		let fract = &format_compact!("{:.6}", f)[2..];
+		let fract = &format_compact!("{:.6}", f.fract())[2..];
 		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
@@ -167,7 +172,7 @@ impl Float {
 	pub fn new_7_point(f: f64) -> Self {
 		handle_nan_string!(f);
 
-		let fract = &format_compact!("{:.7}", f)[2..];
+		let fract = &format_compact!("{:.7}", f.fract())[2..];
 		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
@@ -176,7 +181,7 @@ impl Float {
 	pub fn new_8_point(f: f64) -> Self {
 		handle_nan_string!(f);
 
-		let fract = &format_compact!("{:.8}", f)[2..];
+		let fract = &format_compact!("{:.8}", f.fract())[2..];
 		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
@@ -185,7 +190,7 @@ impl Float {
 	pub fn new_9_point(f: f64) -> Self {
 		handle_nan_string!(f);
 
-		let fract = &format_compact!("{:.9}", f)[2..];
+		let fract = &format_compact!("{:.9}", f.fract())[2..];
 		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
@@ -194,7 +199,7 @@ impl Float {
 	pub fn new_10_point(f: f64) -> Self {
 		handle_nan_string!(f);
 
-		let fract = &format_compact!("{:.10}", f)[2..];
+		let fract = &format_compact!("{:.10}", f.fract())[2..];
 		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
@@ -203,7 +208,7 @@ impl Float {
 	pub fn new_11_point(f: f64) -> Self {
 		handle_nan_string!(f);
 
-		let fract = &format_compact!("{:.11}", f)[2..];
+		let fract = &format_compact!("{:.11}", f.fract())[2..];
 		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
@@ -212,7 +217,7 @@ impl Float {
 	pub fn new_12_point(f: f64) -> Self {
 		handle_nan_string!(f);
 
-		let fract = &format_compact!("{:.12}", f)[2..];
+		let fract = &format_compact!("{:.12}", f.fract())[2..];
 		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
@@ -221,7 +226,7 @@ impl Float {
 	pub fn new_13_point(f: f64) -> Self {
 		handle_nan_string!(f);
 
-		let fract = &format_compact!("{:.13}", f)[2..];
+		let fract = &format_compact!("{:.13}", f.fract())[2..];
 		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 
@@ -230,7 +235,7 @@ impl Float {
 	pub fn new_14_point(f: f64) -> Self {
 		handle_nan_string!(f);
 
-		let fract = &format_compact!("{:.14}", f)[2..];
+		let fract = &format_compact!("{:.14}", f.fract())[2..];
 		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
 	}
 }
