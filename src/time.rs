@@ -10,9 +10,9 @@ use crate::macros::*;
 ///
 /// **The input is always assumed to be in seconds.**
 ///
-/// [`From`] input can be:
-/// - [`std::time::Duration`]
+/// [`Time::from`] input can be:
 /// - [`u8`], [`u16`], [`u32`], [`u64`], [`usize`]
+/// - [`std::time::Duration`], [`std::time::Instant`]
 ///
 /// The lowest unit is `second`, the highest is `year`, and `week` is skipped in favor of `7 days`.
 ///
@@ -198,6 +198,18 @@ impl From<std::time::Duration> for Time {
 impl From<&std::time::Duration> for Time {
 	fn from(duration: &std::time::Duration) -> Self {
 		Self::from(duration.as_secs())
+	}
+}
+
+impl From<std::time::Instant> for Time {
+	fn from(instant: std::time::Instant) -> Self {
+		Self::from(instant.elapsed().as_secs())
+	}
+}
+
+impl From<&std::time::Instant> for Time {
+	fn from(duration: &std::time::Instant) -> Self {
+		Self::from(instant.elapsed().as_secs())
 	}
 }
 

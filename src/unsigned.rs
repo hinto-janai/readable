@@ -9,7 +9,7 @@ use crate::constants::*;
 //---------------------------------------------------------------------------------------------------- Unsigned
 /// Human readable unsigned integer.
 ///
-/// [`From`] takes an unsigned integer as input and returns a ready-to-[`print!()`] [`Unsigned`].
+/// [`Unsigned::from`] takes an unsigned integer as input and returns a ready-to-[`print!()`] [`Unsigned`].
 ///
 /// [`f32`] or [`f64`] inputs will work, but:
 /// - Signed floats will turn into `0`

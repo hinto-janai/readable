@@ -10,7 +10,7 @@ use crate::macros::*;
 ///
 /// Takes a floating point number as input and returns a ready-to-[`print!()`] [`Percent`].
 ///
-/// The default [`From`] implementation will print `2` decimal numbers.
+/// The default [`Percent::from`] implementation will print `2` decimal numbers.
 ///
 /// Anything lower than `0.01` is rounded down to `0.00`.
 ///

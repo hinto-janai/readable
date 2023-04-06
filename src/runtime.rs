@@ -8,7 +8,7 @@ use crate::constants::*;
 //---------------------------------------------------------------------------------------------------- Runtime
 /// Human readable "audio/video runtime" in `H:M:S` format.
 ///
-/// [`From`] input can be:
+/// [`Runtime::from`] input can be:
 /// - [`u8`]
 /// - [`u16`]
 /// - [`u32`]
@@ -17,6 +17,7 @@ use crate::constants::*;
 /// - [`f32`]
 /// - [`f64`]
 /// - [`std::time::Duration`].
+/// - [`std::time::Instant`].
 ///
 /// Integer inputs are presumed to be in _seconds._
 ///
@@ -144,7 +145,6 @@ impl Runtime {
 	#[inline]
 	/// ```rust
 	/// # use readable::Runtime;
-	/// dbg!("{}", Runtime::from(359999.0));
 	/// assert!(Runtime::max() == 359999.0);
 	/// assert!(Runtime::max() == "99:59:59");
 	/// assert!(Runtime::max() == Runtime::from(359999.0));
@@ -203,6 +203,24 @@ impl From<&std::time::Duration> for Runtime {
 	#[inline]
 	fn from(runtime: &std::time::Duration) -> Self {
 		let f = runtime.as_secs_f64();
+		handle_nan_runtime!(f);
+		Self::priv_from(f)
+	}
+}
+
+impl From<std::time::Instant> for Runtime {
+	#[inline]
+	fn from(runtime: std::time::Instant) -> Self {
+		let f = runtime.elapsed().as_secs_f64();
+		handle_nan_runtime!(f);
+		Self::priv_from(f)
+	}
+}
+
+impl From<&std::time::Instant> for Runtime {
+	#[inline]
+	fn from(runtime: &std::time::Instant) -> Self {
+		let f = runtime.elapsed().as_secs_f64();
 		handle_nan_runtime!(f);
 		Self::priv_from(f)
 	}

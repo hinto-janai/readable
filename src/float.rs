@@ -11,7 +11,7 @@ use crate::macros::*;
 ///
 /// Takes a floating point number as input and returns a ready-to-[`print!()`] [`Float`].
 ///
-/// The default [`From`] implementation will print `3` decimal numbers.
+/// The default [`Float::from`] implementation will print `3` decimal numbers.
 ///
 /// This can be changed by using different functions when initially
 /// creating the [`Float`], or converting an existing [`Float`], for example:

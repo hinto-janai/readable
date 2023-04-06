@@ -9,7 +9,7 @@ use crate::constants::*;
 //---------------------------------------------------------------------------------------------------- Int
 /// Human readable signed integer.
 ///
-/// [`From`] takes an signed integer as input and returns a ready-to-[`print!()`] [`Int`].
+/// [`Int::from`] takes a signed integer as input and returns a ready-to-[`print!()`] [`Int`].
 ///
 /// [`f32`] or [`f64`] inputs will work, but:
 /// - Fractional parts will be ignored
