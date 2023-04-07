@@ -110,11 +110,7 @@ fn ok(y:u16, m: u8, d: u8) -> bool {
 //---------------------------------------------------------------------------------------------------- `Date`
 /// A _recent_ date that is human readable date in `YEAR-MONTH-DAY` format
 ///
-/// The inner "integer" type is a tuple of:
-///
-/// `u16` - Year between `1000-9999`
-/// `u8` - Month between `1-12`
-/// `u8` - Day between `1-31`
+/// The inner "integer" type is a tuple of: `(u16, u8, u8)` representing the `(Year, Month, Day)`
 ///
 /// Any value being `0` means it is invalid:
 /// ```rust
@@ -128,7 +124,7 @@ fn ok(y:u16, m: u8, d: u8) -> bool {
 /// - The month must be `1-12`
 /// - The day must be `1-31`
 ///
-/// Example - `u16, u8, u8` input and `-` as the separator:
+/// Example:
 /// ```
 /// # use readable::Date;
 /// let (y, m, d) = (2020_u16, 12_u8, 1_u8);
@@ -149,7 +145,7 @@ fn ok(y:u16, m: u8, d: u8) -> bool {
 ///
 /// ```rust
 /// # use readable::Date;
-/// let array = [
+/// let dates = [
 ///     Date::from_str("2020-12-31", '-').unwrap(),
 ///     Date::from_str("2020/12/31", '-').unwrap(),
 ///     Date::from_str("2020.12.31", '-').unwrap(),
@@ -158,22 +154,22 @@ fn ok(y:u16, m: u8, d: u8) -> bool {
 ///     Date::from_str("20201231",   '-').unwrap(),
 /// ];
 ///
-/// for date in array {
+/// for date in dates {
 ///     assert!(date == (2020, 12, 31));
 ///     assert!(date == "2020-12-31");
 /// }
 /// ```
 ///
-/// Be careful with single characters that are not actually `1` byte:
+/// Be careful with single characters that are _not_ actually `1` byte:
 /// ```rust,
 /// # use readable::Date;
 /// let unknown = Date::unknown();
 ///
-/// assert!("❤️".len()  == 6);
+/// assert!("❤️".len() == 6);
 /// assert!("年".len() == 3);
 /// assert!("で".len() == 3);
 ///
-/// assert!(Date::from_str("2020❤️12❤️31",   '-') == Err(unknown));
+/// assert!(Date::from_str("2020❤️12❤️31", '-') == Err(unknown));
 /// assert!(Date::from_str("2020年12月31", '-') == Err(unknown));
 /// assert!(Date::from_str("2020で12す31", '-') == Err(unknown));
 /// ```
@@ -229,7 +225,7 @@ fn ok(y:u16, m: u8, d: u8) -> bool {
 /// ```rust,should_panic
 /// # use readable::Date;
 /// let d1 = Date::from_str("10000-57-99", '-').unwrap();
-/// let d2 = Date::from_str("2022^12^31", '-').unwrap();
+/// let d2 = Date::from_str("2022.31.31", '-').unwrap();
 /// let d3 = Date::from_str("-1231", '-').unwrap();
 /// ```
 ///
@@ -247,8 +243,9 @@ fn ok(y:u16, m: u8, d: u8) -> bool {
 /// # use readable::Date;
 /// let a = Date::from_str("2014-04-22", '.').unwrap();
 ///
-/// // Copy 'a'
+/// // Copy 'a', use 'b'.
 /// let b = a;
+/// assert!(b == "2014.04.22");
 ///
 /// // We can still use 'a'
 /// assert!(a == "2014.04.22");
@@ -259,6 +256,7 @@ pub struct Date((u16, u8, u8), Buffer);
 
 impl Date {
 	impl_common!((u16, u8, u8));
+	impl_buffer!(MAX_BUF_LEN, UNKNOWN_DATE_BUFFER, UNKNOWN_DATE.len());
 
 	// INVARIANT:
 	// The inputs _must_ be correct.
@@ -510,6 +508,20 @@ impl Date {
 	///
 	/// ```
 	pub fn from_str(string: &str, separator: char) -> Result<Self, Self> {
+		Self::priv_from_str(string, separator)
+	}
+
+	/// Same as [`Date::from_str`] but silently returns an [`UNKNOWN_DATE`]
+	/// on error that isn't wrapped in a [`Result::Err`].
+	pub fn from_str_silent(string: &str, separator: char) -> Self {
+		match Self::priv_from_str(string, separator) {
+			Ok(s)  => s,
+			Err(s) => s,
+		}
+	}
+
+	#[inline(always)]
+	fn priv_from_str(string: &str, separator: char) -> Result<Self, Self> {
 		let len = string.len();
 
 		// Less than the minimum year (1000).

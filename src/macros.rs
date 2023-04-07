@@ -35,6 +35,16 @@ macro_rules! buffer {
 			}
 
 			#[inline(always)]
+			fn to_buffer(&self) -> [u8; $max_length] {
+				self.buf
+			}
+
+			#[inline(always)]
+			fn as_buffer(&self) -> &[u8; $max_length] {
+				&self.buf
+			}
+
+			#[inline(always)]
 			fn as_bytes(&self) -> &[u8] {
 				&self.buf[..self.len]
 			}
@@ -120,6 +130,39 @@ macro_rules! handle_nan_runtime {
 pub(crate) use handle_nan_runtime;
 
 //---------------------------------------------------------------------------------------------------- Impl.
+// `Buffer`.
+macro_rules! impl_buffer {
+	($max_length:expr, $unknown_buffer:expr, $unknown_len:expr) => {
+		#[inline(always)]
+		/// Return the inner buffer that represents the [`String`].
+		///
+		/// These are guaranteed to be valid UTF-8 bytes.
+		///
+		/// Not all bytes are necessarily used, however.
+		/// To find the valid portion of the string, use [`Self::len`].
+		/// That will determine where to stop on the buffer, e.g:
+		/// ```rust,ignore
+		/// let buffer      = self.to_buffer();
+		/// let valid_bytes = buffer[0..self.len()];
+		///
+		/// # SAFETY: These bytes are always be valid UTF-8.
+		/// unsafe {
+		///     let string = std::str::from_utf8_unchecked(&valid_bytes);
+		/// }
+		/// ```
+		fn to_buffer(&self) -> [u8; $max_length] {
+			self.1.to_buffer()
+		}
+
+		#[inline(always)]
+		/// Same as [`Self::to_buffer`] but returns a borrowed array.
+		fn as_buffer(&self) -> &[u8; $max_length] {
+			&self.1.as_buffer()
+		}
+	}
+}
+pub(crate) use impl_buffer;
+
 // `From`.
 macro_rules! impl_from_single {
 	($from:ident, $to:ident, $s:ident) => {

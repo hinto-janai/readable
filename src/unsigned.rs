@@ -24,8 +24,9 @@ use crate::constants::*;
 /// # use readable::Unsigned;
 /// let a = Unsigned::from(100_000_u64);
 ///
-/// // Copy 'a'
+/// // Copy 'a', use 'b'.
 /// let b = a;
+/// assert!(b == 100_000_u64);
 ///
 /// // We can still use 'a'
 /// assert!(a == 100_000_u64);

@@ -9,6 +9,7 @@
 //! |------------------|---------|
 //! | `serde`          | Enable [`serde`](https://docs.rs/serde) on all types
 //! | `ignore_nan_inf` | Disable checking [`f64`]'s for [`f64::NAN`], [`f64::INFINITY`], and [`f64::NEG_INFINITY`]
+//! | `full`           | Enable everything above
 //!
 //! ## Unsigned integers:
 //! ```

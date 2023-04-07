@@ -23,8 +23,9 @@ use crate::constants::*;
 /// # use readable::Int;
 /// let a = Int::from(100_000);
 ///
-/// // Copy 'a'
+/// // Copy 'a', use 'b'.
 /// let b = a;
+/// assert!(b == 100_000);
 ///
 /// // We can still use 'a'
 /// assert!(a == 100_000);

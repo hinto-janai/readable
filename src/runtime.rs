@@ -21,12 +21,12 @@ use crate::constants::*;
 ///
 /// Integer inputs are presumed to be in _seconds._
 ///
-/// ## Errors:
+/// ## Errors
 /// The max input is `359999.0` seconds, or: `99:59:59`.
 ///
 /// If the input is larger than [`MAX_RUNTIME_FLOAT`], [`UNKNOWN_RUNTIME`] is returned.
 ///
-/// ## Formatting rules:
+/// ## Formatting rules
 /// 1. `seconds` always has leading `0`.
 /// 2. `minutes` only has a leading zero if `hours` isn't `0`.
 /// 3. `hours` never has a leading `0`.
@@ -47,6 +47,7 @@ use crate::constants::*;
 ///
 /// // Copy 'a', use 'b'.
 /// let b = a;
+/// assert!(b == 100_000.0);
 ///
 /// // We can still use 'a'
 /// assert!(a == 100_000.0);
@@ -88,6 +89,7 @@ impl_traits!(Runtime, f64);
 impl Runtime {
 	impl_common!(f64);
 	impl_usize!();
+	impl_buffer!(MAX_BUF_LEN, UNKNOWN_RUNTIME_BUFFER, UNKNOWN_RUNTIME.len());
 
 	#[inline]
 	/// ```rust
