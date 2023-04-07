@@ -15,19 +15,19 @@ pub(crate) use num;
 // Implement a private module `Buffer` type
 // with a variable amount of array space.
 macro_rules! buffer {
-	($max_length:expr, $unknown_buffer:expr, $unknown_len:expr) => {
+	($max_len:expr, $unknown_buffer:expr, $unknown_len:expr) => {
 		#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 		#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord)]
 		struct Buffer {
 			// Bytes representing a valid UTF-8 string.
-			buf: [u8; $max_length],
+			buf: [u8; $max_len],
 			// How many bytes we're taking up.
 			len: usize,
 		}
 
 		impl Buffer {
 			#[inline(always)]
-			fn unknown() -> Self {
+			const fn unknown() -> Self {
 				Self {
 					buf: $unknown_buffer,
 					len: $unknown_len,
@@ -35,22 +35,23 @@ macro_rules! buffer {
 			}
 
 			#[inline(always)]
-			fn to_buffer(&self) -> [u8; $max_length] {
+			const fn to_buffer(&self) -> [u8; $max_len] {
 				self.buf
 			}
 
 			#[inline(always)]
-			fn as_buffer(&self) -> &[u8; $max_length] {
+			const fn as_buffer(&self) -> &[u8; $max_len] {
 				&self.buf
 			}
 
 			#[inline(always)]
+			// Returns only the valid bytes.
 			fn as_bytes(&self) -> &[u8] {
 				&self.buf[..self.len]
 			}
 
 			#[inline(always)]
-			fn is_empty(&self) -> bool {
+			const fn is_empty(&self) -> bool {
 				self.len == 0
 			}
 
@@ -72,7 +73,7 @@ macro_rules! buffer {
 			}
 
 		    #[inline(always)]
-		    fn len(&self) -> usize {
+			const fn len(&self) -> usize {
 				self.len
 		    }
 		}
@@ -132,7 +133,7 @@ pub(crate) use handle_nan_runtime;
 //---------------------------------------------------------------------------------------------------- Impl.
 // `Buffer`.
 macro_rules! impl_buffer {
-	($max_length:expr, $unknown_buffer:expr, $unknown_len:expr) => {
+	($max_len:expr, $unknown_buffer:expr, $unknown_len:expr) => {
 		#[inline(always)]
 		/// Return the inner buffer that represents the [`String`].
 		///
@@ -150,13 +151,13 @@ macro_rules! impl_buffer {
 		///     let string = std::str::from_utf8_unchecked(&valid_bytes);
 		/// }
 		/// ```
-		fn to_buffer(&self) -> [u8; $max_length] {
+		const fn to_buffer(&self) -> [u8; $max_len] {
 			self.1.to_buffer()
 		}
 
 		#[inline(always)]
 		/// Same as [`Self::to_buffer`] but returns a borrowed array.
-		fn as_buffer(&self) -> &[u8; $max_length] {
+		const fn as_buffer(&self) -> &[u8; $max_len] {
 			&self.1.as_buffer()
 		}
 	}
@@ -379,7 +380,7 @@ macro_rules! impl_common {
 
 		#[inline]
 		/// Returns the inner number.
-		pub fn inner(&self) -> $num {
+		pub const fn inner(&self) -> $num {
 			self.0
 		}
 
@@ -403,7 +404,7 @@ macro_rules! impl_usize {
 	() => {
 		#[inline]
 		#[cfg(target_pointer_width = "64")]
-		/// Returns the inner [`u64`] as a [`usize`].
+		/// Returns the inner numer as a [`usize`].
 		///
 		/// # Notes
 		/// This function is only available on 64-bit platforms.
@@ -419,7 +420,7 @@ macro_rules! impl_isize {
 	() => {
 		#[inline]
 		#[cfg(target_pointer_width = "64")]
-		/// Returns the inner [`i64`] as an [`isize`].
+		/// Returns the inner number as an [`isize`].
 		///
 		/// # Notes
 		/// This function is only available on 64-bit platforms.

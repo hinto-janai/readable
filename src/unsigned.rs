@@ -61,7 +61,6 @@ pub struct Unsigned(u64, Inner);
 impl Unsigned {
 	impl_inner!(u64);
 	impl_common!(u64);
-	impl_usize!();
 }
 
 impl_traits!(Unsigned, u64);

@@ -97,7 +97,7 @@ impl Runtime {
 	/// assert!(Runtime::unknown() == 0.0);
 	/// assert!(Runtime::unknown() == "?:??");
 	/// ```
-	pub fn unknown() -> Self {
+	pub const fn unknown() -> Self {
 		Self(ZERO_RUNTIME_FLOAT, Buffer::unknown())
 	}
 
@@ -107,7 +107,7 @@ impl Runtime {
 	/// assert!(Runtime::zero() == 0.0);
 	/// assert!(Runtime::zero() == "0:00");
 	/// ```
-	pub fn zero() -> Self {
+	pub const fn zero() -> Self {
 		Self(ZERO_RUNTIME_FLOAT, Buffer::zero())
 	}
 
@@ -118,7 +118,7 @@ impl Runtime {
 	/// assert!(Runtime::second() == "0:01");
 	/// assert!(Runtime::second() == Runtime::from(1.0));
 	/// ```
-	pub fn second() -> Self {
+	pub const fn second() -> Self {
 		Self(SECOND_RUNTIME_FLOAT, Buffer::second())
 	}
 
@@ -129,7 +129,7 @@ impl Runtime {
 	/// assert!(Runtime::minute() == "1:00");
 	/// assert!(Runtime::minute() == Runtime::from(60.0));
 	/// ```
-	pub fn minute() -> Self {
+	pub const fn minute() -> Self {
 		Self(MINUTE_RUNTIME_FLOAT, Buffer::minute())
 	}
 
@@ -140,7 +140,7 @@ impl Runtime {
 	/// assert!(Runtime::hour() == "1:00:00");
 	/// assert!(Runtime::hour() == Runtime::from(3600.0));
 	/// ```
-	pub fn hour() -> Self {
+	pub const fn hour() -> Self {
 		Self(HOUR_RUNTIME_FLOAT, Buffer::hour())
 	}
 
@@ -151,7 +151,7 @@ impl Runtime {
 	/// assert!(Runtime::max() == "99:59:59");
 	/// assert!(Runtime::max() == Runtime::from(359999.0));
 	/// ```
-	pub fn max() -> Self {
+	pub const fn max() -> Self {
 		Self(MAX_RUNTIME_FLOAT, Buffer::max())
 	}
 
@@ -267,7 +267,7 @@ buffer!(MAX_BUF_LEN, UNKNOWN_RUNTIME_BUFFER, UNKNOWN_RUNTIME.len());
 
 impl Buffer {
 	#[inline(always)]
-	fn zero() -> Self {
+	const fn zero() -> Self {
 		Self {
 			buf: ZERO_RUNTIME_BUFFER,
 			len: 4,
@@ -275,7 +275,7 @@ impl Buffer {
 	}
 
 	#[inline(always)]
-	fn second() -> Self {
+	const fn second() -> Self {
 		Self {
 			buf: SECOND_RUNTIME_BUFFER,
 			len: 4,
@@ -283,7 +283,7 @@ impl Buffer {
 	}
 
 	#[inline(always)]
-	fn minute() -> Self {
+	const fn minute() -> Self {
 		Self {
 			buf: MINUTE_RUNTIME_BUFFER,
 			len: 4,
@@ -291,7 +291,7 @@ impl Buffer {
 	}
 
 	#[inline(always)]
-	fn hour() -> Self {
+	const fn hour() -> Self {
 		Self {
 			buf: HOUR_RUNTIME_BUFFER,
 			len: 7,
@@ -299,7 +299,7 @@ impl Buffer {
 	}
 
 	#[inline(always)]
-	fn max() -> Self {
+	const fn max() -> Self {
 		Self {
 			buf: MAX_RUNTIME_BUFFER,
 			len: MAX_BUF_LEN,

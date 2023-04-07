@@ -88,22 +88,22 @@ lazy_static::lazy_static! {
 
 //---------------------------------------------------------------------------------------------------- Functions.
 #[inline(always)]
-fn ok_year(y: u16) -> bool {
+const fn ok_year(y: u16) -> bool {
 	y >= 1000 && y <= 9999
 }
 
 #[inline(always)]
-fn ok_month(m: u8) -> bool {
+const fn ok_month(m: u8) -> bool {
 	m >= 1 && m <= 12
 }
 
 #[inline(always)]
-fn ok_day(d: u8) -> bool {
+const fn ok_day(d: u8) -> bool {
 	d >= 1 && d <= 31
 }
 
 #[inline(always)]
-fn ok(y:u16, m: u8, d: u8) -> bool {
+const fn ok(y:u16, m: u8, d: u8) -> bool {
 	ok_year(y) && ok_month(m) && ok_day(d)
 }
 
@@ -282,31 +282,31 @@ impl Date {
 	/// Returns a [`Self`] with the date values set to `(0, 0, 0)`
 	///
 	/// The [`String`] is set to [`UNKNOWN_DATE`].
-	pub fn unknown() -> Self {
+	pub const fn unknown() -> Self {
 		Self((0, 0, 0), Buffer::unknown())
 	}
 
 	#[inline]
 	/// Same as [`Self::unknown`]
-	pub fn zero() -> Self {
+	pub const fn zero() -> Self {
 		Self((0, 0, 0), Buffer::unknown())
 	}
 
 	#[inline]
 	/// Return the inner year (1000-9999)
-	pub fn year(&self) -> u16 {
+	pub const fn year(&self) -> u16 {
 		self.0.0
 	}
 
 	#[inline]
 	/// Return the inner month (1-12)
-	pub fn month(&self) -> u8 {
+	pub const fn month(&self) -> u8 {
 		self.0.1
 	}
 
 	#[inline]
 	/// Return the inner day (1-31)
-	pub fn day(&self) -> u8 {
+	pub const fn day(&self) -> u8 {
 		self.0.2
 	}
 
@@ -320,7 +320,7 @@ impl Date {
 	/// assert!(a.ok_year());
 	/// assert!(!b.ok_year());
 	/// ```
-	pub fn ok_year(&self) -> bool {
+	pub const fn ok_year(&self) -> bool {
 		ok_year(self.0.0)
 	}
 
@@ -334,7 +334,7 @@ impl Date {
 	/// assert!(a.ok_month());
 	/// assert!(!b.ok_month());
 	/// ```
-	pub fn ok_month(&self) -> bool {
+	pub const fn ok_month(&self) -> bool {
 		ok_month(self.0.1)
 	}
 
@@ -348,7 +348,7 @@ impl Date {
 	/// assert!(a.ok_day());
 	/// assert!(!b.ok_day());
 	/// ```
-	pub fn ok_day(&self) -> bool {
+	pub const fn ok_day(&self) -> bool {
 		ok_day(self.0.2)
 	}
 
@@ -362,7 +362,7 @@ impl Date {
 	/// assert!(a.ok());
 	/// assert!(!b.ok());
 	/// ```
-	pub fn ok(&self) -> bool {
+	pub const fn ok(&self) -> bool {
 		ok(self.0.0, self.0.1, self.0.2)
 	}
 
