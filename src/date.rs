@@ -251,7 +251,7 @@ fn ok(y:u16, m: u8, d: u8) -> bool {
 /// assert!(a == "2014.04.22");
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq)]
 pub struct Date((u16, u8, u8), Buffer);
 
 impl Date {
@@ -830,10 +830,38 @@ impl Buffer {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use std::cmp::Ordering;
 
 	//-------------------------------------------------------------------------------- Date tests.
 	const EXPECTED: (u16, u8, u8) = (2020, 12, 25);
 	const EXPECTED_STR: &str      = "2020-12-25";
+
+	#[test]
+	fn cmp() {
+		let a = Date::from_str("2020-12-01", '-').unwrap();
+		let b = Date::from_str("2020-12-01", '-').unwrap();
+		let c = Date::from_str("2020-12", '-').unwrap();
+		let d = Date::from_str("2020-01", '-').unwrap();
+		assert!(a.cmp(&b) == Ordering::Equal);
+		assert!(a.cmp(&c) == Ordering::Greater);
+		assert!(a.cmp(&d) == Ordering::Greater);
+
+		for i in 1..12 {
+			let s = format_compact!("2020-{:0>2}-01", i);
+			let b = Date::from_str(&s, '-').unwrap();
+			assert!(a.cmp(&b) == Ordering::Greater);
+		}
+		for i in 2..32 {
+			let s = format_compact!("2020-12-{:0>2}", i);
+			let b = Date::from_str(&s, '-').unwrap();
+			assert!(a.cmp(&b) == Ordering::Less);
+		}
+		for i in 2021..9999 {
+			let s = format_compact!("{}-12-01", i);
+			let b = Date::from_str(&s, '-').unwrap();
+			assert!(a.cmp(&b) == Ordering::Less);
+		}
+	}
 
 	fn variety(start: u16, end: u16) {
 		for y in start..end {

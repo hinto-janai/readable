@@ -17,7 +17,7 @@ pub(crate) use num;
 macro_rules! buffer {
 	($max_length:expr, $unknown_buffer:expr, $unknown_len:expr) => {
 		#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-		#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
+		#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord)]
 		struct Buffer {
 			// Bytes representing a valid UTF-8 string.
 			buf: [u8; $max_length],
