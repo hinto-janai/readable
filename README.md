@@ -10,9 +10,14 @@ Most of the internal strings are implemented as fixed length, stack allocated ar
 ## Feature flags
 | Flag             | Purpose |
 |------------------|---------|
-| `serde`          | Enable [`serde`](https://docs.rs/serde) on all types
-| `ignore_nan_inf` | Disable checking `f64`'s for `f64::NAN`, `f64::INFINITY`, and `f64::NEG_INFINITY`
-| `full`           | Enable everything above
+| `serde`          | Enables [`serde`](https://docs.rs/serde) on all types
+| `ignore_nan_inf` | Disables checking `f64`'s for `f64::NAN`, `f64::INFINITY`, and `f64::NEG_INFINITY`
+| `inline_time`    | Inlines any `Time` that is under `1 hour, 1 minute` (`0..=3660`)
+| `inline_runtime` | Inlines ALL of `Runtime` (`0:00..99:59:59`/`0..359999`)
+| `full`           | Enables everything above
+
+**Warning:** The `inline_*` features are disabled by default. While they increase speed,
+they also _heavily_ increase build time and binary size.
 
 ## Unsigned integers:
 ```rust
@@ -48,9 +53,9 @@ assert!(a == "1,000.12%");
 
 ## Runtime:
 ```rust
-let a = readable::Runtime::from(11111.1);
+let a = readable::Runtime::from(11111_u16);
 
-assert!(a == 11111.1);
+assert!(a == 11111);
 assert!(a == "3:05:11");
 ```
 

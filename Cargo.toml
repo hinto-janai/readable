@@ -1,6 +1,6 @@
 [package]
 name = "readable"
-version = "0.6.2"
+version = "0.6.3"
 edition = "2021"
 authors = ["hinto.janai <hinto.janai@protonmail.com>"]
 description = "Human readable data formatting"
@@ -14,11 +14,15 @@ license = "MIT"
 all-features = true
 
 [features]
-default = []
-full    = ["serde", "ignore_nan_inf"]
+default        = []
+full           = ["serde", "ignore_nan_inf", "inline_time", "inline_runtime"]
 ignore_nan_inf = []
+inline_time    = []
+inline_runtime = []
 
 [dependencies]
+paste       = "1.0.12"
+seq-macro   = "0.3.3"
 compact_str = { version = "0.7.0", features = ["bytes", "serde"] }
 lazy_static = { version = "1.4.0" }
 num-format  = { version = "0.4.4", features = ["with-serde"] }

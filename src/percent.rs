@@ -18,10 +18,10 @@ use crate::macros::*;
 /// creating the [`Percent`], or converting an existing [`Percent`], for example:
 /// ```rust
 /// # use readable::Percent;
-/// let f0 = Percent::new_0_point(3.0);
+/// let f0 = Percent::new_0(3.0);
 /// let f2 = Percent::from(3.0);
-/// let f3 = Percent::new_3_point(3.0);
-/// let f4 = Percent::new_4_point(3.0);
+/// let f3 = Percent::new_3(3.0);
+/// let f4 = Percent::new_4(3.0);
 ///
 /// assert!(f0 == "3%");
 /// assert!(f2 == "3.00%");
@@ -72,20 +72,39 @@ use crate::macros::*;
 /// assert!(Percent::from(-1_000_i64)  == "-1,000.00%");
 /// assert!(Percent::from(-10_000_i64) == "-10,000.00%");
 /// ```
-
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Percent(f64, CompactString);
 
-impl Percent {
-	#[inline]
-	/// Returns a [`Self`] with the [`f64`] value of `0.0`.
-	///
-	/// The [`String`] is set to `0.00%`.
-	pub fn zero() -> Self {
-		Self(0.0, CompactString::new(ZERO_PERCENT))
-	}
+// Implements `new_X` functions.
+macro_rules! impl_new {
+	( $num:tt ) => {
+		paste::item! {
+			#[doc = "Same as [`Self::from`] but with `" $num "` floating point."]
+			pub fn [<new_ $num>](f: f64) -> Self {
+				handle_nan_string!(f);
 
+				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
+				Self(f, format_compact!("{}.{}%", num!(f as u64), fract))
+			}
+		}
+	}
+}
+
+// Implements `const_X` functions.
+macro_rules! impl_const {
+	( $num:tt ) => {
+		paste::item! {
+			#[doc = "Returns a [`Percent`] with the [`f64`] value of `" $num ".0`. \n\n\
+			The [`String`] is set to `" $num ".00%`."]
+			pub const fn [<const_ $num>]() -> Self {
+				Self($num as f64, CompactString::new_inline(concat!($num, ".00%")))
+			}
+		}
+	}
+}
+
+impl Percent {
 	#[inline]
 	/// Returns a [`Self`] with the [`f64`] value of [`f64::NAN`].
 	///
@@ -111,6 +130,18 @@ impl Percent {
 	}
 
 	#[inline]
+	/// Returns a [`Percent`] with the [`f64`] value of `0.0`.
+	///
+	/// The [`String`] is set to `0.00%`.
+	pub const fn zero() -> Self {
+		Self(0.0, CompactString::new_inline(ZERO_PERCENT))
+	}
+
+	seq_macro::seq!(N in 1..=100 {
+		impl_const!(N);
+	});
+
+	#[inline]
 	/// Same as [`Self::from`] but with no floating point on the inner [`String`].
 	///
 	/// The inner [`f64`] stays the same as the input.
@@ -123,55 +154,15 @@ impl Percent {
 	/// | 0.0    | `0%`
 	/// | 50.123 | `50%`
 	/// | 100.1  | `100%`
-	pub fn new_0_point(f: f64) -> Self {
+	pub fn new_0(f: f64) -> Self {
 		handle_nan_string!(f);
 		Self(f, format_compact!("{}%", num!(f as u64)))
 	}
 
-	#[inline]
-	/// Same as [`Self::from`] but with `1` floating point.
-	pub fn new_1_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.1}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}%", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Same as [`Self::from`] but with `3` floating point.
-	pub fn new_3_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.3}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}%", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Same as [`Self::from`] but with `4` floating point.
-	pub fn new_4_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.4}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}%", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Same as [`Self::from`] but with `5` floating point.
-	pub fn new_5_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.5}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}%", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Same as [`Self::from`] but with `6` floating point.
-	pub fn new_6_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.6}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}%", num!(f as u64), fract))
-	}
+	impl_new!(1);
+	seq_macro::seq!(N in 3..=18 {
+		impl_new!(N);
+	});
 }
 
 // Implementation Macro.
@@ -273,15 +264,15 @@ mod tests {
 
 	#[test]
 	fn percent_dot() {
-		assert!(Percent::new_1_point(0.0)        == "0.0%");
-		assert!(Percent::new_1_point(1_000.1234) == "1,000.1%");
-		assert!(Percent::new_3_point(1_000.1234) == "1,000.123%");
-		assert!(Percent::new_4_point(1_000.1234) == "1,000.1234%");
+		assert!(Percent::new_1(0.0)        == "0.0%");
+		assert!(Percent::new_1(1_000.1234) == "1,000.1%");
+		assert!(Percent::new_3(1_000.1234) == "1,000.123%");
+		assert!(Percent::new_4(1_000.1234) == "1,000.1234%");
 
-		assert!(Percent::new_1_point(0.1)            == "0.1%");
-		assert!(Percent::new_1_point(10_000.1234)    == "10,000.1%");
-		assert!(Percent::new_3_point(100_000.1234)   == "100,000.123%");
-		assert!(Percent::new_4_point(1_000_000.1234) == "1,000,000.1234%");
+		assert!(Percent::new_1(0.1)            == "0.1%");
+		assert!(Percent::new_1(10_000.1234)    == "10,000.1%");
+		assert!(Percent::new_3(100_000.1234)   == "100,000.123%");
+		assert!(Percent::new_4(1_000_000.1234) == "1,000,000.1234%");
 	}
 
 	#[test]

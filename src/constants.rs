@@ -99,19 +99,16 @@ pub const HOUR_RUNTIME: &str = "1:00:00";
 pub const HOUR_RUNTIME_BUFFER: [u8; 8] = [49, 58, 48, 48, 58, 48, 48, 0];
 
 /// Returned when calling [`Runtime::zero`]
-pub const ZERO_RUNTIME_FLOAT: f64 = 0.0;
+pub const ZERO_RUNTIME_U32: u32 = 0;
 /// Returned when calling [`Runtime::second`]
-pub const SECOND_RUNTIME_FLOAT: f64 = 1.0;
+pub const SECOND_RUNTIME_U32: u32 = 1;
 /// Returned when calling [`Runtime::minute`]
-pub const MINUTE_RUNTIME_FLOAT: f64 = 60.0;
+pub const MINUTE_RUNTIME_U32: u32 = 60;
 /// Returned when calling [`Runtime::hour`]
-pub const HOUR_RUNTIME_FLOAT: f64 = 3600.0;
+pub const HOUR_RUNTIME_U32: u32 = 3600;
 
 /// The max input to [`Runtime`] before it overflows and returns [`UNKNOWN_RUNTIME`]
-pub const MAX_RUNTIME_FLOAT: f64 = 359999.0;
-
-/// The max (unsigned integer) input to [`Runtime`] before it overflows and returns [`UNKNOWN_RUNTIME`]
-pub const MAX_RUNTIME_UINT: u64 = 359999;
+pub const MAX_RUNTIME_U32: u32 = 359999;
 
 /// The text [`Runtime`] will return [`UNKNOWN_RUNTIME`]
 pub const MAX_RUNTIME: &str = "99:59:59";
