@@ -12,6 +12,7 @@ Most of the internal strings are implemented as fixed length, stack allocated ar
 |------------------|---------|
 | `serde`          | Enables [`serde`](https://docs.rs/serde) on all types
 | `ignore_nan_inf` | Disables checking `f64`'s for `f64::NAN`, `f64::INFINITY`, and `f64::NEG_INFINITY`
+| `inline_date`    | Inlines any `Date` that is in `YYYY-MM-HH` format and is between year `1900-2100`
 | `inline_time`    | Inlines any `Time` that is under `1 hour, 1 minute` (`0..=3660`)
 | `inline_runtime` | Inlines ALL of `Runtime` (`0:00..99:59:59`/`0..359999`)
 | `full`           | Enables everything above
@@ -69,10 +70,10 @@ assert!(a == "23 hours, 59 minutes, 59 seconds");
 
 ## Date:
 ```rust
-let a = readable::Date::from_str("2014-12-31", '.').unwrap();
+let a = readable::Date::from_str("2014-12-31").unwrap();
 
 assert!(a == (2014, 12, 31));
-assert!(a == "2014.12.31");
+assert!(a == "2014-12-31");
 ```
 
 ## Comparison

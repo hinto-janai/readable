@@ -1,6 +1,6 @@
 [package]
 name = "readable"
-version = "0.6.3"
+version = "0.7.0"
 edition = "2021"
 authors = ["hinto.janai <hinto.janai@protonmail.com>"]
 description = "Human readable data formatting"
@@ -15,8 +15,9 @@ all-features = true
 
 [features]
 default        = []
-full           = ["serde", "ignore_nan_inf", "inline_time", "inline_runtime"]
+full           = ["serde", "ignore_nan_inf", "inline_date", "inline_time", "inline_runtime"]
 ignore_nan_inf = []
+inline_date    = []
 inline_time    = []
 inline_runtime = []
 
