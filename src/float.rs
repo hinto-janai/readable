@@ -69,43 +69,60 @@ pub struct Float(f64, CompactString);
 
 impl_traits!(Float, f64);
 
+// Implements `new_X` functions.
+macro_rules! impl_new {
+	( $num:tt ) => {
+		paste::item! {
+			#[doc = "Same as [`Float::from`] but with `" $num "` floating point."]
+			pub fn [<new_ $num>](f: f64) -> Self {
+				handle_nan_string!(f);
+
+				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
+				Self(f, format_compact!("{}.{}", num!(f as u64), fract))
+			}
+		}
+	}
+}
+
 impl Float {
 	impl_common!(f64);
+	impl_usize!();
+	impl_isize!();
 
 	#[inline]
-	/// Returns a [`Self`] with the [`f64`] value of `0.0`.
+	/// Returns a [`Float`] with the [`f64`] value of `0.0`.
 	///
 	/// The [`String`] is set to [`ZERO_FLOAT`].
-	pub fn zero() -> Self {
-		Self(0.0, CompactString::new(ZERO_FLOAT))
+	pub const fn zero() -> Self {
+		Self(0.0, CompactString::new_inline(ZERO_FLOAT))
 	}
 
 	#[inline]
-	/// Returns a [`Self`] with the [`f64`] value of [`f64::NAN`].
+	/// Returns a [`Float`] with the [`f64`] value of [`f64::NAN`].
 	///
 	/// The [`String`] is set to [`UNKNOWN_FLOAT`].
-	pub fn unknown() -> Self {
-		Self(f64::NAN, CompactString::new(UNKNOWN_FLOAT))
+	pub const fn unknown() -> Self {
+		Self(f64::NAN, CompactString::new_inline(UNKNOWN_FLOAT))
 	}
 
 	#[inline]
-	/// Returns a [`Self`] with the [`f64`] value of [`f64::NAN`].
+	/// Returns a [`Float`] with the [`f64`] value of [`f64::NAN`].
 	///
 	/// The [`String`] is set to [`NAN`].
-	pub fn nan() -> Self {
-		Self(f64::NAN, CompactString::new(NAN))
+	pub const fn nan() -> Self {
+		Self(f64::NAN, CompactString::new_inline(NAN))
 	}
 
 	#[inline]
-	/// Returns a [`Self`] with the [`f64`] value of [`f64::INFINITY`].
+	/// Returns a [`Float`] with the [`f64`] value of [`f64::INFINITY`].
 	///
 	/// The [`String`] is set to [`INFINITY`].
-	pub fn inf() -> Self {
-		Self(f64::INFINITY, CompactString::new(INFINITY))
+	pub const fn inf() -> Self {
+		Self(f64::INFINITY, CompactString::new_inline(INFINITY))
 	}
 
 	#[inline]
-	/// Same as [`Self::from`] but with no floating point on the inner [`String`].
+	/// Same as [`Float::from`] but with no floating point on the inner [`String`].
 	///
 	/// The inner [`f64`] stays the same as the input.
 	///
@@ -122,122 +139,12 @@ impl Float {
 		Self(f, format_compact!("{}", num!(f as u64)))
 	}
 
-	#[inline]
-	/// Create a new [`Self`]  but with `1` floating point.
-	pub fn new_1_point(f: f64) -> Self {
-		handle_nan_string!(f);
+	impl_new!(1);
+	impl_new!(2);
 
-		let fract = &format_compact!("{:.1}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Create a new [`Self`]  but with `2` floating point.
-	pub fn new_2_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.2}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Create a new [`Self`]  but with `4` floating point.
-	pub fn new_4_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.4}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Create a new [`Self`]  but with `5` floating point.
-	pub fn new_5_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.5}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Create a new [`Self`]  but with `6` floating point.
-	pub fn new_6_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.6}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Create a new [`Self`]  but with `7` floating point.
-	pub fn new_7_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.7}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Create a new [`Self`]  but with `8` floating point.
-	pub fn new_8_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.8}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Create a new [`Self`]  but with `9` floating point.
-	pub fn new_9_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.9}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Create a new [`Self`]  but with `10` floating point.
-	pub fn new_10_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.10}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Create a new [`Self`]  but with `11` floating point.
-	pub fn new_11_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.11}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Create a new [`Self`]  but with `12` floating point.
-	pub fn new_12_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.12}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Create a new [`Self`]  but with `13` floating point.
-	pub fn new_13_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.13}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
-	}
-
-	#[inline]
-	/// Create a new [`Self`]  but with `14` floating point.
-	pub fn new_14_point(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		let fract = &format_compact!("{:.14}", f.fract())[2..];
-		Self(f, format_compact!("{}.{}", num!(f as u64), fract))
-	}
+	seq_macro::seq!(N in 4..=18 {
+		impl_new!(N);
+	});
 }
 
 // Implementation Macro.

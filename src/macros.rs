@@ -408,7 +408,7 @@ macro_rules! impl_usize {
 		///
 		/// # Notes
 		/// This function is only available on 64-bit platforms.
-		pub fn usize(&self) -> usize {
+		pub const fn usize(&self) -> usize {
 			self.0 as usize
 		}
 	}
@@ -424,7 +424,7 @@ macro_rules! impl_isize {
 		///
 		/// # Notes
 		/// This function is only available on 64-bit platforms.
-		pub fn isize(&self) -> isize {
+		pub const fn isize(&self) -> isize {
 			self.0 as isize
 		}
 	}
@@ -436,13 +436,13 @@ macro_rules! impl_inner {
 	($num:ident) => {
 		#[inline]
 		/// Returns a [`Self`] with the value `0`.
-		pub fn zero() -> Self {
+		pub const fn zero() -> Self {
 			Self(0, crate::inner::Inner::Zero)
 		}
 
 		#[inline]
 		/// Returns a [`Self`] set to `0`, but the [`String`] set to `???`.
-		pub fn unknown() -> Self {
+		pub const fn unknown() -> Self {
 			Self(0, crate::inner::Inner::Unknown)
 		}
 

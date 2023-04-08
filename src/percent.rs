@@ -80,7 +80,7 @@ pub struct Percent(f64, CompactString);
 macro_rules! impl_new {
 	( $num:tt ) => {
 		paste::item! {
-			#[doc = "Same as [`Self::from`] but with `" $num "` floating point."]
+			#[doc = "Same as [`Percent::from`] but with `" $num "` floating point."]
 			pub fn [<new_ $num>](f: f64) -> Self {
 				handle_nan_string!(f);
 
@@ -104,7 +104,13 @@ macro_rules! impl_const {
 	}
 }
 
+impl_traits!(Percent, f64);
+
 impl Percent {
+	impl_common!(f64);
+	impl_usize!();
+	impl_isize!();
+
 	#[inline]
 	/// Returns a [`Self`] with the [`f64`] value of [`f64::NAN`].
 	///
@@ -228,8 +234,6 @@ impl From<f64> for Percent {
 		Self(number, format_compact!("{}.{}%", num!(number as u64), fract))
 	}
 }
-
-impl_traits!(Percent, f64);
 
 //---------------------------------------------------------------------------------------------------- TESTS
 #[cfg(test)]

@@ -64,6 +64,7 @@ pub struct Int(i64, Inner);
 impl Int {
 	impl_inner!(i64);
 	impl_common!(i64);
+	impl_isize!();
 }
 
 impl_traits!(Int, i64);
