@@ -269,6 +269,8 @@ impl From<u64> for Time {
 }
 
 //---------------------------------------------------------------------------------------------------- Inlined 0..u16::MAX.
+#[inline(always)]
+#[cfg(feature = "inline_time")]
 const fn inlined_u16(u: u16) -> &'static str {
 	match u {
 		0 => "0 seconds",
