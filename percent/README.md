@@ -1,4 +1,4 @@
-# readable-inlined-runtime
+# readable-inlined-percent
 Inlined data for [`readable`](https://docs.rs/readable).
 
 Do not use this crate directly.

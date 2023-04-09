@@ -12,6 +12,7 @@
 //! | `inline_date`    | Inlines any `Date` that is in `YYYY-MM-HH` format and is between year `1900-2100`
 //! | `inline_time`    | Inlines any `Time` that is under `1 hour, 1 minute` (`0..=3660`)
 //! | `inline_runtime` | Inlines ALL of `Runtime` (`0:00..99:59:59`/`0..=359999`)
+//! | `inline_percent` | Inlines any `Percent` between `0.0..100.0`
 //! | `full`           | Enables everything above
 //!
 //! **Warning:** The `inline_*` features are disabled by default. While they increase speed,

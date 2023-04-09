@@ -28,6 +28,14 @@ use crate::macros::*;
 /// assert!(f3 == "3.000%");
 /// assert!(f4 == "3.0000%");
 ///```
+///
+/// ## Inlining
+/// If the feature flag `inline_percent` is enabled, inputs ranging from `0.0..100.0` into
+/// [`Percent::from`] will return an inlined static [`str`].
+///
+/// **Warning:** This feature is disabled by default. While it increases speed,
+/// it also _heavily_ increases build time and binary size.
+///
 /// ## Cloning
 /// [`Clone`] may be expensive:
 /// ```rust
@@ -84,6 +92,11 @@ macro_rules! impl_new {
 			pub fn [<new_ $num>](f: f64) -> Self {
 				handle_nan_string!(f);
 
+				#[cfg(feature = "inline_percent")]
+				if f >= 0.0 && f <= 100.0 {
+					return Self(f, CompactString::new_inline(crate::readable_inlined_percent::inlined(f));
+				}
+
 				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
 				Self(f, format_compact!("{}.{}%", num!(f as u64), fract))
 			}
@@ -116,7 +129,7 @@ impl Percent {
 	///
 	/// The [`String`] is set to `?.??%`.
 	pub fn unknown() -> Self {
-		Self(f64::NAN, CompactString::new(UNKNOWN_PERCENT))
+		Self(f64::NAN, CompactString::new_inline(UNKNOWN_PERCENT))
 	}
 
 	#[inline]
@@ -124,7 +137,7 @@ impl Percent {
 	///
 	/// The [`String`] is set to `NaN`.
 	pub fn nan() -> Self {
-		Self(f64::NAN, CompactString::new(NAN))
+		Self(f64::NAN, CompactString::new_inline(NAN))
 	}
 
 	#[inline]
@@ -132,7 +145,7 @@ impl Percent {
 	///
 	/// The [`String`] is set to `∞`.
 	pub fn inf() -> Self {
-		Self(f64::INFINITY, CompactString::new(INFINITY))
+		Self(f64::INFINITY, CompactString::new_inline(INFINITY))
 	}
 
 	#[inline]
@@ -162,6 +175,12 @@ impl Percent {
 	/// | 100.1  | `100%`
 	pub fn new_0(f: f64) -> Self {
 		handle_nan_string!(f);
+
+		#[cfg(feature = "inline_percent")]
+		if f >= 0.0 && f <= 100.0 {
+			return Self(f, CompactString::new_inline(crate::readable_inlined_percent::inlined(f));
+		}
+
 		Self(f, format_compact!("{}%", num!(f as u64)))
 	}
 
@@ -177,7 +196,14 @@ macro_rules! impl_number {
 		impl From<$number> for Percent {
 			#[inline]
 			fn from(number: $number) -> Self {
-				Self(number as f64, format_compact!("{}.00%", num!(number)))
+				let f = number as f64;
+
+				#[cfg(feature = "inline_percent")]
+				if f >= 0.0 && f <= 100.0 {
+					return Self(f, CompactString::new_inline(crate::readable_inlined_percent::inlined(f));
+				}
+
+				Self(f, format_compact!("{}.00%", num!(number)))
 			}
 		}
 	}
@@ -209,29 +235,41 @@ impl From<f32> for Percent {
 			}
 		}
 
+		let f = number as f64;
+
+		#[cfg(feature = "inline_percent")]
+		if f >= 0.0 && f <= 100.0 {
+			return Self(f, CompactString::new_inline(crate::readable_inlined_percent::inlined(f));
+		}
+
 		let fract = &format_compact!("{:.2}", number.fract())[2..];
-		Self(number as f64, format_compact!("{}.{}%", num!(number as u64), fract))
+		Self(f, format_compact!("{}.{}%", num!(number as u64), fract))
 	}
 }
 
 impl From<f64> for Percent {
 	#[inline]
-	fn from(number: f64) -> Self {
+	fn from(f: f64) -> Self {
 		#[cfg(not(feature = "ignore_nan_inf"))]
 		{
-			let fpcat = number.classify();
+			let fpcat = f.classify();
 			use std::num::FpCategory;
 			match fpcat {
 				FpCategory::Normal   => (),
-				FpCategory::Nan      => return Self(number, CompactString::new(NAN)),
-				FpCategory::Infinite => return Self(number, CompactString::new(INFINITY)),
+				FpCategory::Nan      => return Self(f, CompactString::new(NAN)),
+				FpCategory::Infinite => return Self(f, CompactString::new(INFINITY)),
 				_ => (),
 			}
 		}
 
-		let fract = &format_compact!("{:.2}", number.fract())[2..];
+		#[cfg(feature = "inline_percent")]
+		if f >= 0.0 && f <= 100.0 {
+			return Self(f, CompactString::new_inline(crate::readable_inlined_percent::inlined(f));
+		}
 
-		Self(number, format_compact!("{}.{}%", num!(number as u64), fract))
+		let fract = &format_compact!("{:.2}", f.fract())[2..];
+
+		Self(f, format_compact!("{}.{}%", num!(f as u64), fract))
 	}
 }
 

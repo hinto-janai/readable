@@ -1,0 +1,13 @@
+[package]
+name = "readable-inlined-percent"
+version = "0.1.0"
+edition = "2021"
+authors = ["hinto.janai <hinto.janai@protonmail.com>"]
+description = "Human readable data formatting"
+documentation = "https://docs.rs/readable-inlined-percent"
+repository = "https://github.com/hinto-janai/readable"
+readme = "README.md"
+keywords = ["human", "readable", "data", "read", "string"]
+license = "MIT"
+
+[dependencies]

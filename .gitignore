@@ -2,4 +2,5 @@
 /date/target
 /time/target
 /runtime/target
+/percent/target
 /src/utf8.rs
