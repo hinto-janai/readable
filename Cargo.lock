@@ -117,10 +117,31 @@ dependencies = [
  "lazy_static",
  "num-format",
  "paste",
+ "readable-inlined-date",
+ "readable-inlined-runtime",
+ "readable-inlined-time",
  "regex",
  "seq-macro",
  "serde",
 ]
+
+[[package]]
+name = "readable-inlined-date"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7aadd8cea085557b95a7ac2e8668418541d62d9f63dfb73943b917fc6fc5fcd1"
+
+[[package]]
+name = "readable-inlined-runtime"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca2d8d7c91d98b93b95f336b45da36fd098d52581ed72cb0f1f9b9b87e27f2ea"
+
+[[package]]
+name = "readable-inlined-time"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d253ff3a427db5c14433d66bb26ea11178c17a444dd190b722843f7391f8c888"
 
 [[package]]
 name = "regex"
