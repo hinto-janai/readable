@@ -127,9 +127,9 @@ dependencies = [
 
 [[package]]
 name = "readable-inlined-date"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7aadd8cea085557b95a7ac2e8668418541d62d9f63dfb73943b917fc6fc5fcd1"
+checksum = "d217dfe23dcecff3cb4f8b7005445b03a6150b4d6dbf5c2ef579cc4e6e660a19"
 
 [[package]]
 name = "readable-inlined-runtime"
