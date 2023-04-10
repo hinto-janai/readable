@@ -3,6 +3,4 @@
 
 Human **readable** data formatting.
 
-This crate turns various data into human-readable strings.
-
-Full docs [here.](https://docs.rs/readable)
+Full docs here: https://docs.rs/readable

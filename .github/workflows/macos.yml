@@ -32,6 +32,6 @@ jobs:
         RUSTFLAGS: '-D warnings'
       run: cargo doc --workspace --no-deps --all-features
     - name: Test
-      run: cargo test --all-features -- --skip float::tests::special --skip int::tests::special --skip percent::tests::special --skip runtime::tests::special --skip unsigned::tests::special
+      run: cargo test -- --skip float::tests::special --skip int::tests::special --skip percent::tests::special --skip runtime::tests::special --skip unsigned::tests::special
     - name: Build
-      run: cargo build --all-features
+      run: cargo build
