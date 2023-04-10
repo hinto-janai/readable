@@ -18,7 +18,7 @@
 //! **Warning:** The `inline_*` features are disabled by default. While they increase speed,
 //! they also _heavily_ increase build time and binary size.
 //!
-//! ## Unsigned integers:
+//! #### Unsigned integers:
 //! ```
 //! let a = readable::Unsigned::from(1000_u64);
 //!
@@ -26,7 +26,7 @@
 //! assert!(a == "1,000");
 //! ```
 //!
-//! ## Signed integers:
+//! #### Signed integers:
 //! ```
 //! let a = readable::Int::from(-1000);
 //!
@@ -34,7 +34,7 @@
 //! assert!(a == "-1,000");
 //! ```
 //!
-//! ## Floats:
+//! #### Floats:
 //! ```
 //! let a = readable::Float::from(1000.123);
 //!
@@ -42,7 +42,7 @@
 //! assert!(a == "1,000.123");
 //! ```
 //!
-//! ## Percents:
+//! #### Percents:
 //! ```
 //! let a = readable::Percent::from(1000.123);
 //!
@@ -50,7 +50,7 @@
 //! assert!(a == "1,000.12%");
 //! ```
 //!
-//! ## Runtime:
+//! #### Runtime:
 //! ```
 //! let a = readable::Runtime::from(11111_u16);
 //!
@@ -58,7 +58,7 @@
 //! assert!(a == "3:05:11");
 //! ```
 //!
-//! ## Time:
+//! #### Time:
 //! ```
 //! let a = readable::Time::from(86399_u64);
 //!
@@ -66,7 +66,7 @@
 //! assert!(a == "23 hours, 59 minutes, 59 seconds");
 //! ```
 //!
-//! ## Date:
+//! #### Date:
 //! ```rust
 //! let a = readable::Date::from_str("2014-12-31").unwrap();
 //!
@@ -74,7 +74,7 @@
 //! assert!(a == "2014-12-31");
 //! ```
 //!
-//! ## Comparison
+//! # Comparison
 //! All types implement `Display`, `PartialEq`, `PartialEq<&str>` and `PartialEq` for their inner number primitive.
 //!
 //! Example 1:
@@ -102,6 +102,44 @@
 //! assert!(a == b);
 //! ```
 //! This compares both the `u64` AND `String` inside `a` and `b`.
+//!
+//! # Math
+//! Most types implement `+, -, /, *, %`, outputting a new `Self`.
+//!
+//! Example - `Add +`:
+//! ```rust
+//! let f1 = readable::Float::from(1.0);
+//! let f2 = readable::Float::from(2.0);
+//! let f3 = readable::Float::from(3.0);
+//!
+//! assert!(f1 + f2 == f3);
+//! ```
+//! Example - `Sub -`:
+//! ```rust
+//! let p50 = readable::Percent::from(50.0);
+//! let p25 = readable::Percent::from(25.0);
+//!
+//! assert!(p50 - p25 == "25.00%");
+//! ```
+//! Example - `Div /`:
+//! ```rust
+//! let u100 = readable::Unsigned::from(100_u64);
+//! let u10  = readable::Unsigned::from(10_u64);
+//!
+//! assert!(u100 / u10 == 10);
+//! ```
+//! Example - `Mul *`:
+//! ```rust
+//! let u10 = readable::Unsigned::from(10_u64);
+//!
+//! assert!(u10 * u10 == readable::Unsigned::from(100_u64));
+//! ```
+//! Example - `Rem %`:
+//! ```rust
+//! let u10 = readable::Unsigned::from(10_u64);
+//!
+//! assert!(u10 % u10 == 0);
+//! ```
 
 pub(crate) mod inner;
 pub(crate) mod macros;
