@@ -579,6 +579,13 @@ macro_rules! impl_impl_math {
 	($trait_word:ident, $operator:tt, $s:ty, $num:ty) => {
 		paste::item! {
 			// Standard ops.
+			impl std::ops::[<$trait_word>]<$s> for $s {
+				type Output = Self;
+				fn [<$trait_word:lower>](self, other: $s) -> Self {
+					let r = self.inner() $operator other.inner();
+					Self::from(r)
+				}
+			}
 			impl std::ops::[<$trait_word>]<$num> for $s {
 				type Output = Self;
 				fn [<$trait_word:lower>](self, other: $num) -> Self {
@@ -589,6 +596,12 @@ macro_rules! impl_impl_math {
 				type Output = Self;
 				fn [<$trait_word:lower>](self, other: $s) -> Self {
 					Self::from(self $operator other.inner())
+				}
+			}
+			impl std::ops::[<$trait_word>]<&$s> for $s {
+				type Output = Self;
+				fn [<$trait_word:lower>](self, other: &$s) -> Self {
+					Self::from(self.inner() $operator other.inner())
 				}
 			}
 			impl std::ops::[<$trait_word>]<&$num> for $s {
@@ -605,16 +618,30 @@ macro_rules! impl_impl_math {
 			}
 
 			// Assign ops.
-			impl std::ops::[<$trait_word Assign>]<$num> for $s {
-				fn [<$trait_word:lower _assign>](&mut self, other: $num) {
-					*self = Self::from(self.inner() $operator other)
-				}
-			}
-			impl std::ops::[<$trait_word Assign>]<&$num> for $s {
-				fn [<$trait_word:lower _assign>](&mut self, other: &$num) {
-					*self = Self::from(self.inner() $operator other)
-				}
-			}
+			// TODO:
+			// These types are meant to be immutable so
+			// creating a new value with normal operators
+			// instead of assigned seems more correct.
+//			impl std::ops::[<$trait_word Assign>]<$s> for $s {
+//				fn [<$trait_word:lower _assign>](&mut self, other: $s) {
+//					*self = Self::from(self.inner() $operator other.inner())
+//				}
+//			}
+//			impl std::ops::[<$trait_word Assign>]<&$s> for $s {
+//				fn [<$trait_word:lower _assign>](&mut self, other: &$s) {
+//					*self = Self::from(self.inner() $operator other.inner())
+//				}
+//			}
+//			impl std::ops::[<$trait_word Assign>]<$num> for $s {
+//				fn [<$trait_word:lower _assign>](&mut self, other: $num) {
+//					*self = Self::from(self.inner() $operator other)
+//				}
+//			}
+//			impl std::ops::[<$trait_word Assign>]<&$num> for $s {
+//				fn [<$trait_word:lower _assign>](&mut self, other: &$num) {
+//					*self = Self::from(self.inner() $operator other)
+//				}
+//			}
 		}
 	}
 }

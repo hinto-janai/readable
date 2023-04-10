@@ -37,6 +37,35 @@ use crate::constants::*;
 ///
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///
+/// ## Math
+/// These operators are overloaded. They will always output a new [`Self`]:
+/// - `Add +`
+/// - `Sub -`
+/// - `Div /`
+/// - `Mul *`
+/// - `Rem %`
+///
+/// They can either be:
+/// - Combined with another [`Self`]: `Int::from(1) + Int::from(1)`
+/// - Or with the inner number itself: `Int::from(1) + 1`
+///
+/// They also have the same `panic!()` behavior on overflow as the normal ones, because internally,
+/// it is just calling `.inner() $OPERATOR $NUMBER`.
+///
+/// ```rust
+/// # use readable::*;
+/// assert!(Int::from(10) + 10 == Int::from(20));
+/// assert!(Int::from(10) - 10 == Int::from(0));
+/// assert!(Int::from(10) / 10 == Int::from(1));
+/// assert!(Int::from(10) * 10 == Int::from(100));
+/// assert!(Int::from(10) % 10 == Int::from(0));
+/// ```
+/// Overflow example:
+/// ```rust,should_panic
+/// # use readable::*;
+/// let n = Int::from(i64::MAX) + i64::MAX;
+/// ```
+///
 /// ## Examples
 /// ```rust
 /// # use readable::Int;

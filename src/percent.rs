@@ -8,7 +8,10 @@ use crate::macros::*;
 //---------------------------------------------------------------------------------------------------- Percent
 /// Human readable percentage.
 ///
-/// Takes a floating point number as input and returns a ready-to-[`print!()`] [`Percent`].
+/// [`Percent::from`] input can be:
+/// - [`u8`], [`u16`], [`u32`], [`u64`], [`usize`]
+/// - [`i8`], [`i16`], [`i32`], [`i64`], [`isize`]
+/// - [`f32`], [`f64`]
 ///
 /// The default [`Percent::from`] implementation will print `2` decimal numbers.
 ///
@@ -52,6 +55,36 @@ use crate::macros::*;
 /// - [`f64::INFINITY`] outputs [`INFINITY`]
 ///
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
+///
+/// ## Math
+/// These operators are overloaded. They will always output a new [`Self`]:
+/// - `Add +`
+/// - `Sub -`
+/// - `Div /`
+/// - `Mul *`
+/// - `Rem %`
+///
+/// They can either be:
+/// - Combined with another [`Self`]: `Percent::from(1.0) + Percent::from(1.0)`
+/// - Or with the inner number itself: `Percent::from(1.0) + 1.0`
+///
+/// They also have the same `panic!()` behavior on overflow as the normal ones, because internally,
+/// it is just calling `.inner() $OPERATOR $NUMBER`.
+///
+/// ```rust
+/// # use readable::*;
+/// assert!(Percent::from(10.0) + 10.0 == Percent::from(20.0));
+/// assert!(Percent::from(10.0) - 10.0 == Percent::from(0.0));
+/// assert!(Percent::from(10.0) / 10.0 == Percent::from(1.0));
+/// assert!(Percent::from(10.0) * 10.0 == Percent::from(100.0));
+/// assert!(Percent::from(10.0) % 10.0 == Percent::from(0.0));
+/// ```
+/// Overflow example (floats don't panic in this case):
+/// ```rust
+/// # use readable::*;
+/// let n = Percent::from(f64::MAX) + f64::MAX;
+/// assert!(n.inner().is_infinite());
+/// ```
 ///
 /// ## Examples
 /// ```rust

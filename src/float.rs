@@ -19,9 +19,9 @@ use crate::macros::*;
 /// creating the [`Float`], or converting an existing [`Float`], for example:
 /// ```
 /// # use readable::Float;
-/// let f2 = Float::new_2_point(3.0);
-/// let f6 = Float::new_6_point(3.0);
-/// let f9 = Float::new_9_point(f2.inner());
+/// let f2 = Float::from_2(3.0);
+/// let f6 = Float::from_6(3.0);
+/// let f9 = Float::from_9(f2.inner());
 ///
 /// assert!(f2 == 3.00);
 /// assert!(f6 == 3.000000);
@@ -52,15 +52,46 @@ use crate::macros::*;
 ///
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///
+/// ## Math
+/// These operators are overloaded. They will always output a new [`Self`]:
+/// - `Add +`
+/// - `Sub -`
+/// - `Div /`
+/// - `Mul *`
+/// - `Rem %`
+///
+/// They can either be:
+/// - Combined with another [`Self`]: `Float::from(1.0) + Float::from(1.0)`
+/// - Or with the inner number itself: `Float::from(1.0) + 1.0`
+///
+/// They also have the same `panic!()` behavior on overflow as the normal ones, because internally,
+/// it is just calling `.inner() $OPERATOR $NUMBER`.
+///
+/// ```rust
+/// # use readable::*;
+/// // Regular operators.
+/// assert!(Float::from(10.0) + 10.0 == Float::from(20.0));
+/// assert!(Float::from(10.0) - 10.0 == Float::from(0.0));
+/// assert!(Float::from(10.0) / 10.0 == Float::from(1.0));
+/// assert!(Float::from(10.0) * 10.0 == Float::from(100.0));
+/// assert!(Float::from(10.0) % 10.0 == Float::from(0.0));
+/// ```
+/// Overflow example (floats don't panic in this case):
+/// ```rust
+/// # use readable::*;
+/// let n = Float::from(f64::MAX) + f64::MAX;
+/// assert!(n.is_inf());
+/// ```
+///
 /// # Examples
 /// ```rust
 /// # use readable::Float;
-/// assert!(Float::from(0.0)              == "0.000");
+/// assert!(Float::from(0.0) == "0.000");
 ///
 /// // This gets rounded up to '.568'
-/// assert!(Float::from(1234.5678)        == "1,234.568");
+/// assert!(Float::from(1234.5678) == "1,234.568");
 /// // To prevent that, use 4 point.
-/// assert!(Float::new_4_point(1234.5678) == "1,234.5678");
+/// assert!(Float::from_4(1234.5678) == "1,234.5678");
 /// ```
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -70,12 +101,12 @@ pub struct Float(f64, CompactString);
 impl_math!(Float, f64);
 impl_traits!(Float, f64);
 
-// Implements `new_X` functions.
+// Implements `from_X` functions.
 macro_rules! impl_new {
 	( $num:tt ) => {
 		paste::item! {
 			#[doc = "Same as [`Float::from`] but with `" $num "` floating point."]
-			pub fn [<new_ $num>](f: f64) -> Self {
+			pub fn [<from_ $num>](f: f64) -> Self {
 				handle_nan_string!(f);
 
 				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
@@ -123,6 +154,18 @@ impl Float {
 	}
 
 	#[inline]
+	/// Calls [`f64::is_nan`].
+	pub fn is_nan(&self) -> bool {
+		self.0.is_nan()
+	}
+
+	#[inline]
+	/// Calls [`f64::is_infinite`].
+	pub fn is_inf(&self) -> bool {
+		self.0.is_infinite()
+	}
+
+	#[inline]
 	/// Same as [`Float::from`] but with no floating point on the inner [`String`].
 	///
 	/// The inner [`f64`] stays the same as the input.
@@ -135,7 +178,7 @@ impl Float {
 	/// | 0.0    | `0`
 	/// | 50.123 | `50`
 	/// | 100.1  | `100`
-	pub fn new_0_point(f: f64) -> Self {
+	pub fn from_0(f: f64) -> Self {
 		handle_nan_string!(f);
 		Self(f, format_compact!("{}", num!(f as u64)))
 	}
@@ -237,20 +280,20 @@ mod tests {
 
 	#[test]
 	fn float() {
-		assert!(Float::new_0_point( 0.1)              == "0");
-		assert!(Float::new_1_point( 0.1)              == "0.1");
-		assert!(Float::new_2_point( 0.01)             == "0.01");
+		assert!(Float::from_0( 0.1)              == "0");
+		assert!(Float::from_1( 0.1)              == "0.1");
+		assert!(Float::from_2( 0.01)             == "0.01");
 		assert!(Float::from(        0.001)            == "0.001");
-		assert!(Float::new_4_point( 0.0001)           == "0.0001");
-		assert!(Float::new_5_point( 0.00001)          == "0.00001");
-		assert!(Float::new_6_point( 0.000001)         == "0.000001");
-		assert!(Float::new_7_point( 0.0000001)        == "0.0000001");
-		assert!(Float::new_8_point( 0.00000001)       == "0.00000001");
-		assert!(Float::new_9_point( 0.000000001)      == "0.000000001");
-		assert!(Float::new_10_point(0.0000000001)     == "0.0000000001");
-		assert!(Float::new_11_point(0.00000000001)    == "0.00000000001");
-		assert!(Float::new_12_point(0.000000000001)   == "0.000000000001");
-		assert!(Float::new_13_point(0.0000000000001)  == "0.0000000000001");
-		assert!(Float::new_14_point(0.00000000000001) == "0.00000000000001");
+		assert!(Float::from_4( 0.0001)           == "0.0001");
+		assert!(Float::from_5( 0.00001)          == "0.00001");
+		assert!(Float::from_6( 0.000001)         == "0.000001");
+		assert!(Float::from_7( 0.0000001)        == "0.0000001");
+		assert!(Float::from_8( 0.00000001)       == "0.00000001");
+		assert!(Float::from_9( 0.000000001)      == "0.000000001");
+		assert!(Float::from_10(0.0000000001)     == "0.0000000001");
+		assert!(Float::from_11(0.00000000001)    == "0.00000000001");
+		assert!(Float::from_12(0.000000000001)   == "0.000000000001");
+		assert!(Float::from_13(0.0000000000001)  == "0.0000000000001");
+		assert!(Float::from_14(0.00000000000001) == "0.00000000000001");
 	}
 }

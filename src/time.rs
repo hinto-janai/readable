@@ -43,6 +43,35 @@ use crate::macros::*;
 ///
 /// The documentation will still refer to the inner string as a `String`. Anything returned will also be a `String`.
 ///
+/// ## Math
+/// These operators are overloaded. They will always output a new [`Self`]:
+/// - `Add +`
+/// - `Sub -`
+/// - `Div /`
+/// - `Mul *`
+/// - `Rem %`
+///
+/// They can either be:
+/// - Combined with another [`Self`]: `Time::from(1) + Time::from(1)`
+/// - Or with the inner number itself: `Time::from(1) + 1`
+///
+/// They also have the same `panic!()` behavior on overflow as the normal ones, because internally,
+/// it is just calling `.inner() $OPERATOR $NUMBER`.
+///
+/// ```rust
+/// # use readable::*;
+/// assert!(Time::from(10_u64) + 10 == Time::from(20_u64));
+/// assert!(Time::from(10_u64) - 10 == Time::from(0_u64));
+/// assert!(Time::from(10_u64) / 10 == Time::from(1_u64));
+/// assert!(Time::from(10_u64) * 10 == Time::from(100_u64));
+/// assert!(Time::from(10_u64) % 10 == Time::from(0_u64));
+/// ```
+/// Overflow example:
+/// ```rust,should_panic
+/// # use readable::*;
+/// let n = Time::from(u64::MAX) + u64::MAX;
+/// ```
+///
 /// ## Examples
 /// ```rust
 /// # use readable::Time;

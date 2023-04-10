@@ -38,6 +38,35 @@ use crate::constants::*;
 ///
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///
+/// ## Math
+/// These operators are overloaded. They will always output a new [`Self`]:
+/// - `Add +`
+/// - `Sub -`
+/// - `Div /`
+/// - `Mul *`
+/// - `Rem %`
+///
+/// They can either be:
+/// - Combined with another [`Self`]: `Unsigned::from(1) + Unsigned::from(1)`
+/// - Or with the inner number itself: `Unsigned::from(1) + 1`
+///
+/// They also have the same `panic!()` behavior on overflow as the normal ones, because internally,
+/// it is just calling `.inner() $OPERATOR $NUMBER`.
+///
+/// ```rust
+/// # use readable::*;
+/// assert!(Unsigned::from(10_u64) + 10 == Unsigned::from(20_u64));
+/// assert!(Unsigned::from(10_u64) - 10 == Unsigned::from(0_u64));
+/// assert!(Unsigned::from(10_u64) / 10 == Unsigned::from(1_u64));
+/// assert!(Unsigned::from(10_u64) * 10 == Unsigned::from(100_u64));
+/// assert!(Unsigned::from(10_u64) % 10 == Unsigned::from(0_u64));
+/// ```
+/// Overflow example:
+/// ```rust,should_panic
+/// # use readable::*;
+/// let n = Unsigned::from(u64::MAX) + u64::MAX;
+/// ```
+///
 /// # Examples
 /// ```rust
 /// # use readable::Unsigned;
