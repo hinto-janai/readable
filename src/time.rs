@@ -102,6 +102,7 @@ macro_rules! impl_number {
 	}
 }
 
+impl_math!(Time, u64);
 impl_traits!(Time, u64);
 impl_number!(u8);
 impl_number!(u16);

@@ -67,6 +67,7 @@ impl Int {
 	impl_isize!();
 }
 
+impl_math!(Int, i64);
 impl_traits!(Int, i64);
 impl_from!(i8, i16, i32, i64, isize, Int);
 impl_from_single!(u8, i64, Int);

@@ -59,7 +59,7 @@ macro_rules! buffer {
 			fn as_str(&self) -> &str {
 				// SAFETY:
 				// This is intended to format numbers, which are valid UTF-8.
-				unsafe { ::std::str::from_utf8_unchecked(self.as_bytes()) }
+				unsafe { std::str::from_utf8_unchecked(self.as_bytes()) }
 			}
 
 			#[inline(always)]
@@ -88,9 +88,9 @@ macro_rules! handle_nan {
 		#[cfg(not(feature = "ignore_nan_inf"))]
 		{
 			match $float.classify() {
-				::std::num::FpCategory::Normal   => (),
-				::std::num::FpCategory::Nan      => return Self(f64::NAN, crate::inner::Inner::Nan(crate::constants::NAN)),
-				::std::num::FpCategory::Infinite => return Self(f64::INFINITY, crate::inner::Inner::Inf(crate::constants::INFINITY)),
+				std::num::FpCategory::Normal   => (),
+				std::num::FpCategory::Nan      => return Self(f64::NAN, crate::inner::Inner::Nan(crate::constants::NAN)),
+				std::num::FpCategory::Infinite => return Self(f64::INFINITY, crate::inner::Inner::Inf(crate::constants::INFINITY)),
 				_ => (),
 			}
 		}
@@ -104,9 +104,9 @@ macro_rules! handle_nan_string {
 		#[cfg(not(feature = "ignore_nan_inf"))]
 		{
 			match $float.classify() {
-				::std::num::FpCategory::Normal   => (),
-				::std::num::FpCategory::Nan      => return Self(f64::NAN, ::compact_str::CompactString::new(crate::constants::NAN)),
-				::std::num::FpCategory::Infinite => return Self(f64::INFINITY, ::compact_str::CompactString::new(crate::constants::INFINITY)),
+				std::num::FpCategory::Normal   => (),
+				std::num::FpCategory::Nan      => return Self(f64::NAN, ::compact_str::CompactString::new(crate::constants::NAN)),
+				std::num::FpCategory::Infinite => return Self(f64::INFINITY, ::compact_str::CompactString::new(crate::constants::INFINITY)),
 				_ => (),
 			}
 		}
@@ -120,9 +120,9 @@ macro_rules! handle_nan_runtime {
 //		#[cfg(not(feature = "ignore_nan_inf"))]
 		{
 			match $float.classify() {
-				::std::num::FpCategory::Normal   => (),
-				::std::num::FpCategory::Nan      => return Self::unknown(),
-				::std::num::FpCategory::Infinite => return Self::unknown(),
+				std::num::FpCategory::Normal   => (),
+				std::num::FpCategory::Nan      => return Self::unknown(),
+				std::num::FpCategory::Infinite => return Self::unknown(),
 				_ => (),
 			}
 		}
@@ -269,9 +269,9 @@ macro_rules! impl_from {
 				#[cfg(not(feature = "ignore_nan_inf"))]
 				{
 					match number.classify() {
-						::std::num::FpCategory::Normal   => (),
-						::std::num::FpCategory::Nan      => return Self(number as $to, crate::inner::Inner::Nan),
-						::std::num::FpCategory::Infinite => return Self(number as $to, crate::inner::Inner::Inf),
+						std::num::FpCategory::Normal   => (),
+						std::num::FpCategory::Nan      => return Self(number as $to, crate::inner::Inner::Nan),
+						std::num::FpCategory::Infinite => return Self(number as $to, crate::inner::Inner::Inf),
 						_ => (),
 					}
 				}
@@ -287,9 +287,9 @@ macro_rules! impl_from {
 				#[cfg(not(feature = "ignore_nan_inf"))]
 				{
 					match number.classify() {
-						::std::num::FpCategory::Normal   => (),
-						::std::num::FpCategory::Nan      => return Self(number as $to, crate::inner::Inner::Nan),
-						::std::num::FpCategory::Infinite => return Self(number as $to, crate::inner::Inner::Inf),
+						std::num::FpCategory::Normal   => (),
+						std::num::FpCategory::Nan      => return Self(number as $to, crate::inner::Inner::Nan),
+						std::num::FpCategory::Infinite => return Self(number as $to, crate::inner::Inner::Inf),
 						_ => (),
 					}
 				}
@@ -306,9 +306,9 @@ macro_rules! impl_from {
 				#[cfg(not(feature = "ignore_nan_inf"))]
 				{
 					match number.classify() {
-						::std::num::FpCategory::Normal   => (),
-						::std::num::FpCategory::Nan      => return Self(*number as $to, crate::inner::Inner::Nan),
-						::std::num::FpCategory::Infinite => return Self(*number as $to, crate::inner::Inner::Inf),
+						std::num::FpCategory::Normal   => (),
+						std::num::FpCategory::Nan      => return Self(*number as $to, crate::inner::Inner::Nan),
+						std::num::FpCategory::Infinite => return Self(*number as $to, crate::inner::Inner::Inf),
 						_ => (),
 					}
 				}
@@ -324,9 +324,9 @@ macro_rules! impl_from {
 				#[cfg(not(feature = "ignore_nan_inf"))]
 				{
 					match number.classify() {
-						::std::num::FpCategory::Normal   => (),
-						::std::num::FpCategory::Nan      => return Self(*number as $to, crate::inner::Inner::Nan),
-						::std::num::FpCategory::Infinite => return Self(*number as $to, crate::inner::Inner::Inf),
+						std::num::FpCategory::Normal   => (),
+						std::num::FpCategory::Nan      => return Self(*number as $to, crate::inner::Inner::Nan),
+						std::num::FpCategory::Infinite => return Self(*number as $to, crate::inner::Inner::Inf),
 						_ => (),
 					}
 				}
@@ -573,6 +573,64 @@ macro_rules! impl_traits {
 	}
 }
 pub(crate) use impl_traits;
+
+// Macro for a math macro impl.
+macro_rules! impl_impl_math {
+	($trait_word:ident, $operator:tt, $s:ty, $num:ty) => {
+		paste::item! {
+			// Standard ops.
+			impl std::ops::[<$trait_word>]<$num> for $s {
+				type Output = Self;
+				fn [<$trait_word:lower>](self, other: $num) -> Self {
+					Self::from(self.inner() $operator other)
+				}
+			}
+			impl std::ops::[<$trait_word>]<$s> for $num {
+				type Output = Self;
+				fn [<$trait_word:lower>](self, other: $s) -> Self {
+					Self::from(self $operator other.inner())
+				}
+			}
+			impl std::ops::[<$trait_word>]<&$num> for $s {
+				type Output = Self;
+				fn [<$trait_word:lower>](self, other: &$num) -> Self {
+					Self::from(self.inner() $operator other)
+				}
+			}
+			impl std::ops::[<$trait_word>]<&$s> for $num {
+				type Output = Self;
+				fn [<$trait_word:lower>](self, other: &$s) -> Self {
+					Self::from(self $operator other.inner())
+				}
+			}
+
+			// Assign ops.
+			impl std::ops::[<$trait_word Assign>]<$num> for $s {
+				fn [<$trait_word:lower _assign>](&mut self, other: $num) {
+					*self = Self::from(self.inner() $operator other)
+				}
+			}
+			impl std::ops::[<$trait_word Assign>]<&$num> for $s {
+				fn [<$trait_word:lower _assign>](&mut self, other: &$num) {
+					*self = Self::from(self.inner() $operator other)
+				}
+			}
+		}
+	}
+}
+pub(crate) use impl_impl_math;
+
+// Implement math operators.
+macro_rules! impl_math {
+	($s:ty, $num:ty) => {
+		impl_impl_math!(Add, +, $s, $num);
+		impl_impl_math!(Sub, -, $s, $num);
+		impl_impl_math!(Div, /, $s, $num);
+		impl_impl_math!(Mul, *, $s, $num);
+		impl_impl_math!(Rem, %, $s, $num);
+	}
+}
+pub(crate) use impl_math;
 
 //---------------------------------------------------------------------------------------------------- TESTS
 //#[cfg(test)]

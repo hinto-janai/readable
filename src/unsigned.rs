@@ -64,6 +64,7 @@ impl Unsigned {
 	impl_usize!();
 }
 
+impl_math!(Unsigned, u64);
 impl_traits!(Unsigned, u64);
 impl_from!(u8, u16, u32, u64, usize, Unsigned);
 

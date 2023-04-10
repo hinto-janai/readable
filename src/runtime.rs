@@ -92,6 +92,7 @@ use crate::constants::*;
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub struct Runtime(u32, Buffer);
 
+impl_math!(Runtime, u32);
 impl_traits!(Runtime, u32);
 
 impl Runtime {

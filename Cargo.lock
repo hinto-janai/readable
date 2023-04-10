@@ -118,7 +118,6 @@ dependencies = [
  "num-format",
  "paste",
  "readable-inlined-date",
- "readable-inlined-percent",
  "readable-inlined-runtime",
  "readable-inlined-time",
  "regex",
@@ -131,12 +130,6 @@ name = "readable-inlined-date"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7aadd8cea085557b95a7ac2e8668418541d62d9f63dfb73943b917fc6fc5fcd1"
-
-[[package]]
-name = "readable-inlined-percent"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a242c9903ae192066bb5a55970682b23414c0a50d3f4f504142c0b404207132"
 
 [[package]]
 name = "readable-inlined-runtime"

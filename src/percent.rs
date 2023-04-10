@@ -110,6 +110,7 @@ macro_rules! impl_const {
 	}
 }
 
+impl_math!(Percent, f64);
 impl_traits!(Percent, f64);
 
 impl Percent {

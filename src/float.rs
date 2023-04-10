@@ -67,6 +67,7 @@ use crate::macros::*;
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Float(f64, CompactString);
 
+impl_math!(Float, f64);
 impl_traits!(Float, f64);
 
 // Implements `new_X` functions.
