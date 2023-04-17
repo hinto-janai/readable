@@ -110,6 +110,13 @@ use crate::macros::*;
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Percent(f64, CompactString);
 
+//impl<'a> std::ops::Add<f64> for Percent {
+//	type Output = Self;
+//	fn add(self, other: f64) -> Self::Output {
+//		Self::from(self.inner() + other)
+//	}
+//}
+
 // Implements `new_X` functions.
 macro_rules! impl_new {
 	( $num:tt ) => {
