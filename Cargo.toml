@@ -30,7 +30,7 @@ compact_str = { version = "0.7.0", features = ["bytes", "serde"] }
 lazy_static = { version = "1.4.0" }
 num-format  = { version = "0.4.4", features = ["with-serde"] }
 regex       = { version = "1.7.3" }
-serde       = { version = "1.0.159", features = ["derive"], optional = true }
+serde       = { version = "1.0.160", features = ["derive"], optional = true }
 
 # Inlined crates.
 readable-inlined-date    = { version = "0.1.1", optional = true }
