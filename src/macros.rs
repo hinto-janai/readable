@@ -682,6 +682,55 @@ macro_rules! impl_traits {
 				*self == other.0
 			}
 		}
+
+		// Ord
+		impl PartialOrd<str> for $s {
+			fn partial_cmp(&self, other: &str) -> Option<std::cmp::Ordering> {
+				Some(self.1.as_str().cmp(other))
+			}
+		}
+
+		impl PartialOrd<$s> for str {
+			fn partial_cmp(&self, other: &$s) -> Option<std::cmp::Ordering> {
+				Some(self.cmp(other.1.as_str()))
+			}
+		}
+
+		impl PartialOrd<&str> for $s {
+			fn partial_cmp(&self, other: &&str) -> Option<std::cmp::Ordering> {
+				Some(self.1.as_str().cmp(other))
+			}
+		}
+
+		impl PartialOrd<&$s> for str {
+			fn partial_cmp(&self, other: &&$s) -> Option<std::cmp::Ordering> {
+				Some(self.cmp(other.1.as_str()))
+			}
+		}
+
+		impl PartialOrd<$num> for $s {
+			fn partial_cmp(&self, other: &$num) -> Option<std::cmp::Ordering> {
+				self.0.partial_cmp(other)
+			}
+		}
+
+		impl PartialOrd<$s> for $num {
+			fn partial_cmp(&self, other: &$s) -> Option<std::cmp::Ordering> {
+				self.partial_cmp(&other.0)
+			}
+		}
+
+		impl PartialOrd<$num> for &$s {
+			fn partial_cmp(&self, other: &$num) -> Option<std::cmp::Ordering> {
+				self.0.partial_cmp(other)
+			}
+		}
+
+		impl PartialOrd<&$s> for $num {
+			fn partial_cmp(&self, other: &&$s) -> Option<std::cmp::Ordering> {
+				self.partial_cmp(&other.0)
+			}
+		}
 	}
 }
 pub(crate) use impl_traits;
