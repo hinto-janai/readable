@@ -419,7 +419,7 @@ macro_rules! impl_common {
 			}
 		}
 
-		/// Same as [`head()`] but returns a [`String`] ending with `...`
+		/// Same as [`Self::head`] but returns a [`String`] ending with `...`
 		///
 		/// This will return the full string without `...` if
 		/// the `len` is longer than the actual inner [`str`].
@@ -463,7 +463,7 @@ macro_rules! impl_common {
 			}
 		}
 
-		/// Same as [`tail()`] but returns a [`String`] starting with `...`
+		/// Same as [`Self::tail`] but returns a [`String`] starting with `...`
 		///
 		/// This will return the full string without `...` if
 		/// the `len` is longer than the actual inner [`str`].
@@ -559,21 +559,25 @@ macro_rules! impl_inner {
 		}
 
 		#[inline(always)]
+		/// Returns true if [`Self`] is [`Self::zero`].
 		pub fn is_zero(&self) -> bool {
 			self.1.is_zero()
 		}
 
 		#[inline(always)]
+		/// Returns true if [`Self`] is [`Self::unknown`].
 		pub fn is_unknown(&self) -> bool {
 			self.1.is_unknown()
 		}
 
 		#[inline(always)]
+		/// Returns true if [`Self`] is `NAN`.
 		pub fn is_nan(&self) -> bool {
 			self.1.is_nan()
 		}
 
 		#[inline(always)]
+		/// Returns true if [`Self`] is `INF`.
 		pub fn is_inf(&self) -> bool {
 			self.1.is_inf()
 		}
