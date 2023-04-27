@@ -16,7 +16,7 @@ use crate::constants::*;
 /// - Fractional parts will be ignored
 ///
 /// ## Cloning
-/// [`Copy`] available, [`Clone`] is cheap.
+/// [`Copy`] is available.
 ///
 /// The inner type is either a `&'static str` or a buffer
 /// allocated on the stack, both are able to be cheaply `Copy`-ied:

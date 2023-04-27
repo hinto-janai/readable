@@ -223,7 +223,7 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// it also _heavily_ increases build time and binary size.
 ///
 /// ## Cloning
-/// [`Copy`] available, [`Clone`] is cheap.
+/// [`Copy`] is available.
 ///
 /// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
 /// but a 10 byte array buffer, literally: `[u8; 10]`.

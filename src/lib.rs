@@ -141,6 +141,9 @@
 //! assert!(u10 % u10 == 0);
 //! ```
 
+//------ Docs
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+
 //------ Lints
 #![forbid(
 	future_incompatible,

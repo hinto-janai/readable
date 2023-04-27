@@ -57,17 +57,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "inherent"
-version = "1.0.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20cc83c51f04b1ad3b24cbac53d2ec1a138d699caabe05d315cb8538e8624d01"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -124,7 +113,6 @@ name = "readable"
 version = "0.7.7"
 dependencies = [
  "compact_str",
- "inherent",
  "lazy_static",
  "num-format",
  "paste",

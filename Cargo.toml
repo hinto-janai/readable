@@ -12,6 +12,7 @@ license = "MIT"
 
 [package.metadata.docs.rs]
 all-features = true
+rustc-args = ["--cfg", "docsrs"]
 
 [features]
 default        = []
@@ -23,7 +24,6 @@ inline_runtime = ["readable-inlined-runtime"]
 #inline_percent = ["readable-inlined-percent"]
 
 [dependencies]
-inherent    = "1.0.7"
 paste       = "1.0.12"
 seq-macro   = "0.3.3"
 compact_str = { version = "0.7.0", features = ["bytes", "serde"] }

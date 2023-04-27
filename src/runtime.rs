@@ -40,7 +40,7 @@ use crate::constants::*;
 /// 3. `hours` never has a leading `0`.
 ///
 /// ## Cloning
-/// [`Copy`] available, [`Clone`] is cheap.
+/// [`Copy`] is available.
 ///
 /// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
 /// but a 8 byte array buffer, literally: `[u8; 8]`.
