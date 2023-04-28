@@ -244,7 +244,7 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// assert!(a == "2014-04-22");
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Hash)]
 pub struct Date((u16, u8, u8), Buffer);
 
 impl Date {

@@ -116,7 +116,7 @@ use crate::macros::*;
 /// This code is forked from `https://docs.rs/humantime`, edited to remove sub-second time, change spacing and some words.
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Time(u64, CompactString);
 
 // Implementation Macro.

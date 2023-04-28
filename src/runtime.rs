@@ -118,7 +118,7 @@ use crate::constants::*;
 /// assert!(Runtime::from(f64::INFINITY) == "?:??");
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Hash)]
 pub struct Runtime(u32, Buffer);
 
 impl_math!(Runtime, u32);
