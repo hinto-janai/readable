@@ -155,6 +155,7 @@ impl_traits!(Percent, f64);
 
 impl Percent {
 	impl_common!(f64);
+	impl_not_const!();
 	impl_usize!();
 	impl_isize!();
 

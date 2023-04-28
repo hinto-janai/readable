@@ -33,6 +33,14 @@ pub const UNKNOWN_PERCENT: &str = "?.??%";
 /// Returned when using [`Runtime::unknown`]
 pub const UNKNOWN_RUNTIME: &str = "?:??";
 
+/// UTF-8 byte encoding of [`UNKNOWN`], aka: `???`
+///
+/// ```rust
+/// # use readable::*;
+/// assert!(UNKNOWN.as_bytes()[..3] == UNKNOWN_BUFFER[..3]);
+/// ```
+pub const UNKNOWN_BUFFER: [u8; 26] = [63, 63, 63, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+
 /// UTF-8 byte encoding of [`UNKNOWN_DATE`], aka: `?:??`
 ///
 /// ```rust
@@ -51,6 +59,16 @@ pub const UNKNOWN_DATE: &str = "????-??-??";
 /// assert!(UNKNOWN_DATE.as_bytes() == UNKNOWN_DATE_BUFFER);
 /// ```
 pub const UNKNOWN_DATE_BUFFER: [u8; 10] = [63, 63, 63, 63, 45, 63, 63, 45, 63, 63];
+
+/// Returned when using [`Unsigned::zero`] or [`Int::zero`]
+pub const ZERO_NUM: &str = "0";
+/// UTF-8 byte encoding of [`ZERO_NUM`]
+///
+/// ```rust
+/// # use readable::*;
+/// assert!(ZERO_NUM.as_bytes()[0] == ZERO_RUNTIME_BUFFER[0]);
+/// ```
+pub const ZERO_NUM_BUFFER: [u8; 26] = [48, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
 /// Returned when using [`Float::zero`]
 pub const ZERO_FLOAT: &str = "0.000";

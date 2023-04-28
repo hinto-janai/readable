@@ -118,6 +118,7 @@ macro_rules! impl_new {
 
 impl Float {
 	impl_common!(f64);
+	impl_not_const!();
 	impl_usize!();
 	impl_isize!();
 

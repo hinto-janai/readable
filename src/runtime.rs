@@ -118,7 +118,7 @@ use crate::constants::*;
 /// assert!(Runtime::from(f64::INFINITY) == "?:??");
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Runtime(u32, Buffer);
 
 impl_math!(Runtime, u32);
@@ -126,6 +126,7 @@ impl_traits!(Runtime, u32);
 
 impl Runtime {
 	impl_common!(u32);
+	impl_const!();
 	impl_usize!();
 	impl_buffer!(MAX_BUF_LEN, UNKNOWN_RUNTIME_BUFFER, UNKNOWN_RUNTIME.len());
 

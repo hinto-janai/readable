@@ -113,6 +113,7 @@ name = "readable"
 version = "0.7.8"
 dependencies = [
  "compact_str",
+ "itoa",
  "lazy_static",
  "num-format",
  "paste",

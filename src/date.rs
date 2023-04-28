@@ -244,11 +244,12 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// assert!(a == "2014-04-22");
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Date((u16, u8, u8), Buffer);
 
 impl Date {
 	impl_common!((u16, u8, u8));
+	impl_const!();
 	impl_buffer!(MAX_BUF_LEN, UNKNOWN_DATE_BUFFER, UNKNOWN_DATE.len());
 
 	// INVARIANT:

@@ -40,6 +40,11 @@ macro_rules! buffer {
 			}
 
 			#[inline(always)]
+			const fn into_buffer(self) -> [u8; $max_len] {
+				self.buf
+			}
+
+			#[inline(always)]
 			const fn as_buffer(&self) -> &[u8; $max_len] {
 				&self.buf
 			}
@@ -58,7 +63,8 @@ macro_rules! buffer {
 			#[inline(always)]
 			fn as_str(&self) -> &str {
 				// SAFETY:
-				// This is intended to format numbers, which are valid UTF-8.
+				// The buffer at this point should be
+				// valid UTF-8 bytes representing integers.
 				unsafe { std::str::from_utf8_unchecked(self.as_bytes()) }
 			}
 
@@ -135,29 +141,40 @@ pub(crate) use handle_nan_runtime;
 macro_rules! impl_buffer {
 	($max_len:expr, $unknown_buffer:expr, $unknown_len:expr) => {
 		#[inline(always)]
-		/// Return the inner buffer that represents the [`String`].
+		/// Return the _full_ inner buffer that represents the [`String`].
 		///
 		/// These are guaranteed to be valid UTF-8 bytes.
 		///
 		/// Not all bytes are necessarily used, however.
 		/// To find the valid portion of the string, use [`Self::len`].
-		/// That will determine where to stop on the buffer, e.g:
-		/// ```rust,ignore
-		/// let buffer      = self.to_buffer();
-		/// let valid_bytes = buffer[0..self.len()];
+		/// ```rust
+		/// # use readable::Unsigned;
+		/// let u           = Unsigned::from(123_u8);
+		/// let buffer      = u.to_buffer();
+		/// let valid_bytes = &buffer[0..u.len()];
 		///
-		/// # SAFETY: These bytes are always be valid UTF-8.
+		/// // SAFETY: These bytes are always be valid UTF-8.
 		/// unsafe {
-		///     let string = std::str::from_utf8_unchecked(&valid_bytes);
+		///     let specified = std::str::from_utf8_unchecked(&valid_bytes);
+		///     let all_bytes = std::str::from_utf8_unchecked(&buffer);
+		///
+		///     // Bunch of trailing `\0\0\0`'s at the end.
+		///     assert!(all_bytes != "123");
+		///     assert!(specified == "123");
 		/// }
 		/// ```
-		const fn to_buffer(&self) -> [u8; $max_len] {
+		pub const fn to_buffer(&self) -> [u8; $max_len] {
 			self.1.to_buffer()
+		}
+
+		/// Same as [`Self::to_buffer`] but consumes self.
+		pub const fn into_buffer(self) -> [u8; $max_len] {
+			self.1.into_buffer()
 		}
 
 		#[inline(always)]
 		/// Same as [`Self::to_buffer`] but returns a borrowed array.
-		const fn as_buffer(&self) -> &[u8; $max_len] {
+		pub const fn as_buffer(&self) -> &[u8; $max_len] {
 			&self.1.as_buffer()
 		}
 	}
@@ -339,9 +356,27 @@ macro_rules! impl_from {
 }
 pub(crate) use impl_from;
 
-// Implement common functions.
-macro_rules! impl_common {
-	($num:ty) => {
+// Implement common const functions.
+macro_rules! impl_const {
+	() => {
+		#[inline]
+		/// The length of the inner [`String`]
+		pub const fn len(&self) -> usize {
+			self.1.len()
+		}
+
+		#[inline]
+		/// If the inner [`String`] is empty or not
+		pub const fn is_empty(&self) -> bool {
+			self.1.is_empty()
+		}
+	}
+}
+pub(crate) use impl_const;
+
+// Implement common non-const functions.
+macro_rules! impl_not_const {
+	() => {
 		#[inline]
 		/// The length of the inner [`String`]
 		pub fn len(&self) -> usize {
@@ -353,7 +388,13 @@ macro_rules! impl_common {
 		pub fn is_empty(&self) -> bool {
 			self.1.is_empty()
 		}
+	}
+}
+pub(crate) use impl_not_const;
 
+// Implement common functions.
+macro_rules! impl_common {
+	($num:ty) => {
 		#[inline]
 		/// Return a borrowed [`str`] without consuming [`Self`].
 		pub fn as_str(&self) -> &str {
@@ -361,7 +402,9 @@ macro_rules! impl_common {
 		}
 
 		#[inline]
-		/// Return the bytes of the inner [`String`]
+		/// Returns the _valid_ byte slice of the inner [`String`]
+		///
+		/// These bytes can _always_ safely be used for [`std::str::from_utf8_unchecked`].
 		pub fn as_bytes(&self) -> &[u8] {
 			self.1.as_bytes()
 		}
@@ -410,7 +453,7 @@ macro_rules! impl_common {
 		/// assert!(date.head(5) == "2021-");
 		/// ```
 		pub fn head(&self, len: usize) -> &str {
-			let s = self.as_ref();
+			let s = self.as_str();
 
 			if len >= s.len() {
 				s
@@ -430,7 +473,7 @@ macro_rules! impl_common {
 		/// assert!(date.head_dot(4) == "2021...");
 		/// ```
 		pub fn head_dot(&self, len: usize) -> String {
-			let s = self.as_ref();
+			let s = self.as_str();
 
 			if len >= s.len() {
 				s.to_string()
@@ -453,7 +496,7 @@ macro_rules! impl_common {
 		/// assert!(date.tail(5) == "12-11");
 		/// ```
 		pub fn tail(&self, len: usize) -> &str {
-			let s = self.as_ref();
+			let s = self.as_str();
 			let s_len = s.len();
 
 			if len >= s_len {
@@ -474,7 +517,7 @@ macro_rules! impl_common {
 		/// assert!(date.tail_dot(5) == "...12-11");
 		/// ```
 		pub fn tail_dot(&self, len: usize) -> String {
-			let s = self.as_ref();
+			let s = self.as_str();
 			let s_len = s.len();
 
 			if len >= s_len {
@@ -498,7 +541,7 @@ macro_rules! impl_common {
 		/// assert!(date.head_tail(3, 5) == "202...12-11");
 		/// ```
 		pub fn head_tail(&self, head: usize, tail: usize) -> String {
-			let s = self.as_ref();
+			let s = self.as_str();
 			let len = s.len();
 
 			if head > len || tail > len {
@@ -516,7 +559,7 @@ macro_rules! impl_usize {
 	() => {
 		#[inline]
 		#[cfg(target_pointer_width = "64")]
-		/// Returns the inner numer as a [`usize`].
+		/// Returns the inner number as a [`usize`].
 		///
 		/// # Notes
 		/// This function is only available on 64-bit platforms.
@@ -598,44 +641,6 @@ macro_rules! impl_traits {
 			/// Calls [`Self::zero`]
 			fn default() -> Self {
 				Self::zero()
-			}
-		}
-
-		impl AsRef<str> for $s {
-			#[inline(always)]
-			fn as_ref(&self) -> &str {
-				self.1.as_str()
-			}
-		}
-
-		impl std::borrow::Borrow<str> for $s {
-			#[inline(always)]
-			fn borrow(&self) -> &str {
-				self.1.as_str()
-			}
-		}
-
-		impl std::ops::Deref for $s {
-			type Target = str;
-
-			fn deref(&self) -> &Self::Target {
-				&self.1.as_str()
-			}
-		}
-
-		impl std::ops::Index<std::ops::Range<usize>> for $s {
-			type Output = [u8];
-
-			fn index(&self, range: std::ops::Range<usize>) -> &Self::Output {
-				&self.as_bytes()[range]
-			}
-		}
-
-		impl std::ops::Index<usize> for $s {
-			type Output = u8;
-
-			fn index(&self, byte: usize) -> &Self::Output {
-				&self.as_bytes()[byte]
 			}
 		}
 

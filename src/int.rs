@@ -92,6 +92,7 @@ pub struct Int(i64, Inner);
 
 impl Int {
 	impl_inner!(i64);
+	impl_not_const!();
 	impl_common!(i64);
 	impl_isize!();
 }

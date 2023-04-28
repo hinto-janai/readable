@@ -140,6 +140,7 @@ impl_number!(usize);
 
 impl Time {
 	impl_common!(u64);
+	impl_not_const!();
 	impl_usize!();
 
 	#[inline]
