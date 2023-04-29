@@ -108,7 +108,7 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 }
 
 //---------------------------------------------------------------------------------------------------- `Date`
-/// A _recent_ date that is human readable date in `YEAR-MONTH-DAY` format
+/// A _recent_ date that is in `YEAR-MONTH-DAY` format
 ///
 /// The inner "integer" type is a tuple of: `(u16, u8, u8)` representing the `(Year, Month, Day)`
 ///

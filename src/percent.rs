@@ -124,11 +124,6 @@ macro_rules! impl_new {
 			pub fn [<new_ $num>](f: f64) -> Self {
 				handle_nan_string!(f);
 
-//				#[cfg(feature = "inline_percent")]
-//				if f >= 0.0 && f <= 100.0 {
-//					return Self(f, CompactString::new_inline(readable_inlined_percent::inlined(f)));
-//				}
-
 				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
 				Self(f, format_compact!("{}.{}%", str_u64!(f as u64), fract))
 			}
@@ -210,11 +205,6 @@ impl Percent {
 	pub fn new_0(f: f64) -> Self {
 		handle_nan_string!(f);
 
-//		#[cfg(feature = "inline_percent")]
-//		if f >= 0.0 && f <= 100.0 {
-//			return Self(f, CompactString::new_inline(readable_inlined_percent::inlined(f)));
-//		}
-
 		Self(f, format_compact!("{}%", str_u64!(f as u64)))
 	}
 
@@ -275,11 +265,6 @@ impl From<f32> for Percent {
 
 		let f = number as f64;
 
-//		#[cfg(feature = "inline_percent")]
-//		if f >= 0.0 && f <= 100.0 {
-//			return Self(f, CompactString::new_inline(readable_inlined_percent::inlined(f)));
-//		}
-
 		let fract = &format_compact!("{:.2}", number.fract())[2..];
 		Self(f, format_compact!("{}.{}%", str_u64!(number as u64), fract))
 	}
@@ -299,11 +284,6 @@ impl From<f64> for Percent {
 				_ => (),
 			}
 		}
-
-//		#[cfg(feature = "inline_percent")]
-//		if f >= 0.0 && f <= 100.0 {
-//			return Self(f, CompactString::new_inline(readable_inlined_percent::inlined(f)));
-//		}
 
 		let fract = &format_compact!("{:.2}", f.fract())[2..];
 

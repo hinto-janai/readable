@@ -73,7 +73,7 @@ pub const ZERO_NUM: &str = "0";
 ///
 /// ```rust
 /// # use readable::*;
-/// assert!(ZERO_NUM.as_bytes()[0] == ZERO_BUFFER[0]);
+/// assert!(ZERO_NUM.as_bytes()[0] == ZERO_NUM_BUFFER[0]);
 /// ```
 pub const ZERO_NUM_BUFFER: [u8; 26] = [48, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 

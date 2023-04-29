@@ -47,17 +47,17 @@ macro_rules! buffer {
 			}
 
 			#[inline(always)]
-			const fn to_buffer(&self) -> [u8; $max_len] {
+			const fn to_buf(&self) -> [u8; $max_len] {
 				self.buf
 			}
 
 			#[inline(always)]
-			const fn into_buffer(self) -> [u8; $max_len] {
+			const fn into_buf(self) -> [u8; $max_len] {
 				self.buf
 			}
 
 			#[inline(always)]
-			const fn as_buffer(&self) -> &[u8; $max_len] {
+			const fn as_buf(&self) -> &[u8; $max_len] {
 				&self.buf
 			}
 
@@ -162,7 +162,7 @@ macro_rules! impl_buffer {
 		/// ```rust
 		/// # use readable::Unsigned;
 		/// let u           = Unsigned::from(123_u8);
-		/// let buffer      = u.to_buffer();
+		/// let buffer      = u.to_buf();
 		/// let valid_bytes = &buffer[0..u.len()];
 		///
 		/// // SAFETY: These bytes are always be valid UTF-8.
@@ -175,19 +175,31 @@ macro_rules! impl_buffer {
 		///     assert!(specified == "123");
 		/// }
 		/// ```
-		pub const fn to_buffer(&self) -> [u8; $max_len] {
-			self.1.to_buffer()
+		pub const fn to_buf(&self) -> [u8; $max_len] {
+			self.1.to_buf()
 		}
 
-		/// Same as [`Self::to_buffer`] but consumes self.
-		pub const fn into_buffer(self) -> [u8; $max_len] {
-			self.1.into_buffer()
+		/// Same as [`Self::to_buf`] but consumes self.
+		pub const fn into_buf(self) -> [u8; $max_len] {
+			self.1.into_buf()
 		}
 
 		#[inline(always)]
-		/// Same as [`Self::to_buffer`] but returns a borrowed array.
-		pub const fn as_buffer(&self) -> &[u8; $max_len] {
-			&self.1.as_buffer()
+		/// Same as [`Self::to_buf`] but returns a borrowed array.
+		pub const fn as_buf(&self) -> &[u8; $max_len] {
+			&self.1.as_buf()
+		}
+
+		#[inline(always)]
+		/// Same as [`Self::to_buf`] but returns the length as well.
+		pub const fn to_buf_parts(&self) -> ([u8; $max_len], usize) {
+			(self.1.to_buf(), self.1.len())
+		}
+
+		#[inline(always)]
+		/// Same as [`Self::into_buf`] but returns the length as well.
+		pub const fn into_buf_parts(self) -> ([u8; $max_len], usize) {
+			(self.1.into_buf(), self.1.len())
 		}
 	}
 }

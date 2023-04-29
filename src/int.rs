@@ -311,8 +311,8 @@ mod tests {
 
 	#[test]
 	fn special() {
-		assert!(Int::from(f64::NAN)          == crate::NAN);
-		assert!(Int::from(f64::INFINITY)     == crate::INFINITY);
-		assert!(Int::from(f64::NEG_INFINITY) == crate::INFINITY);
+		assert!(Int::from(f64::NAN)          == crate::UNKNOWN);
+		assert!(Int::from(f64::INFINITY)     == crate::UNKNOWN);
+		assert!(Int::from(f64::NEG_INFINITY) == crate::UNKNOWN);
 	}
 }
