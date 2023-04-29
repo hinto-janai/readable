@@ -9,8 +9,15 @@ use crate::{
 };
 
 //---------------------------------------------------------------------------------------------------- Constants
-/// The locale numbers are formatted in (English). This looks like: `1,000`
-const LOCALE: num_format::Locale = num_format::Locale::en;
+/// The separator character. This looks like: `1,000`
+pub const COMMA: u8 = b',';
+
+/// The max length the inner buffer within [`Unsigned`] or [`Int`] can be.
+///
+/// [`u64::MAX`] == `"18_446_744_073_709_551_615".len()` == `26`
+///
+/// [`i64::MIN`] == `"-9,223,372,036,854,775,808".len()` == `26`
+pub const MAX_BUF_LEN: usize = 26;
 
 /// Returned when encountering a [`f32::NAN`] or [`f64::NAN`]
 pub const NAN: &str = "NaN";
@@ -33,13 +40,13 @@ pub const UNKNOWN_PERCENT: &str = "?.??%";
 /// Returned when using [`Runtime::unknown`]
 pub const UNKNOWN_RUNTIME: &str = "?:??";
 
-/// UTF-8 byte encoding of [`UNKNOWN`], aka: `???`
+/// UTF-8 byte encoding of [`UNKNOWN`]
 ///
 /// ```rust
 /// # use readable::*;
-/// assert!(UNKNOWN.as_bytes()[..3] == UNKNOWN_BUFFER[..3]);
+/// assert!(UNKNOWN.as_bytes()[..3] == UNKNOWN_NUM_BUFFER[..3]);
 /// ```
-pub const UNKNOWN_BUFFER: [u8; 26] = [63, 63, 63, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+pub const UNKNOWN_NUM_BUFFER: [u8; 26] = [63, 63, 63, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
 /// UTF-8 byte encoding of [`UNKNOWN_DATE`], aka: `?:??`
 ///
@@ -62,11 +69,11 @@ pub const UNKNOWN_DATE_BUFFER: [u8; 10] = [63, 63, 63, 63, 45, 63, 63, 45, 63, 6
 
 /// Returned when using [`Unsigned::zero`] or [`Int::zero`]
 pub const ZERO_NUM: &str = "0";
-/// UTF-8 byte encoding of [`ZERO_NUM`]
+/// UTF-8 byte encoding of [`ZERO_NUM`] for [`Unsigned`]
 ///
 /// ```rust
 /// # use readable::*;
-/// assert!(ZERO_NUM.as_bytes()[0] == ZERO_RUNTIME_BUFFER[0]);
+/// assert!(ZERO_NUM.as_bytes()[0] == ZERO_BUFFER[0]);
 /// ```
 pub const ZERO_NUM_BUFFER: [u8; 26] = [48, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 

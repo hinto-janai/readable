@@ -11,12 +11,13 @@ use crate::constants::*;
 /// Human readable unsigned integer.
 ///
 /// ## Creation
-/// For [`u8`], [`u16`], [`u32`], [`u64`] or any [`NonZeroU8`] variant:
+/// For [`u8`], [`u16`], [`u32`], [`u64`], [`usize`] or any [`NonZeroU8`] variant:
 /// - Use [`Unsigned::from`]
 ///
 /// [`f32`] or [`f64`] inputs will work, but:
 /// - Signed floats will turn into `0`
 /// - Fractional parts will be ignored
+/// - Under/overflows will return [`Unsigned::unknown`]
 /// - Special floats like [`f64::NAN`] will return [`Unsigned::unknown`]
 ///
 /// For [`i8`] and other signed integers:
@@ -42,7 +43,7 @@ use crate::constants::*;
 /// assert!(a == 100_000_u64);
 /// ```
 ///
-/// ## Exceptions
+/// ## Float Errors
 /// - Inputting [`f64::NAN`] returns [`Unsigned::unknown`]
 /// - Inputting [`f64::INFINITY`] returns [`Unsigned::unknown`]
 /// - Inputting [`f64::NEG_INFINITY`] returns [`Unsigned::unknown`]
@@ -109,7 +110,7 @@ impl Unsigned {
 	impl_common!(u64);
 	impl_const!();
 	impl_usize!();
-	impl_buffer!(MAX_BUF_LEN, UNKNOWN_BUFFER, UNKNOWN.len());
+	impl_buffer!(MAX_BUF_LEN, UNKNOWN_NUM_BUFFER, UNKNOWN.len());
 
 	#[inline]
 	/// ```rust
@@ -224,11 +225,7 @@ impl_math!(Unsigned, u64);
 impl_traits!(Unsigned, u64);
 
 //---------------------------------------------------------------------------------------------------- Buffer
-// u64::MAX == "18_446_744_073_709_551_615".len() == 26
-const MAX_BUF_LEN: usize = 26;
-const COMMA: u8 = b',';
-
-buffer!(MAX_BUF_LEN, UNKNOWN_BUFFER, UNKNOWN.len());
+buffer!(MAX_BUF_LEN, UNKNOWN_NUM_BUFFER, UNKNOWN.len());
 
 impl Buffer {
 	#[inline(always)]
@@ -246,263 +243,29 @@ impl Buffer {
 		let mut buf = [0_u8; MAX_BUF_LEN];
 
 		let len = match u {
-			0..=9                         => { Self::from_1(&mut buf, &string); 1 },
-			0..=99                        => { Self::from_2(&mut buf, &string); 2 },
-			0..=999                       => { Self::from_3(&mut buf, &string); 3 },
-			0..=9_999                     => { Self::from_4(&mut buf, &string); 5 },
-			0..=99_999                    => { Self::from_5(&mut buf, &string); 6 },
-			0..=999_999                   => { Self::from_6(&mut buf, &string); 7 },
-			0..=9_999_999                 => { Self::from_7(&mut buf, &string); 9 },
-			0..=99_999_999                => { Self::from_8(&mut buf, &string); 10 },
-			0..=999_999_999               => { Self::from_9(&mut buf, &string); 11 },
-			0..=9_999_999_999             => { Self::from_10(&mut buf, &string); 13 },
-			0..=99_999_999_999            => { Self::from_11(&mut buf, &string); 14 },
-			0..=999_999_999_999           => { Self::from_12(&mut buf, &string); 15 },
-			0..=9_999_999_999_999         => { Self::from_13(&mut buf, &string); 17 },
-			0..=99_999_999_999_999        => { Self::from_14(&mut buf, &string); 18 },
-			0..=999_999_999_999_999       => { Self::from_15(&mut buf, &string); 19 },
-			0..=9_999_999_999_999_999     => { Self::from_16(&mut buf, &string); 21 },
-			0..=99_999_999_999_999_999    => { Self::from_17(&mut buf, &string); 22 },
-			0..=999_999_999_999_999_999   => { Self::from_18(&mut buf, &string); 23 },
-			0..=9_999_999_999_999_999_999 => { Self::from_19(&mut buf, &string); 25 },
-			_ => { Self::from_20(&mut buf, &string); 26 },
+			0..=9                         => { crate::buf::from_1(&mut buf, &string); 1 },
+			0..=99                        => { crate::buf::from_2(&mut buf, &string); 2 },
+			0..=999                       => { crate::buf::from_3(&mut buf, &string); 3 },
+			0..=9_999                     => { crate::buf::from_4(&mut buf, &string); 5 },
+			0..=99_999                    => { crate::buf::from_5(&mut buf, &string); 6 },
+			0..=999_999                   => { crate::buf::from_6(&mut buf, &string); 7 },
+			0..=9_999_999                 => { crate::buf::from_7(&mut buf, &string); 9 },
+			0..=99_999_999                => { crate::buf::from_8(&mut buf, &string); 10 },
+			0..=999_999_999               => { crate::buf::from_9(&mut buf, &string); 11 },
+			0..=9_999_999_999             => { crate::buf::from_10(&mut buf, &string); 13 },
+			0..=99_999_999_999            => { crate::buf::from_11(&mut buf, &string); 14 },
+			0..=999_999_999_999           => { crate::buf::from_12(&mut buf, &string); 15 },
+			0..=9_999_999_999_999         => { crate::buf::from_13(&mut buf, &string); 17 },
+			0..=99_999_999_999_999        => { crate::buf::from_14(&mut buf, &string); 18 },
+			0..=999_999_999_999_999       => { crate::buf::from_15(&mut buf, &string); 19 },
+			0..=9_999_999_999_999_999     => { crate::buf::from_16(&mut buf, &string); 21 },
+			0..=99_999_999_999_999_999    => { crate::buf::from_17(&mut buf, &string); 22 },
+			0..=999_999_999_999_999_999   => { crate::buf::from_18(&mut buf, &string); 23 },
+			0..=9_999_999_999_999_999_999 => { crate::buf::from_19(&mut buf, &string); 25 },
+			_                             => { crate::buf::from_20(&mut buf, &string); 26 },
 		};
 
 		Self { buf, len }
-	}
-
-	#[inline(always)]
-	// 9
-	fn from_1(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0] = string[0];
-	}
-
-	#[inline(always)]
-	// 99
-	fn from_2(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[..2].copy_from_slice(&string[..2]);
-	}
-
-	#[inline(always)]
-	// 999
-	fn from_3(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[..3].copy_from_slice(&string[..3]);
-	}
-
-	#[inline(always)]
-	// 9,999
-	fn from_4(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0] = string[0];
-		buf[1] = COMMA;
-		buf[2..5].copy_from_slice(&string[1..4]);
-	}
-
-	#[inline(always)]
-	// 99,999
-	fn from_5(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0..2].copy_from_slice(&string[0..2]);
-		buf[2] = COMMA;
-		buf[3..6].copy_from_slice(&string[2..5]);
-	}
-
-	#[inline(always)]
-	// 999,999
-	fn from_6(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0..3].copy_from_slice(&string[0..3]);
-		buf[3] = COMMA;
-		buf[4..7].copy_from_slice(&string[3..6]);
-	}
-
-	#[inline(always)]
-	// 9,999,999
-	fn from_7(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0] = string[0];
-		buf[1] = COMMA;
-		buf[2..5].copy_from_slice(&string[1..4]);
-		buf[5] = COMMA;
-		buf[6..9].copy_from_slice(&string[4..7]);
-	}
-
-	#[inline(always)]
-	// 99,999,999
-	fn from_8(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0..2].copy_from_slice(&string[0..2]);
-		buf[2] = COMMA;
-		buf[3..6].copy_from_slice(&string[2..5]);
-		buf[6] = COMMA;
-		buf[7..10].copy_from_slice(&string[5..8]);
-	}
-
-	#[inline(always)]
-	// 999,999,999
-	fn from_9(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0..3].copy_from_slice(&string[0..3]);
-		buf[3] = COMMA;
-		buf[4..7].copy_from_slice(&string[3..6]);
-		buf[7] = COMMA;
-		buf[8..11].copy_from_slice(&string[6..9]);
-	}
-
-	#[inline(always)]
-	// 9,999,999,999
-	fn from_10(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0] = string[0];
-		buf[1] = COMMA;
-		buf[2..5].copy_from_slice(&string[1..4]);
-		buf[5] = COMMA;
-		buf[6..9].copy_from_slice(&string[4..7]);
-		buf[9] = COMMA;
-		buf[10..13].copy_from_slice(&string[7..10]);
-	}
-
-	#[inline(always)]
-	// 99,999,999,999
-	fn from_11(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0..2].copy_from_slice(&string[0..2]);
-		buf[2] = COMMA;
-		buf[3..6].copy_from_slice(&string[2..5]);
-		buf[6] = COMMA;
-		buf[7..10].copy_from_slice(&string[5..8]);
-		buf[10] = COMMA;
-		buf[11..14].copy_from_slice(&string[8..11]);
-	}
-
-	#[inline(always)]
-	// 999,999,999,999
-	fn from_12(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0..3].copy_from_slice(&string[0..3]);
-		buf[3] = COMMA;
-		buf[4..7].copy_from_slice(&string[3..6]);
-		buf[7] = COMMA;
-		buf[8..11].copy_from_slice(&string[6..9]);
-		buf[11] = COMMA;
-		buf[12..15].copy_from_slice(&string[9..12]);
-	}
-
-	#[inline(always)]
-	// 9,999,999,999,999
-	fn from_13(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0] = string[0];
-		buf[1] = COMMA;
-		buf[2..5].copy_from_slice(&string[1..4]);
-		buf[5] = COMMA;
-		buf[6..9].copy_from_slice(&string[3..6]);
-		buf[9] = COMMA;
-		buf[10..13].copy_from_slice(&string[6..9]);
-		buf[13] = COMMA;
-		buf[14..17].copy_from_slice(&string[9..12]);
-	}
-
-	#[inline(always)]
-	// 99,999,999,999,999
-	fn from_14(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0..2].copy_from_slice(&string[0..2]);
-		buf[2] = COMMA;
-		buf[3..6].copy_from_slice(&string[2..5]);
-		buf[6] = COMMA;
-		buf[7..10].copy_from_slice(&string[5..8]);
-		buf[10] = COMMA;
-		buf[11..14].copy_from_slice(&string[8..11]);
-		buf[14] = COMMA;
-		buf[15..18].copy_from_slice(&string[11..14]);
-	}
-
-	#[inline(always)]
-	// 999,999,999,999,999
-	fn from_15(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0..3].copy_from_slice(&string[0..3]);
-		buf[3] = COMMA;
-		buf[4..7].copy_from_slice(&string[3..6]);
-		buf[7] = COMMA;
-		buf[8..11].copy_from_slice(&string[6..9]);
-		buf[11] = COMMA;
-		buf[12..15].copy_from_slice(&string[9..12]);
-		buf[15] = COMMA;
-		buf[16..19].copy_from_slice(&string[12..15]);
-	}
-
-	#[inline(always)]
-	// 9,999,999,999,999,999
-	fn from_16(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0] = string[0];
-		buf[1] = COMMA;
-		buf[2..5].copy_from_slice(&string[1..4]);
-		buf[5] = COMMA;
-		buf[6..9].copy_from_slice(&string[3..6]);
-		buf[9] = COMMA;
-		buf[10..13].copy_from_slice(&string[6..9]);
-		buf[13] = COMMA;
-		buf[14..17].copy_from_slice(&string[9..12]);
-		buf[17] = COMMA;
-		buf[18..21].copy_from_slice(&string[12..15]);
-	}
-
-	#[inline(always)]
-	// 99,999,999,999,999,999
-	fn from_17(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0..2].copy_from_slice(&string[0..2]);
-		buf[2] = COMMA;
-		buf[3..6].copy_from_slice(&string[2..5]);
-		buf[6] = COMMA;
-		buf[7..10].copy_from_slice(&string[5..8]);
-		buf[10] = COMMA;
-		buf[11..14].copy_from_slice(&string[8..11]);
-		buf[14] = COMMA;
-		buf[15..18].copy_from_slice(&string[11..14]);
-		buf[18] = COMMA;
-		buf[19..22].copy_from_slice(&string[14..17]);
-	}
-
-	#[inline(always)]
-	// 999,999,999,999,999,999
-	fn from_18(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0..3].copy_from_slice(&string[0..3]);
-		buf[3] = COMMA;
-		buf[4..7].copy_from_slice(&string[3..6]);
-		buf[7] = COMMA;
-		buf[8..11].copy_from_slice(&string[6..9]);
-		buf[11] = COMMA;
-		buf[12..15].copy_from_slice(&string[9..12]);
-		buf[15] = COMMA;
-		buf[16..19].copy_from_slice(&string[12..15]);
-		buf[19] = COMMA;
-		buf[20..23].copy_from_slice(&string[15..18]);
-	}
-
-	#[inline(always)]
-	// 9,999,999,999,999,999,999
-	fn from_19(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0] = string[0];
-		buf[1] = COMMA;
-		buf[2..5].copy_from_slice(&string[1..4]);
-		buf[5] = COMMA;
-		buf[6..9].copy_from_slice(&string[3..6]);
-		buf[9] = COMMA;
-		buf[10..13].copy_from_slice(&string[6..9]);
-		buf[13] = COMMA;
-		buf[14..17].copy_from_slice(&string[9..12]);
-		buf[17] = COMMA;
-		buf[18..21].copy_from_slice(&string[12..15]);
-		buf[21] = COMMA;
-		buf[22..25].copy_from_slice(&string[15..18]);
-	}
-
-	#[inline(always)]
-	// 99,999,999,999,999,999
-	fn from_20(buf: &mut [u8; MAX_BUF_LEN], string: &[u8]) {
-		buf[0..2].copy_from_slice(&string[0..2]);
-		buf[2] = COMMA;
-		buf[3..6].copy_from_slice(&string[2..5]);
-		buf[6] = COMMA;
-		buf[7..10].copy_from_slice(&string[5..8]);
-		buf[10] = COMMA;
-		buf[11..14].copy_from_slice(&string[8..11]);
-		buf[14] = COMMA;
-		buf[15..18].copy_from_slice(&string[11..14]);
-		buf[18] = COMMA;
-		buf[19..22].copy_from_slice(&string[14..17]);
-		buf[22] = COMMA;
-		buf[23..26].copy_from_slice(&string[17..20]);
 	}
 }
 
@@ -510,13 +273,6 @@ impl Buffer {
 #[cfg(test)]
 mod tests {
 	use super::*;
-
-//	#[test]
-//	fn aaaa() {
-//		for i in 0..u32::MAX {
-//			Buffer::from_u(i);
-//		}
-//	}
 
 	#[test]
 	fn unsigned() {

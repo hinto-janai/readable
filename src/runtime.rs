@@ -62,8 +62,7 @@ use crate::constants::*;
 /// ```
 ///
 /// ## Exceptions
-/// - [`f64::NAN`] outputs [`UNKNOWN_RUNTIME`]
-/// - [`f64::INFINITY`] outputs [`UNKNOWN_RUNTIME`]
+/// - Inputting [`f64::NAN`], [`f64::INFINITY`], [`f64::NEG_INFINITY`] or the [`f32`] variants returns errors
 ///
 /// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
 ///

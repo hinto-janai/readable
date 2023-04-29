@@ -160,7 +160,6 @@
 	semicolon_in_expressions_from_macros,
 	redundant_semicolons,
 	unconditional_recursion,
-	unreachable_patterns,
 	unused_allocation,
 	unused_braces,
 	unused_comparisons,
@@ -183,6 +182,7 @@
 
 pub(crate) mod inner;
 pub(crate) mod macros;
+pub(crate) mod buf;
 
 mod constants;
 pub use constants::*;
