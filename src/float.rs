@@ -204,7 +204,7 @@ macro_rules! impl_u {
 		)*
 	}
 }
-impl_u!(u8,u16,u32,u64,usize);
+impl_u!(u8,u16,u32);
 
 macro_rules! impl_i {
 	($($number:ty),*) => {
@@ -218,7 +218,7 @@ macro_rules! impl_i {
 		)*
 	}
 }
-impl_i!(i8,i16,i32,i64,isize);
+impl_i!(i8,i16,i32);
 
 impl From<f32> for Float {
 	#[inline]

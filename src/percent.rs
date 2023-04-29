@@ -9,8 +9,8 @@ use crate::macros::*;
 /// Human readable percentage.
 ///
 /// [`Percent::from`] input can be:
-/// - [`u8`], [`u16`], [`u32`], [`u64`], [`usize`]
-/// - [`i8`], [`i16`], [`i32`], [`i64`], [`isize`]
+/// - [`u8`], [`u16`], [`u32`]
+/// - [`i8`], [`i16`], [`i32`]
 /// - [`f32`], [`f64`]
 ///
 /// The default [`Percent::from`] implementation will print `2` decimal numbers.
@@ -97,24 +97,17 @@ use crate::macros::*;
 /// assert!(Percent::from(100.0)   == "100.00%");
 /// assert!(Percent::from(1_000.0) == "1,000.00%");
 ///
-/// assert!(Percent::from(1_u64)      == "1.00%");
-/// assert!(Percent::from(1_000_u64)  == "1,000.00%");
-/// assert!(Percent::from(10_000_u64) == "10,000.00%");
+/// assert!(Percent::from(1_u32)      == "1.00%");
+/// assert!(Percent::from(1_000_u32)  == "1,000.00%");
+/// assert!(Percent::from(10_000_u32) == "10,000.00%");
 ///
-/// assert!(Percent::from(-1_i64)      == "-1.00%");
-/// assert!(Percent::from(-1_000_i64)  == "-1,000.00%");
-/// assert!(Percent::from(-10_000_i64) == "-10,000.00%");
+/// assert!(Percent::from(-1_i32)      == "-1.00%");
+/// assert!(Percent::from(-1_000_i32)  == "-1,000.00%");
+/// assert!(Percent::from(-10_000_i32) == "-10,000.00%");
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Percent(f64, CompactString);
-
-//impl<'a> std::ops::Add<f64> for Percent {
-//	type Output = Self;
-//	fn add(self, other: f64) -> Self::Output {
-//		Self::from(self.inner() + other)
-//	}
-//}
 
 // Implements `new_X` functions.
 macro_rules! impl_new {
@@ -209,7 +202,7 @@ impl Percent {
 	}
 
 	impl_new!(1);
-	seq_macro::seq!(N in 3..=18 {
+	seq_macro::seq!(N in 3..=14 {
 		impl_new!(N);
 	});
 }
@@ -229,7 +222,7 @@ macro_rules! impl_u {
 		)*
 	}
 }
-impl_u!(u8,u16,u32,u64,usize);
+impl_u!(u8,u16,u32);
 
 // Implementation Macro.
 macro_rules! impl_i {
@@ -246,7 +239,7 @@ macro_rules! impl_i {
 		)*
 	}
 }
-impl_i!(i8,i16,i32,i64,isize);
+impl_i!(i8,i16,i32);
 
 impl From<f32> for Percent {
 	#[inline]
@@ -337,19 +330,19 @@ mod tests {
 
 	#[test]
 	fn from_unsigned() {
-		assert!(Percent::from(1_u64)         == "1.00%");
-		assert!(Percent::from(1_000_u64)     == "1,000.00%");
-		assert!(Percent::from(10_000_u64)    == "10,000.00%");
-		assert!(Percent::from(100_000_u64)   == "100,000.00%");
-		assert!(Percent::from(1_000_000_u64) == "1,000,000.00%");
+		assert!(Percent::from(1_u32)         == "1.00%");
+		assert!(Percent::from(1_000_u32)     == "1,000.00%");
+		assert!(Percent::from(10_000_u32)    == "10,000.00%");
+		assert!(Percent::from(100_000_u32)   == "100,000.00%");
+		assert!(Percent::from(1_000_000_u32) == "1,000,000.00%");
 	}
 
 	#[test]
 	fn from_int() {
-		assert!(Percent::from(-1_i64)         == "-1.00%");
-		assert!(Percent::from(-1_000_i64)     == "-1,000.00%");
-		assert!(Percent::from(-10_000_i64)    == "-10,000.00%");
-		assert!(Percent::from(-100_000_i64)   == "-100,000.00%");
-		assert!(Percent::from(-1_000_000_i64) == "-1,000,000.00%");
+		assert!(Percent::from(-1_i32)         == "-1.00%");
+		assert!(Percent::from(-1_000_i32)     == "-1,000.00%");
+		assert!(Percent::from(-10_000_i32)    == "-10,000.00%");
+		assert!(Percent::from(-100_000_i32)   == "-100,000.00%");
+		assert!(Percent::from(-1_000_000_i32) == "-1,000,000.00%");
 	}
 }
