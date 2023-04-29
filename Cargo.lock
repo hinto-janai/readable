@@ -12,15 +12,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "arrayvec"
-version = "0.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
-dependencies = [
- "serde",
-]
-
-[[package]]
 name = "bytes"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -75,16 +66,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
-name = "num-format"
-version = "0.4.4"
-source = "git+https://github.com/hinto-janai/num-format.git#64830609a24192fbe2f5588ade1c5d8b7cf2766d"
-dependencies = [
- "arrayvec",
- "itoa",
- "serde",
-]
-
-[[package]]
 name = "paste"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -115,7 +96,6 @@ dependencies = [
  "compact_str",
  "itoa",
  "lazy_static",
- "num-format",
  "paste",
  "readable-inlined-date",
  "readable-inlined-runtime",

@@ -1,15 +1,27 @@
-//---------------------------------------------------------------------------------------------------- num_format::Buffer.
-// Creates a num_format::Buffer, turns it into a compact_str::CompactString, and returns it.
-macro_rules! num {
+//---------------------------------------------------------------------------------------------------- 1-off Buffer
+// This quickly creates a `crate::buf::Buffer` for 1-off, quick formatting.
+
+// Converts anything `i64` and below to a formatted `str`.
+macro_rules! str_i64 {
 	($number:expr) => {
 		{
-			let mut num = ::num_format::Buffer::new();
-			num.write_formatted(&$number, &::num_format::Locale::en);
-			num
+			let (buf, len) = crate::buf::from_i($number);
+			crate::buf::Buffer { buf, len }.as_str()
 		}
 	}
 }
-pub(crate) use num;
+pub(crate) use str_i64;
+
+// Converts anything `u64` and below to a formatted `str`.
+macro_rules! str_u64 {
+	($number:expr) => {
+		{
+			let (buf, len) = crate::buf::from_u($number);
+			crate::buf::Buffer { buf, len }.as_str()
+		}
+	}
+}
+pub(crate) use str_u64;
 
 //---------------------------------------------------------------------------------------------------- Internal Buffer.
 // Implement a private module `Buffer` type

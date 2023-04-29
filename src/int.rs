@@ -3,7 +3,6 @@
 use serde::{Serialize,Deserialize};
 
 use std::num::*;
-use crate::inner::*;
 use crate::macros::*;
 use crate::constants::*;
 
@@ -233,64 +232,8 @@ impl Buffer {
 
 	#[inline(always)]
 	fn from_i(i: i64) -> Self {
-		let mut buffer = itoa::Buffer::new();
-		let string = &buffer.format(i).as_bytes();
-		let mut buf = [0_u8; MAX_BUF_LEN];
-
-		if i.is_negative() {
-			let len = match string.len() {
-				// Must be at least two bytes: `-1`
-				2 => { crate::buf::from_neg_2(&mut buf, &string); 2 },
-				3 => { crate::buf::from_neg_3(&mut buf, &string); 3 },
-				4 => { crate::buf::from_neg_4(&mut buf, &string); 4 },
-				5 => { crate::buf::from_neg_5(&mut buf, &string); 6 },
-				6 => { crate::buf::from_neg_6(&mut buf, &string); 7 },
-				7 => { crate::buf::from_neg_7(&mut buf, &string); 8 },
-				8 => { crate::buf::from_neg_8(&mut buf, &string); 10 },
-				9 => { crate::buf::from_neg_9(&mut buf, &string); 11 },
-				10 => { crate::buf::from_neg_10(&mut buf, &string); 12 },
-				11 => { crate::buf::from_neg_11(&mut buf, &string); 14 },
-				12 => { crate::buf::from_neg_12(&mut buf, &string); 15 },
-				13 => { crate::buf::from_neg_13(&mut buf, &string); 16 },
-				14 => { crate::buf::from_neg_14(&mut buf, &string); 18 },
-				15 => { crate::buf::from_neg_15(&mut buf, &string); 19 },
-				16 => { crate::buf::from_neg_16(&mut buf, &string); 20 },
-				17 => { crate::buf::from_neg_17(&mut buf, &string); 22 },
-				18 => { crate::buf::from_neg_18(&mut buf, &string); 23 },
-				19 => { crate::buf::from_neg_19(&mut buf, &string); 24 },
-				20 => { crate::buf::from_neg_20(&mut buf, &string); 26 },
-
-				// We've covered all possible negative `i64` lengths.
-				_ => unreachable!(),
-			};
-			Self { buf, len }
-		} else {
-			let len = match i {
-				0..=9                         => { crate::buf::from_1(&mut buf, &string); 1 },
-				0..=99                        => { crate::buf::from_2(&mut buf, &string); 2 },
-				0..=999                       => { crate::buf::from_3(&mut buf, &string); 3 },
-				0..=9_999                     => { crate::buf::from_4(&mut buf, &string); 5 },
-				0..=99_999                    => { crate::buf::from_5(&mut buf, &string); 6 },
-				0..=999_999                   => { crate::buf::from_6(&mut buf, &string); 7 },
-				0..=9_999_999                 => { crate::buf::from_7(&mut buf, &string); 9 },
-				0..=99_999_999                => { crate::buf::from_8(&mut buf, &string); 10 },
-				0..=999_999_999               => { crate::buf::from_9(&mut buf, &string); 11 },
-				0..=9_999_999_999             => { crate::buf::from_10(&mut buf, &string); 13 },
-				0..=99_999_999_999            => { crate::buf::from_11(&mut buf, &string); 14 },
-				0..=999_999_999_999           => { crate::buf::from_12(&mut buf, &string); 15 },
-				0..=9_999_999_999_999         => { crate::buf::from_13(&mut buf, &string); 17 },
-				0..=99_999_999_999_999        => { crate::buf::from_14(&mut buf, &string); 18 },
-				0..=999_999_999_999_999       => { crate::buf::from_15(&mut buf, &string); 19 },
-				0..=9_999_999_999_999_999     => { crate::buf::from_16(&mut buf, &string); 21 },
-				0..=99_999_999_999_999_999    => { crate::buf::from_17(&mut buf, &string); 22 },
-				0..=999_999_999_999_999_999   => { crate::buf::from_18(&mut buf, &string); 23 },
-				0..=9_223_372_036_854_775_807 => { crate::buf::from_19(&mut buf, &string); 25 },
-
-				// We've covered all possible positive `i64` lengths.
-				_ => unreachable!(),
-			};
-			Self { buf, len }
-		}
+		let (buf, len) = crate::buf::from_i(i);
+		Self { buf, len }
 	}
 }
 

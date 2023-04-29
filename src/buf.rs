@@ -1,6 +1,128 @@
 use crate::constants::*;
 
+// Shared `Buffer` for quickly formatting (float, percent, etc)
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub(crate) struct Buffer {
+	// Bytes representing a valid UTF-8 string.
+	pub(crate) buf: [u8; MAX_BUF_LEN],
+	// How many bytes we're taking up.
+	pub(crate) len: usize,
+}
+
+impl Buffer {
+	#[inline(always)]
+	// Returns only the valid bytes.
+	pub(crate) fn as_bytes(&self) -> &[u8] {
+		&self.buf[..self.len]
+	}
+
+	#[inline(always)]
+	pub(crate) fn as_str(&self) -> &str {
+		// SAFETY:
+		// The buffer at this point should be
+		// valid UTF-8 bytes representing integers.
+		unsafe { std::str::from_utf8_unchecked(self.as_bytes()) }
+	}
+}
+
 // Shared functions for `Buffer` between `Unsigned` and `Int`.
+
+//---------------------------------------------------------------------------------------------------- Frontend function for `u*` -> buf
+#[inline(always)]
+pub(crate) fn from_u(u: u64) -> ([u8; MAX_BUF_LEN], usize) {
+	let mut buffer = itoa::Buffer::new();
+	let string = &buffer.format(u).as_bytes();
+	let mut buf = [0_u8; MAX_BUF_LEN];
+
+	let len = match u {
+		0..=9                         => { from_1(&mut buf, &string); 1 },
+		0..=99                        => { from_2(&mut buf, &string); 2 },
+		0..=999                       => { from_3(&mut buf, &string); 3 },
+		0..=9_999                     => { from_4(&mut buf, &string); 5 },
+		0..=99_999                    => { from_5(&mut buf, &string); 6 },
+		0..=999_999                   => { from_6(&mut buf, &string); 7 },
+		0..=9_999_999                 => { from_7(&mut buf, &string); 9 },
+		0..=99_999_999                => { from_8(&mut buf, &string); 10 },
+		0..=999_999_999               => { from_9(&mut buf, &string); 11 },
+		0..=9_999_999_999             => { from_10(&mut buf, &string); 13 },
+		0..=99_999_999_999            => { from_11(&mut buf, &string); 14 },
+		0..=999_999_999_999           => { from_12(&mut buf, &string); 15 },
+		0..=9_999_999_999_999         => { from_13(&mut buf, &string); 17 },
+		0..=99_999_999_999_999        => { from_14(&mut buf, &string); 18 },
+		0..=999_999_999_999_999       => { from_15(&mut buf, &string); 19 },
+		0..=9_999_999_999_999_999     => { from_16(&mut buf, &string); 21 },
+		0..=99_999_999_999_999_999    => { from_17(&mut buf, &string); 22 },
+		0..=999_999_999_999_999_999   => { from_18(&mut buf, &string); 23 },
+		0..=9_999_999_999_999_999_999 => { from_19(&mut buf, &string); 25 },
+		_                             => { from_20(&mut buf, &string); 26 },
+	};
+
+	(buf, len)
+}
+
+//---------------------------------------------------------------------------------------------------- Frontend function for `i*` -> buf
+#[inline(always)]
+pub(crate) fn from_i(i: i64) -> ([u8; MAX_BUF_LEN], usize) {
+	let mut buffer = itoa::Buffer::new();
+	let string = &buffer.format(i).as_bytes();
+	let mut buf = [0_u8; MAX_BUF_LEN];
+
+	if i.is_negative() {
+		let len = match string.len() {
+			// Must be at least two bytes: `-1`
+			2 => { from_neg_2(&mut buf, &string); 2 },
+			3 => { from_neg_3(&mut buf, &string); 3 },
+			4 => { from_neg_4(&mut buf, &string); 4 },
+			5 => { from_neg_5(&mut buf, &string); 6 },
+			6 => { from_neg_6(&mut buf, &string); 7 },
+			7 => { from_neg_7(&mut buf, &string); 8 },
+			8 => { from_neg_8(&mut buf, &string); 10 },
+			9 => { from_neg_9(&mut buf, &string); 11 },
+			10 => { from_neg_10(&mut buf, &string); 12 },
+			11 => { from_neg_11(&mut buf, &string); 14 },
+			12 => { from_neg_12(&mut buf, &string); 15 },
+			13 => { from_neg_13(&mut buf, &string); 16 },
+			14 => { from_neg_14(&mut buf, &string); 18 },
+			15 => { from_neg_15(&mut buf, &string); 19 },
+			16 => { from_neg_16(&mut buf, &string); 20 },
+			17 => { from_neg_17(&mut buf, &string); 22 },
+			18 => { from_neg_18(&mut buf, &string); 23 },
+			19 => { from_neg_19(&mut buf, &string); 24 },
+			20 => { from_neg_20(&mut buf, &string); 26 },
+
+			// We've covered all possible negative `i64` lengths.
+			_ => unreachable!(),
+		};
+		(buf, len)
+	} else {
+		let len = match i {
+			0..=9                         => { from_1(&mut buf, &string); 1 },
+			0..=99                        => { from_2(&mut buf, &string); 2 },
+			0..=999                       => { from_3(&mut buf, &string); 3 },
+			0..=9_999                     => { from_4(&mut buf, &string); 5 },
+			0..=99_999                    => { from_5(&mut buf, &string); 6 },
+			0..=999_999                   => { from_6(&mut buf, &string); 7 },
+			0..=9_999_999                 => { from_7(&mut buf, &string); 9 },
+			0..=99_999_999                => { from_8(&mut buf, &string); 10 },
+			0..=999_999_999               => { from_9(&mut buf, &string); 11 },
+			0..=9_999_999_999             => { from_10(&mut buf, &string); 13 },
+			0..=99_999_999_999            => { from_11(&mut buf, &string); 14 },
+			0..=999_999_999_999           => { from_12(&mut buf, &string); 15 },
+			0..=9_999_999_999_999         => { from_13(&mut buf, &string); 17 },
+			0..=99_999_999_999_999        => { from_14(&mut buf, &string); 18 },
+			0..=999_999_999_999_999       => { from_15(&mut buf, &string); 19 },
+			0..=9_999_999_999_999_999     => { from_16(&mut buf, &string); 21 },
+			0..=99_999_999_999_999_999    => { from_17(&mut buf, &string); 22 },
+			0..=999_999_999_999_999_999   => { from_18(&mut buf, &string); 23 },
+			0..=9_223_372_036_854_775_807 => { from_19(&mut buf, &string); 25 },
+
+			// We've covered all possible positive `i64` lengths.
+			_ => unreachable!(),
+		};
+		(buf, len)
+	}
+}
 
 //---------------------------------------------------------------------------------------------------- Unsigned (assumes no `-`)
 #[inline(always)]

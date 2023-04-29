@@ -180,9 +180,8 @@
 	nonstandard_style,
 )]
 
-pub(crate) mod inner;
-pub(crate) mod macros;
 pub(crate) mod buf;
+pub(crate) mod macros;
 
 mod constants;
 pub use constants::*;

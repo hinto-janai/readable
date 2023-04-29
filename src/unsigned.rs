@@ -3,7 +3,6 @@
 use serde::{Serialize,Deserialize};
 
 use std::num::*;
-use crate::inner::*;
 use crate::macros::*;
 use crate::constants::*;
 
@@ -238,33 +237,7 @@ impl Buffer {
 
 	#[inline(always)]
 	fn from_u(u: u64) -> Self {
-		let mut buffer = itoa::Buffer::new();
-		let string = &buffer.format(u).as_bytes();
-		let mut buf = [0_u8; MAX_BUF_LEN];
-
-		let len = match u {
-			0..=9                         => { crate::buf::from_1(&mut buf, &string); 1 },
-			0..=99                        => { crate::buf::from_2(&mut buf, &string); 2 },
-			0..=999                       => { crate::buf::from_3(&mut buf, &string); 3 },
-			0..=9_999                     => { crate::buf::from_4(&mut buf, &string); 5 },
-			0..=99_999                    => { crate::buf::from_5(&mut buf, &string); 6 },
-			0..=999_999                   => { crate::buf::from_6(&mut buf, &string); 7 },
-			0..=9_999_999                 => { crate::buf::from_7(&mut buf, &string); 9 },
-			0..=99_999_999                => { crate::buf::from_8(&mut buf, &string); 10 },
-			0..=999_999_999               => { crate::buf::from_9(&mut buf, &string); 11 },
-			0..=9_999_999_999             => { crate::buf::from_10(&mut buf, &string); 13 },
-			0..=99_999_999_999            => { crate::buf::from_11(&mut buf, &string); 14 },
-			0..=999_999_999_999           => { crate::buf::from_12(&mut buf, &string); 15 },
-			0..=9_999_999_999_999         => { crate::buf::from_13(&mut buf, &string); 17 },
-			0..=99_999_999_999_999        => { crate::buf::from_14(&mut buf, &string); 18 },
-			0..=999_999_999_999_999       => { crate::buf::from_15(&mut buf, &string); 19 },
-			0..=9_999_999_999_999_999     => { crate::buf::from_16(&mut buf, &string); 21 },
-			0..=99_999_999_999_999_999    => { crate::buf::from_17(&mut buf, &string); 22 },
-			0..=999_999_999_999_999_999   => { crate::buf::from_18(&mut buf, &string); 23 },
-			0..=9_999_999_999_999_999_999 => { crate::buf::from_19(&mut buf, &string); 25 },
-			_                             => { crate::buf::from_20(&mut buf, &string); 26 },
-		};
-
+		let (buf, len) = crate::buf::from_u(u);
 		Self { buf, len }
 	}
 }
