@@ -23,12 +23,22 @@ macro_rules! str_u64 {
 }
 pub(crate) use str_u64;
 
+macro_rules! itoa {
+	($number:expr) => {
+		{
+			::itoa::Buffer::new().format($number).as_bytes()
+		}
+	}
+}
+pub(crate) use itoa;
+
 //---------------------------------------------------------------------------------------------------- Internal Buffer.
 // Implement a private module `Buffer` type
 // with a variable amount of array space.
 macro_rules! buffer {
 	($max_len:expr, $unknown_buffer:expr, $unknown_len:expr) => {
 		#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+		#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 		#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 		struct Buffer {
 			// Bytes representing a valid UTF-8 string.

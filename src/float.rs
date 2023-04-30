@@ -94,8 +94,9 @@ use crate::macros::*;
 /// ```
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct Float(f64, CompactString);
+pub struct Float(f64, #[cfg_attr(feature = "bincode", bincode(with_serde))] CompactString);
 
 impl_math!(Float, f64);
 impl_traits!(Float, f64);

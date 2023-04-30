@@ -114,10 +114,10 @@ use crate::macros::*;
 /// ```
 /// # Credit
 /// This code is forked from `https://docs.rs/humantime`, edited to remove sub-second time, change spacing and some words.
-
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct Time(u64, CompactString);
+pub struct Time(u64, #[cfg_attr(feature = "bincode", bincode(with_serde))] CompactString);
 
 // Implementation Macro.
 macro_rules! impl_number {

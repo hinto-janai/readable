@@ -106,8 +106,9 @@ use crate::macros::*;
 /// assert!(Percent::from(-10_000_i32) == "-10,000.00%");
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct Percent(f64, CompactString);
+pub struct Percent(f64, #[cfg_attr(feature = "bincode", bincode(with_serde))] CompactString);
 
 // Implements `new_X` functions.
 macro_rules! impl_new {

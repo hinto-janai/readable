@@ -244,6 +244,7 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// assert!(a == "2014-04-22");
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Date((u16, u8, u8), Buffer);
 
@@ -257,8 +258,7 @@ impl Date {
 	// Private functions for construction.
 	#[inline]
 	fn priv_y(y: u16) -> Self {
-		let s = format_compact!("{y}");
-		Self((y, 0, 0), Buffer::from_4_unchecked(s.as_bytes()))
+		Self((y, 0, 0), Buffer::from_4_unchecked(itoa!(y)))
 	}
 	#[inline]
 	fn priv_ym(y: u16, m: u8) -> Self {

@@ -2,6 +2,7 @@ use crate::constants::*;
 
 // Shared `Buffer` for quickly formatting (float, percent, etc)
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub(crate) struct Buffer {
 	// Bytes representing a valid UTF-8 string.

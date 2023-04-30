@@ -1,6 +1,6 @@
 [package]
 name = "readable"
-version = "0.8.0"
+version = "0.8.1"
 edition = "2021"
 authors = ["hinto.janai <hinto.janai@protonmail.com>"]
 description = "Human readable data formatting"
@@ -16,7 +16,7 @@ rustc-args = ["--cfg", "docsrs"]
 
 [features]
 default        = []
-full           = ["serde", "ignore_nan_inf", "inline_date", "inline_time", "inline_runtime"]
+full           = ["serde", "bincode", "ignore_nan_inf", "inline_date", "inline_time", "inline_runtime"]
 ignore_nan_inf = []
 inline_date    = ["readable-inlined-date"]
 inline_time    = ["readable-inlined-time"]
@@ -31,9 +31,10 @@ compact_str = { version = "0.7.0", features = ["bytes", "serde"] }
 lazy_static = { version = "1.4.0" }
 regex       = { version = "1.8.1" }
 serde       = { version = "1.0.160", features = ["derive"], optional = true }
+bincode     = { version = "2.0.0-rc.3", features = ["serde"], optional = true }
 
 # Inlined crates.
-readable-inlined-date    = { version = "0.1.1", optional = true }
+readable-inlined-date    = { version = "0.1.2", optional = true }
 readable-inlined-time    = { version = "0.1.0", optional = true }
-readable-inlined-runtime = { version = "0.1.0", optional = true }
+readable-inlined-runtime = { version = "0.1.1", optional = true }
 #readable-inlined-percent = { version = "0.1.0", optional = true }
