@@ -4,16 +4,16 @@
 
 pub const UNKNOWN_RUNTIME: &str = "?:??";
 
-pub const fn inlined(u: u32) -> (u32, &'static str) {
+pub const fn inlined(u: u32) -> &'static [u8] {
 	if u > 359999 {
-		(0, UNKNOWN_RUNTIME)
+		UNKNOWN_RUNTIME.as_bytes()
 	} else {
 		// INVARIANT:
 		// `u` must be less than `359999` at this point.
 		// The array is greater than `359999` length.
 		//
 		// This is always a safe index.
-		(u, RUNTIME_LUT[u as usize])
+		RUNTIME_LUT[u as usize].as_bytes()
 	}
 }
 
