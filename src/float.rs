@@ -181,13 +181,13 @@ impl Float {
 	/// | 100.1  | `100`
 	pub fn from_0(f: f64) -> Self {
 		handle_nan_string!(f);
-		Self(f, format_compact!("{}", str_u64!(f as u64)))
+		Self(f, CompactString::from(str_u64!(f as u64)))
 	}
 
 	impl_new!(1);
 	impl_new!(2);
 
-	seq_macro::seq!(N in 4..=18 {
+	seq_macro::seq!(N in 4..=14 {
 		impl_new!(N);
 	});
 }

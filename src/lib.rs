@@ -8,6 +8,7 @@
 //! | Flag             | Purpose |
 //! |------------------|---------|
 //! | `serde`          | Enables [`serde`](https://docs.rs/serde) on all types
+//! | `bincode`        | Enables [`bincode 2.0.0`](https://docs.rs/bincode/2.0.0-rc.3/bincode/index.html)'s `Encode/Decode` on all types
 //! | `ignore_nan_inf` | Disables checking `f64`'s for `f64::NAN`, `f64::INFINITY`, and `f64::NEG_INFINITY`
 //! | `inline_date`    | Inlines any `Date` that is in `YYYY-MM-HH` format and is between year `1900-2100`
 //! | `inline_time`    | Inlines any `Time` that is under `1 hour, 1 minute` (`0..=3660`)
