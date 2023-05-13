@@ -1,12 +1,5 @@
 //---------------------------------------------------------------------------------------------------- Use
-use crate::{
-	int::Int,
-	unsigned::Unsigned,
-	float::Float,
-	percent::Percent,
-	runtime::Runtime,
-	date::Date,
-};
+
 
 //---------------------------------------------------------------------------------------------------- Constants
 /// The separator character. This looks like: `1,000`

@@ -4,8 +4,8 @@ use serde::{Serialize,Deserialize};
 
 use crate::macros::*;
 use crate::constants::*;
-use compact_str::{format_compact,CompactString};
-use std::num::TryFromIntError;
+use compact_str::{format_compact};
+
 use regex::Regex;
 
 //---------------------------------------------------------------------------------------------------- Regexes
@@ -459,6 +459,7 @@ impl Date {
 		}
 	}
 
+	#[allow(clippy::should_implement_trait)]
 	/// Parse arbitrary strings for a date.
 	///
 	/// If the complete date cannot be parsed, this function will
@@ -533,19 +534,19 @@ impl Date {
 		// if the regexes I've made are faulty themselves (sorry).
 
 		// If input is just numbers...
-		if NUM.is_match(&string) {
+		if NUM.is_match(string) {
 			match len {
 				// YM || MY
 				5 => {
-					if YM_NUM.is_match(&string) {
+					if YM_NUM.is_match(string) {
 						let y = string[..4].parse::<u16>().unwrap();
 						let m = string[4..].parse::<u8>().unwrap();
 						return Ok(Self::priv_ym(y, m));
-					} else if MY_NUM.is_match(&string) {
+					} else if MY_NUM.is_match(string) {
 						let m = string[..1].parse::<u8>().unwrap();
 						let y = string[1..].parse::<u16>().unwrap();
 						return Ok(Self::priv_ym(y, m));
-					} else if YEAR.is_match(&string) {
+					} else if YEAR.is_match(string) {
 						let y = string[..4].parse::<u16>().unwrap();
 						return Ok(Self::priv_y(y));
 					}
@@ -553,26 +554,26 @@ impl Date {
 
 				// YMM || YMD || MDY || DMY
 				6 => {
-					if YMM_NUM.is_match(&string) {
+					if YMM_NUM.is_match(string) {
 						let y = string[..4].parse::<u16>().unwrap();
 						let m = string[4..].parse::<u8>().unwrap();
 						return Ok(Self::priv_ym(y, m));
-					} else if YMD_NUM.is_match(&string) {
+					} else if YMD_NUM.is_match(string) {
 						let y = string[..4].parse::<u16>().unwrap();
 						let m = string[4..5].parse::<u8>().unwrap();
 						let d = string[5..].parse::<u8>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if MDY_NUM.is_match(&string) {
+					} else if MDY_NUM.is_match(string) {
 						let m = string[..1].parse::<u8>().unwrap();
 						let d = string[1..2].parse::<u8>().unwrap();
 						let y = string[2..].parse::<u16>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if DMY_NUM.is_match(&string) {
+					} else if DMY_NUM.is_match(string) {
 						let d = string[..1].parse::<u8>().unwrap();
 						let m = string[1..2].parse::<u8>().unwrap();
 						let y = string[2..].parse::<u16>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if YEAR.is_match(&string) {
+					} else if YEAR.is_match(string) {
 						let y = string[..4].parse::<u16>().unwrap();
 						return Ok(Self::priv_y(y));
 					}
@@ -580,37 +581,37 @@ impl Date {
 
 				// YMMD || YMDD || MMDY || MDDY || DMMY || DDMY
 				7 => {
-					if YMMD_NUM.is_match(&string) {
+					if YMMD_NUM.is_match(string) {
 						let y = string[..4].parse::<u16>().unwrap();
 						let m = string[4..5].parse::<u8>().unwrap();
 						let d = string[6..].parse::<u8>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if YMDD_NUM.is_match(&string) {
+					} else if YMDD_NUM.is_match(string) {
 						let y = string[..4].parse::<u16>().unwrap();
 						let m = string[4..5].parse::<u8>().unwrap();
 						let d = string[5..].parse::<u8>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if MMDY_NUM.is_match(&string) {
+					} else if MMDY_NUM.is_match(string) {
 						let m = string[..2].parse::<u8>().unwrap();
 						let d = string[2..3].parse::<u8>().unwrap();
 						let y = string[3..].parse::<u16>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if MDDY_NUM.is_match(&string) {
+					} else if MDDY_NUM.is_match(string) {
 						let m = string[..1].parse::<u8>().unwrap();
 						let d = string[1..3].parse::<u8>().unwrap();
 						let y = string[3..].parse::<u16>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if DMMY_NUM.is_match(&string) {
+					} else if DMMY_NUM.is_match(string) {
 						let d = string[..1].parse::<u8>().unwrap();
 						let m = string[1..3].parse::<u8>().unwrap();
 						let y = string[3..].parse::<u16>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if DDMY_NUM.is_match(&string) {
+					} else if DDMY_NUM.is_match(string) {
 						let d = string[..2].parse::<u8>().unwrap();
 						let m = string[2..3].parse::<u8>().unwrap();
 						let y = string[3..].parse::<u16>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if YEAR.is_match(&string) {
+					} else if YEAR.is_match(string) {
 						let y = string[..4].parse::<u16>().unwrap();
 						return Ok(Self::priv_y(y));
 					}
@@ -618,22 +619,22 @@ impl Date {
 
 				// YMMDD || MMDDY || DDMMY
 				8 => {
-					if YMMDD_NUM.is_match(&string) {
+					if YMMDD_NUM.is_match(string) {
 						let y = string[..4].parse::<u16>().unwrap();
 						let m = string[4..6].parse::<u8>().unwrap();
 						let d = string[6..].parse::<u8>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if MMDDY_NUM.is_match(&string) {
+					} else if MMDDY_NUM.is_match(string) {
 						let m = string[..2].parse::<u8>().unwrap();
 						let d = string[2..4].parse::<u8>().unwrap();
 						let y = string[4..].parse::<u16>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if DDMMY_NUM.is_match(&string) {
+					} else if DDMMY_NUM.is_match(string) {
 						let d = string[..2].parse::<u8>().unwrap();
 						let m = string[2..4].parse::<u8>().unwrap();
 						let y = string[4..].parse::<u16>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if YEAR.is_match(&string) {
+					} else if YEAR.is_match(string) {
 						let y = string[..4].parse::<u16>().unwrap();
 						return Ok(Self::priv_y(y));
 					}
@@ -647,15 +648,15 @@ impl Date {
 		match len {
 			// Y.M || M.Y
 			6 => {
-				if YM.is_match(&string) {
+				if YM.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					let m = string[5..].parse::<u8>().unwrap();
 					return Ok(Self::priv_ym(y, m));
-				} else if MY.is_match(&string) {
+				} else if MY.is_match(string) {
 					let m = string[..1].parse::<u8>().unwrap();
 					let y = string[2..].parse::<u16>().unwrap();
 					return Ok(Self::priv_ym(y, m));
-				} else if YEAR.is_match(&string) {
+				} else if YEAR.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					return Ok(Self::priv_y(y));
 				}
@@ -663,15 +664,15 @@ impl Date {
 
 			// Y.MM || MM.Y
 			7 => {
-				if YMM.is_match(&string) {
+				if YMM.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					let m = string[5..].parse::<u8>().unwrap();
 					return Ok(Self::priv_ym(y, m));
-				} else if MMY.is_match(&string) {
+				} else if MMY.is_match(string) {
 					let m = string[..2].parse::<u8>().unwrap();
 					let y = string[3..].parse::<u16>().unwrap();
 					return Ok(Self::priv_ym(y, m));
-				} else if YEAR.is_match(&string) {
+				} else if YEAR.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					return Ok(Self::priv_y(y));
 				}
@@ -679,22 +680,22 @@ impl Date {
 
 			// Y.M.D || M.D.Y || D.M.Y
 			8 => {
-				if YMD.is_match(&string) {
+				if YMD.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					let m = string[5..6].parse::<u8>().unwrap();
 					let d = string[7..].parse::<u8>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if MDY.is_match(&string) {
+				} else if MDY.is_match(string) {
 					let m = string[..1].parse::<u8>().unwrap();
 					let d = string[2..3].parse::<u8>().unwrap();
 					let y = string[4..].parse::<u16>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if DMY.is_match(&string) {
+				} else if DMY.is_match(string) {
 					let d = string[..1].parse::<u8>().unwrap();
 					let m = string[2..3].parse::<u8>().unwrap();
 					let y = string[4..].parse::<u16>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if YEAR.is_match(&string) {
+				} else if YEAR.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					return Ok(Self::priv_y(y));
 				}
@@ -702,36 +703,36 @@ impl Date {
 
 			// Y.MM.D || Y.M.DD || MM.D.Y || M.DD.Y || D.MM.Y || DD.M.Y
 			9 => {
-				if YMMD.is_match(&string) {
+				if YMMD.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					let m = string[5..7].parse::<u8>().unwrap();
 					return Ok(Self::priv_ym(y, m));
-				} else if YMDD.is_match(&string) {
+				} else if YMDD.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					let m = string[5..6].parse::<u8>().unwrap();
 					let d = string[7..].parse::<u8>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if MMDY.is_match(&string) {
+				} else if MMDY.is_match(string) {
 					let m = string[..2].parse::<u8>().unwrap();
 					let d = string[3..4].parse::<u8>().unwrap();
 					let y = string[5..].parse::<u16>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if MDDY.is_match(&string) {
+				} else if MDDY.is_match(string) {
 					let m = string[..1].parse::<u8>().unwrap();
 					let d = string[2..4].parse::<u8>().unwrap();
 					let y = string[5..].parse::<u16>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if DMMY.is_match(&string) {
+				} else if DMMY.is_match(string) {
 					let d = string[..1].parse::<u8>().unwrap();
 					let m = string[2..4].parse::<u8>().unwrap();
 					let y = string[5..].parse::<u16>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if DDMY.is_match(&string) {
+				} else if DDMY.is_match(string) {
 					let d = string[..2].parse::<u8>().unwrap();
 					let m = string[3..4].parse::<u8>().unwrap();
 					let y = string[5..].parse::<u16>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if YEAR.is_match(&string) {
+				} else if YEAR.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					return Ok(Self::priv_y(y));
 				}
@@ -739,22 +740,22 @@ impl Date {
 
 			// Y.MM.DD || MM.DD.Y || DD.MM.Y
 			10 => {
-				if YMMDD.is_match(&string) {
+				if YMMDD.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					let m = string[5..7].parse::<u8>().unwrap();
 					let d = string[8..].parse::<u8>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if MMDDY.is_match(&string) {
+				} else if MMDDY.is_match(string) {
 					let m = string[..2].parse::<u8>().unwrap();
 					let d = string[3..5].parse::<u8>().unwrap();
 					let y = string[6..].parse::<u16>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if DDMMY.is_match(&string) {
+				} else if DDMMY.is_match(string) {
 					let d = string[..2].parse::<u8>().unwrap();
 					let m = string[3..5].parse::<u8>().unwrap();
 					let y = string[6..].parse::<u16>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if YEAR.is_match(&string) {
+				} else if YEAR.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					return Ok(Self::priv_y(y));
 				}

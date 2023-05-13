@@ -319,14 +319,14 @@ mod tests {
 	#[test]
 	fn percent_dot() {
 		assert!(Percent::new_1(0.0)        == "0.0%");
-		assert!(Percent::new_1(1_000.1234) == "1,000.1%");
-		assert!(Percent::new_3(1_000.1234) == "1,000.123%");
-		assert!(Percent::new_4(1_000.1234) == "1,000.1234%");
+		assert!(Percent::new_1(1_000.123_4) == "1,000.1%");
+		assert!(Percent::new_3(1_000.123_4) == "1,000.123%");
+		assert!(Percent::new_4(1_000.123_4) == "1,000.1234%");
 
 		assert!(Percent::new_1(0.1)            == "0.1%");
-		assert!(Percent::new_1(10_000.1234)    == "10,000.1%");
-		assert!(Percent::new_3(100_000.1234)   == "100,000.123%");
-		assert!(Percent::new_4(1_000_000.1234) == "1,000,000.1234%");
+		assert!(Percent::new_1(10_000.123_4)    == "10,000.1%");
+		assert!(Percent::new_3(100_000.123_4)   == "100,000.123%");
+		assert!(Percent::new_4(1_000_000.123_4) == "1,000,000.1234%");
 	}
 
 	#[test]

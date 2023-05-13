@@ -57,6 +57,7 @@ macro_rules! buffer {
 			}
 
 			#[inline(always)]
+			#[allow(clippy::wrong_self_convention)]
 			const fn to_buf(&self) -> [u8; $max_len] {
 				self.buf
 			}
@@ -91,11 +92,6 @@ macro_rules! buffer {
 			}
 
 			#[inline(always)]
-			fn to_string(&self) -> String {
-				self.as_str().to_string()
-			}
-
-			#[inline(always)]
 			fn into_string(self) -> String {
 				self.as_str().to_string()
 			}
@@ -110,22 +106,6 @@ macro_rules! buffer {
 pub(crate) use buffer;
 
 //---------------------------------------------------------------------------------------------------- NaN.
-// "Handle NaN/Infinite" Macro.
-macro_rules! handle_nan {
-	($float:ident) => {
-		#[cfg(not(feature = "ignore_nan_inf"))]
-		{
-			match $float.classify() {
-				std::num::FpCategory::Normal   => (),
-				std::num::FpCategory::Nan      => return Self(f64::NAN, crate::inner::Inner::Nan(crate::constants::NAN)),
-				std::num::FpCategory::Infinite => return Self(f64::INFINITY, crate::inner::Inner::Inf(crate::constants::INFINITY)),
-				_ => (),
-			}
-		}
-	}
-}
-pub(crate) use handle_nan;
-
 // "Handle NaN/Infinite" Macro for `compact_str`.
 macro_rules! handle_nan_string {
 	($float:ident) => {
@@ -215,180 +195,6 @@ macro_rules! impl_buffer {
 }
 pub(crate) use impl_buffer;
 
-// `From`.
-macro_rules! impl_from_single {
-	($from:ident, $to:ident, $s:ident) => {
-		impl From<$from> for $s {
-			#[inline]
-			fn from(number: $from) -> Self {
-				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-
-		impl From<&$from> for $s {
-			#[inline]
-			fn from(number: &$from) -> Self {
-				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-	}
-}
-pub(crate) use impl_from_single;
-
-// `From`.
-macro_rules! impl_from {
-	($from_8:ident, $from_16:ident, $from_32:ident, $to:ident, $from_size:ident, $s:ident) => {
-		// Same.
-		impl From<$to> for $s {
-			#[inline]
-			fn from(number: $to) -> Self {
-				Self(number, crate::inner::Inner::Buf(crate::macros::num!(number)))
-			}
-		}
-		impl From<&$to> for $s {
-			#[inline]
-			fn from(number: &$to) -> Self {
-				Self(*number, crate::inner::Inner::Buf(crate::macros::num!(*number)))
-			}
-		}
-
-		// Other types.
-		impl From<$from_8> for $s {
-			#[inline]
-			fn from(number: $from_8) -> Self {
-				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-		impl From<$from_16> for $s {
-			#[inline]
-			fn from(number: $from_16) -> Self {
-				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-		impl From<$from_32> for $s {
-			#[inline]
-			fn from(number: $from_32) -> Self {
-				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-		impl From<$from_size> for $s {
-			#[inline]
-			fn from(number: $from_size) -> Self {
-				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-		// Borrowed
-		impl From<&$from_8> for $s {
-			#[inline]
-			fn from(number: &$from_8) -> Self {
-				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-		impl From<&$from_16> for $s {
-			#[inline]
-			fn from(number: &$from_16) -> Self {
-				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-		impl From<&$from_32> for $s {
-			#[inline]
-			fn from(number: &$from_32) -> Self {
-				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-		impl From<&$from_size> for $s {
-			#[inline]
-			fn from(number: &$from_size) -> Self {
-				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-
-		// Floats.
-		impl From<f32> for $s {
-			#[inline]
-			fn from(number: f32) -> Self {
-				#[cfg(not(feature = "ignore_nan_inf"))]
-				{
-					match number.classify() {
-						std::num::FpCategory::Normal   => (),
-						std::num::FpCategory::Nan      => return Self(number as $to, crate::inner::Inner::Nan),
-						std::num::FpCategory::Infinite => return Self(number as $to, crate::inner::Inner::Inf),
-						_ => (),
-					}
-				}
-
-				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-
-		impl From<f64> for $s {
-			#[inline]
-			fn from(number: f64) -> Self {
-				#[cfg(not(feature = "ignore_nan_inf"))]
-				{
-					match number.classify() {
-						std::num::FpCategory::Normal   => (),
-						std::num::FpCategory::Nan      => return Self(number as $to, crate::inner::Inner::Nan),
-						std::num::FpCategory::Infinite => return Self(number as $to, crate::inner::Inner::Inf),
-						_ => (),
-					}
-				}
-
-				let n = number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-
-		// Borrowed.
-		impl From<&f32> for $s {
-			#[inline]
-			fn from(number: &f32) -> Self {
-				#[cfg(not(feature = "ignore_nan_inf"))]
-				{
-					match number.classify() {
-						std::num::FpCategory::Normal   => (),
-						std::num::FpCategory::Nan      => return Self(*number as $to, crate::inner::Inner::Nan),
-						std::num::FpCategory::Infinite => return Self(*number as $to, crate::inner::Inner::Inf),
-						_ => (),
-					}
-				}
-
-				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-
-		impl From<&f64> for $s {
-			#[inline]
-			fn from(number: &f64) -> Self {
-				#[cfg(not(feature = "ignore_nan_inf"))]
-				{
-					match number.classify() {
-						std::num::FpCategory::Normal   => (),
-						std::num::FpCategory::Nan      => return Self(*number as $to, crate::inner::Inner::Nan),
-						std::num::FpCategory::Infinite => return Self(*number as $to, crate::inner::Inner::Inf),
-						_ => (),
-					}
-				}
-
-				let n = *number as $to;
-				Self(n, crate::inner::Inner::Buf(crate::macros::num!(n)))
-			}
-		}
-	}
-}
-pub(crate) use impl_from;
 
 // Implement common const functions.
 macro_rules! impl_const {
@@ -619,48 +425,6 @@ macro_rules! impl_isize {
 	}
 }
 pub(crate) use impl_isize;
-
-// Implement common `Inner` functions.
-macro_rules! impl_inner {
-	($num:ident) => {
-		#[inline]
-		/// Returns a [`Self`] with the value `0`.
-		pub const fn zero() -> Self {
-			Self(0, crate::inner::Inner::Zero)
-		}
-
-		#[inline]
-		/// Returns a [`Self`] set to `0`, but the [`String`] set to `???`.
-		pub const fn unknown() -> Self {
-			Self(0, crate::inner::Inner::Unknown)
-		}
-
-		#[inline(always)]
-		/// Returns true if [`Self`] is [`Self::zero`].
-		pub fn is_zero(&self) -> bool {
-			self.1.is_zero()
-		}
-
-		#[inline(always)]
-		/// Returns true if [`Self`] is [`Self::unknown`].
-		pub fn is_unknown(&self) -> bool {
-			self.1.is_unknown()
-		}
-
-		#[inline(always)]
-		/// Returns true if [`Self`] is `NAN`.
-		pub fn is_nan(&self) -> bool {
-			self.1.is_nan()
-		}
-
-		#[inline(always)]
-		/// Returns true if [`Self`] is `INF`.
-		pub fn is_inf(&self) -> bool {
-			self.1.is_inf()
-		}
-	}
-}
-pub(crate) use impl_inner;
 
 // Implement traits.
 macro_rules! impl_traits {

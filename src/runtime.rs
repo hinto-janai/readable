@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------------------------- Use
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
-use compact_str::{format_compact,CompactString};
+use compact_str::{format_compact};
 use crate::macros::*;
 use crate::constants::*;
 
@@ -194,6 +194,7 @@ impl Runtime {
 		Self(MAX_RUNTIME_U32, Buffer::max())
 	}
 
+	#[allow(unreachable_code)]
 	// Private function used in float `From`.
 	//
 	// INVARIANT:
@@ -208,12 +209,12 @@ impl Runtime {
 
 		// Zero length.
 		if runtime <= 0.0 {
-			return Self::zero()
+			return Self::zero();
 		}
 
 		// Return unknown if over max.
 		if runtime > MAX_RUNTIME_U32 as f64 {
-			return Self::unknown()
+			return Self::unknown();
 		}
 
 		// Cast to `u32` (rounds down implicitly).
@@ -366,7 +367,7 @@ impl Buffer {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use crate::constants::*;
+	
 
 	#[test]
 	fn all_uint() {

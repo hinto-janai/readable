@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------------------------- Use
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
-use compact_str::{format_compact,CompactString};
+use compact_str::{CompactString};
 use std::fmt::Write;
 use crate::macros::*;
 
@@ -149,7 +149,7 @@ impl Time {
 			if *started {
 				string.push_str(", ");
 			}
-			write!(string, "{} {}", value, name);
+			let _ = write!(string, "{} {}", value, name);
 			if value > 1 {
 				string.push('s');
 			}
@@ -291,5 +291,5 @@ impl From<u64> for Time {
 //---------------------------------------------------------------------------------------------------- TESTS
 #[cfg(test)]
 mod tests {
-	use super::*;
+	
 }
