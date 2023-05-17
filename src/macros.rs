@@ -429,6 +429,32 @@ pub(crate) use impl_isize;
 // Implement traits.
 macro_rules! impl_traits {
 	($s:ty, $num:ty) => {
+		impl std::ops::Deref for $s {
+			type Target = str;
+
+			fn deref(&self) -> &Self::Target {
+				self.as_str()
+			}
+		}
+
+		impl AsRef<str> for $s {
+			fn as_ref(&self) -> &str {
+				self.as_str()
+			}
+		}
+
+		impl AsRef<[u8]> for $s {
+			fn as_ref(&self) -> &[u8] {
+				self.as_bytes()
+			}
+		}
+
+		impl std::borrow::Borrow<str> for $s {
+			fn borrow(&self) -> &str {
+				self.as_str()
+			}
+		}
+
 		impl std::fmt::Display for $s {
 			fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 				write!(f, "{}", &self.1.as_str())
