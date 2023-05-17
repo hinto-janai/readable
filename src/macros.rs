@@ -468,6 +468,18 @@ macro_rules! impl_traits {
 			}
 		}
 
+		impl PartialEq<&$s> for $s {
+			fn eq(&self, other: &&$s) -> bool {
+				self == other
+			}
+		}
+
+		impl PartialEq<$s> for &$s {
+			fn eq(&self, other: &$s) -> bool {
+				self == other
+			}
+		}
+
 		impl PartialEq<str> for $s {
 			fn eq(&self, other: &str) -> bool {
 				self.1.as_str() == other

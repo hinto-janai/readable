@@ -1,6 +1,6 @@
 [package]
 name = "readable"
-version = "0.8.3"
+version = "0.8.4"
 edition = "2021"
 authors = ["hinto.janai <hinto.janai@protonmail.com>"]
 description = "Human readable data formatting"
@@ -30,7 +30,7 @@ seq-macro   = "0.3.3"
 compact_str = { version = "0.7.0", features = ["bytes", "serde"] }
 lazy_static = { version = "1.4.0" }
 regex       = { version = "1.8.1" }
-serde       = { version = "1.0.160", features = ["derive"], optional = true }
+serde       = { version = "1.0.163", features = ["derive"], optional = true }
 bincode     = { version = "2.0.0-rc.3", features = ["serde", "derive"], optional = true }
 
 # Inlined crates.
