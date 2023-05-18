@@ -110,7 +110,7 @@ dependencies = [
 
 [[package]]
 name = "readable"
-version = "0.8.3"
+version = "0.8.4"
 dependencies = [
  "bincode",
  "compact_str",
@@ -121,6 +121,7 @@ dependencies = [
  "readable-inlined-runtime",
  "readable-inlined-time",
  "regex",
+ "ryu",
  "seq-macro",
  "serde",
 ]
