@@ -1,6 +1,6 @@
 [package]
 name = "readable"
-version = "0.8.5"
+version = "0.8.6"
 edition = "2021"
 authors = ["hinto.janai <hinto.janai@protonmail.com>"]
 description = "Human readable data formatting"
@@ -29,7 +29,7 @@ paste       = "1.0.12"
 seq-macro   = "0.3.3"
 compact_str = { version = "0.7.0", features = ["bytes", "serde"] }
 lazy_static = { version = "1.4.0" }
-regex       = { version = "1.8.1" }
+regex       = { version = "1.8.2" }
 serde       = { version = "1.0.163", features = ["derive"], optional = true }
 bincode     = { version = "2.0.0-rc.3", features = ["serde", "derive"], optional = true }
 ryu = "1.0.13"
