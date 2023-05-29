@@ -4,7 +4,7 @@
 /// This takes an [`itoa::Integer`] as input and outputs a [`&str`].
 #[macro_export]
 macro_rules! itoa {
-	($integer:ident) => {{
+	($integer:expr) => {{
 		itoa::Buffer::new().format($integer)
 	}}
 }
@@ -20,7 +20,7 @@ pub use itoa;
 /// Else, it uses [`ryu::Buffer::format`], which does.
 #[macro_export]
 macro_rules! ryu {
-	($float:ident) => {{
+	($float:expr) => {{
 		ryu::Buffer::new().format($float)
 	}}
 }
