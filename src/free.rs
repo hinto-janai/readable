@@ -5,10 +5,9 @@
 #[macro_export]
 macro_rules! itoa {
 	($integer:expr) => {{
-		itoa::Buffer::new().format($integer)
+		$crate::__readable_itoa::Buffer::new().format($integer)
 	}}
 }
-pub use itoa;
 
 /// Use [`ryu`](https://docs.ryu) to format a float (without commas).
 ///
@@ -21,10 +20,9 @@ pub use itoa;
 #[macro_export]
 macro_rules! ryu {
 	($float:expr) => {{
-		ryu::Buffer::new().format($float)
+		$crate::__readable_ryu::Buffer::new().format($float)
 	}}
 }
-pub use ryu;
 
 //---------------------------------------------------------------------------------------------------- TESTS
 #[cfg(test)]
