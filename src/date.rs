@@ -41,48 +41,48 @@ lazy_static::lazy_static! {
 	pub(crate) static ref YEAR: Regex = Regex::new(r"^\d{4}.*$").unwrap();
 
 	// Number only - `YearMonthDay`
-	pub(crate) static ref YM_NUM:    Regex = Regex::new(r"^[1-9]\d{3}[1-9]$").unwrap();
-	pub(crate) static ref YMM_NUM:   Regex = Regex::new(r"^[1-9]\d{3}([0][1-9]|1[012])$").unwrap();
-	pub(crate) static ref YMD_NUM:   Regex = Regex::new(r"^[1-9]\d{3}[1-9][1-9]$").unwrap();
-	pub(crate) static ref YMMD_NUM:  Regex = Regex::new(r"^[1-9]\d{3}(0[1-9]|1[012])[1-9]$").unwrap();
-	pub(crate) static ref YMDD_NUM:  Regex = Regex::new(r"^[1-9]\d{3}[1-9](0[1-9]|[12][0-9]|30|31)$").unwrap();
-	pub(crate) static ref YMMDD_NUM: Regex = Regex::new(r"^[1-9]\d{3}(0[1-9]|1[012])(0[1-9]|[12][0-9]|30|31)$").unwrap();
+	pub(crate) static ref YM_NUM:    Regex = Regex::new(r"^[1-9]\d{3}[1-9].*$").unwrap();
+	pub(crate) static ref YMM_NUM:   Regex = Regex::new(r"^[1-9]\d{3}([0][1-9]|1[012]).*$").unwrap();
+	pub(crate) static ref YMD_NUM:   Regex = Regex::new(r"^[1-9]\d{3}[1-9][1-9].*$").unwrap();
+	pub(crate) static ref YMMD_NUM:  Regex = Regex::new(r"^[1-9]\d{3}(0[1-9]|1[012])[1-9].*$").unwrap();
+	pub(crate) static ref YMDD_NUM:  Regex = Regex::new(r"^[1-9]\d{3}[1-9](0[1-9]|[12][0-9]|30|31).*$").unwrap();
+	pub(crate) static ref YMMDD_NUM: Regex = Regex::new(r"^[1-9]\d{3}(0[1-9]|1[012])(0[1-9]|[12][0-9]|30|31).*$").unwrap();
 
 	// Number only - `MonthDayYear`
-	pub(crate) static ref MY_NUM:    Regex = Regex::new(r"^[1-9]\d{4}$").unwrap();
-	pub(crate) static ref MMY_NUM:   Regex = Regex::new(r"^([0][1-9]|1[012])\d{4}$").unwrap();
-	pub(crate) static ref MDY_NUM:   Regex = Regex::new(r"^[1-9][1-9]\d{4}$").unwrap();
-	pub(crate) static ref MMDY_NUM:  Regex = Regex::new(r"^(0[1-9]|1[012])[1-9]\d{4}$").unwrap();
-	pub(crate) static ref MDDY_NUM:  Regex = Regex::new(r"^[1-9](0[1-9]|[12][0-9]|30|31)\d{4}$").unwrap();
-	pub(crate) static ref MMDDY_NUM: Regex = Regex::new(r"^(0[1-9]|1[012])(0[1-9]|[12][0-9]|30|31)\d{4}$").unwrap();
+	pub(crate) static ref MY_NUM:    Regex = Regex::new(r"^[1-9]\d{4}.*$").unwrap();
+	pub(crate) static ref MMY_NUM:   Regex = Regex::new(r"^([0][1-9]|1[012])\d{4}.*$").unwrap();
+	pub(crate) static ref MDY_NUM:   Regex = Regex::new(r"^[1-9][1-9]\d{4}.*$").unwrap();
+	pub(crate) static ref MMDY_NUM:  Regex = Regex::new(r"^(0[1-9]|1[012])[1-9]\d{4}.*$").unwrap();
+	pub(crate) static ref MDDY_NUM:  Regex = Regex::new(r"^[1-9](0[1-9]|[12][0-9]|30|31)\d{4}.*$").unwrap();
+	pub(crate) static ref MMDDY_NUM: Regex = Regex::new(r"^(0[1-9]|1[012])(0[1-9]|[12][0-9]|30|31)\d{4}.*$").unwrap();
 
 	// Number only - `DayMonthYear`
-	pub(crate) static ref DMY_NUM:   Regex = Regex::new(r"^[1-9][1-9]\d{4}$").unwrap();
-	pub(crate) static ref DDMY_NUM:  Regex = Regex::new(r"^(0[1-9]|[12][0-9]|3[01])[1-9]\d{4}$").unwrap();
-	pub(crate) static ref DMMY_NUM:  Regex = Regex::new(r"^[1-9](0[1-9]|1[012])\d{4}$").unwrap();
-	pub(crate) static ref DDMMY_NUM: Regex = Regex::new(r"^(0[1-9]|[12][0-9]|30|31)(0[1-9]|1[012])\d{4}$").unwrap();
+	pub(crate) static ref DMY_NUM:   Regex = Regex::new(r"^[1-9][1-9]\d{4}.*$").unwrap();
+	pub(crate) static ref DDMY_NUM:  Regex = Regex::new(r"^(0[1-9]|[12][0-9]|3[01])[1-9]\d{4}.*$").unwrap();
+	pub(crate) static ref DMMY_NUM:  Regex = Regex::new(r"^[1-9](0[1-9]|1[012])\d{4}.*$").unwrap();
+	pub(crate) static ref DDMMY_NUM: Regex = Regex::new(r"^(0[1-9]|[12][0-9]|30|31)(0[1-9]|1[012])\d{4}.*$").unwrap();
 
 	// Separated - `YEAR MONTH DAY`
-	pub(crate) static ref YM:    Regex = Regex::new(r"^[1-9]\d{3}\D[1-9]$").unwrap();
-	pub(crate) static ref YMM:   Regex = Regex::new(r"^[1-9]\d{3}\D([0][1-9]|1[012])$").unwrap();
-	pub(crate) static ref YMD:   Regex = Regex::new(r"^[1-9]\d{3}\D[1-9]\D[1-9]$").unwrap();
-	pub(crate) static ref YMMD:  Regex = Regex::new(r"^[1-9]\d{3}\D(0[1-9]|1[012])\D[1-9]$").unwrap();
-	pub(crate) static ref YMDD:  Regex = Regex::new(r"^[1-9]\d{3}\D[1-9]\D(0[1-9]|[12][0-9]|30|31)$").unwrap();
-	pub(crate) static ref YMMDD: Regex = Regex::new(r"^[1-9]\d{3}\D(0[1-9]|1[012])\D(0[1-9]|[12][0-9]|30|31)$").unwrap();
+	pub(crate) static ref YM:    Regex = Regex::new(r"^[1-9]\d{3}\D[1-9].*$").unwrap();
+	pub(crate) static ref YMM:   Regex = Regex::new(r"^[1-9]\d{3}\D([0][1-9]|1[012]).*$").unwrap();
+	pub(crate) static ref YMD:   Regex = Regex::new(r"^[1-9]\d{3}\D[1-9]\D[1-9].*$").unwrap();
+	pub(crate) static ref YMMD:  Regex = Regex::new(r"^[1-9]\d{3}\D(0[1-9]|1[012])\D[1-9].*$").unwrap();
+	pub(crate) static ref YMDD:  Regex = Regex::new(r"^[1-9]\d{3}\D[1-9]\D(0[1-9]|[12][0-9]|30|31).*$").unwrap();
+	pub(crate) static ref YMMDD: Regex = Regex::new(r"^[1-9]\d{3}\D(0[1-9]|1[012])\D(0[1-9]|[12][0-9]|30|31).*$").unwrap();
 
 	// Separated - `MONTH DAY YEAR`
-	pub(crate) static ref MY:    Regex = Regex::new(r"^[1-9]\D\d{4}$").unwrap();
-	pub(crate) static ref MMY:   Regex = Regex::new(r"^([0][1-9]|1[012])\D\d{4}$").unwrap();
-	pub(crate) static ref MDY:   Regex = Regex::new(r"^[1-9]\D[1-9]\D\d{4}$").unwrap();
-	pub(crate) static ref MMDY:  Regex = Regex::new(r"^(0[1-9]|1[012])\D[1-9]\D\d{4}$").unwrap();
-	pub(crate) static ref MDDY:  Regex = Regex::new(r"^[1-9]\D(0[1-9]|[12][0-9]|30|31)\D\d{4}$").unwrap();
-	pub(crate) static ref MMDDY: Regex = Regex::new(r"^(0[1-9]|1[012])\D(0[1-9]|[12][0-9]|30|31)\D\d{4}$").unwrap();
+	pub(crate) static ref MY:    Regex = Regex::new(r"^[1-9]\D\d{4}.*$").unwrap();
+	pub(crate) static ref MMY:   Regex = Regex::new(r"^([0][1-9]|1[012])\D\d{4}.*$").unwrap();
+	pub(crate) static ref MDY:   Regex = Regex::new(r"^[1-9]\D[1-9]\D\d{4}.*$").unwrap();
+	pub(crate) static ref MMDY:  Regex = Regex::new(r"^(0[1-9]|1[012])\D[1-9]\D\d{4}.*$").unwrap();
+	pub(crate) static ref MDDY:  Regex = Regex::new(r"^[1-9]\D(0[1-9]|[12][0-9]|30|31)\D\d{4}.*$").unwrap();
+	pub(crate) static ref MMDDY: Regex = Regex::new(r"^(0[1-9]|1[012])\D(0[1-9]|[12][0-9]|30|31)\D\d{4}.*$").unwrap();
 
 	// Separated - `DAY MONTH YEAR`
-	pub(crate) static ref DMY:   Regex = Regex::new(r"^[1-9]\D[1-9]\D\d{4}$").unwrap();
-	pub(crate) static ref DDMY:  Regex = Regex::new(r"^(0[1-9]|[12][0-9]|3[01])\D[1-9]\D\d{4}$").unwrap();
-	pub(crate) static ref DMMY:  Regex = Regex::new(r"^[1-9]\D(0[1-9]|1[012])\D\d{4}$").unwrap();
-	pub(crate) static ref DDMMY: Regex = Regex::new(r"^(0[1-9]|[12][0-9]|30|31)\D(0[1-9]|1[012])\D\d{4}$").unwrap();
+	pub(crate) static ref DMY:   Regex = Regex::new(r"^[1-9]\D[1-9]\D\d{4}.*$").unwrap();
+	pub(crate) static ref DDMY:  Regex = Regex::new(r"^(0[1-9]|[12][0-9]|3[01])\D[1-9]\D\d{4}.*$").unwrap();
+	pub(crate) static ref DMMY:  Regex = Regex::new(r"^[1-9]\D(0[1-9]|1[012])\D\d{4}.*$").unwrap();
+	pub(crate) static ref DDMMY: Regex = Regex::new(r"^(0[1-9]|[12][0-9]|30|31)\D(0[1-9]|1[012])\D\d{4}.*$").unwrap();
 
 }
 
@@ -618,21 +618,21 @@ impl Date {
 				},
 
 				// YMMDD || MMDDY || DDMMY
-				8 => {
+				_ => {
 					if YMMDD_NUM.is_match(string) {
 						let y = string[..4].parse::<u16>().unwrap();
 						let m = string[4..6].parse::<u8>().unwrap();
-						let d = string[6..].parse::<u8>().unwrap();
+						let d = string[6..8].parse::<u8>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
 					} else if MMDDY_NUM.is_match(string) {
 						let m = string[..2].parse::<u8>().unwrap();
 						let d = string[2..4].parse::<u8>().unwrap();
-						let y = string[4..].parse::<u16>().unwrap();
+						let y = string[4..8].parse::<u16>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
 					} else if DDMMY_NUM.is_match(string) {
 						let d = string[..2].parse::<u8>().unwrap();
 						let m = string[2..4].parse::<u8>().unwrap();
-						let y = string[4..].parse::<u16>().unwrap();
+						let y = string[4..8].parse::<u16>().unwrap();
 						return Ok(Self::priv_ymd(y, m, d));
 					} else if YEAR.is_match(string) {
 						let y = string[..4].parse::<u16>().unwrap();
@@ -640,7 +640,6 @@ impl Date {
 					}
 				},
 
-				_ => return Err(Self::unknown()),
 			}
 		}
 
@@ -739,29 +738,27 @@ impl Date {
 			},
 
 			// Y.MM.DD || MM.DD.Y || DD.MM.Y
-			10 => {
+			_ => {
 				if YMMDD.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					let m = string[5..7].parse::<u8>().unwrap();
-					let d = string[8..].parse::<u8>().unwrap();
+					let d = string[8..10].parse::<u8>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
 				} else if MMDDY.is_match(string) {
 					let m = string[..2].parse::<u8>().unwrap();
 					let d = string[3..5].parse::<u8>().unwrap();
-					let y = string[6..].parse::<u16>().unwrap();
+					let y = string[6..10].parse::<u16>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
 				} else if DDMMY.is_match(string) {
 					let d = string[..2].parse::<u8>().unwrap();
 					let m = string[3..5].parse::<u8>().unwrap();
-					let y = string[6..].parse::<u16>().unwrap();
+					let y = string[6..10].parse::<u16>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
 				} else if YEAR.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					return Ok(Self::priv_y(y));
 				}
 			},
-
-			_ => return Err(Date::unknown()),
 		}
 
 		// Give up.

@@ -211,7 +211,7 @@ mod headtail;
 pub use headtail::*;
 
 mod free;
-pub use free::*;
+
 #[doc(hidden)]
 pub use itoa as __readable_itoa;
 #[doc(hidden)]

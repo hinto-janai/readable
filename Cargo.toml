@@ -1,6 +1,6 @@
 [package]
 name = "readable"
-version = "0.8.8"
+version = "0.8.9"
 edition = "2021"
 authors = ["hinto.janai <hinto.janai@protonmail.com>"]
 description = "Human readable data formatting"
@@ -25,6 +25,7 @@ inline_runtime = ["readable-inlined-runtime"]
 
 [dependencies]
 itoa        = "1.0.6"
+ryu         = "1.0.13"
 paste       = "1.0.12"
 seq-macro   = "0.3.3"
 compact_str = { version = "0.7.0", features = ["bytes", "serde"] }
@@ -32,7 +33,6 @@ lazy_static = { version = "1.4.0" }
 regex       = { version = "1.8.2" }
 serde       = { version = "1.0.163", features = ["derive"], optional = true }
 bincode     = { version = "2.0.0-rc.3", features = ["serde", "derive"], optional = true }
-ryu = "1.0.13"
 
 # Inlined crates.
 readable-inlined-date    = { version = "0.1.2", optional = true }
