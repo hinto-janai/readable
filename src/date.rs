@@ -517,7 +517,9 @@ impl Date {
 		// Return `YYYY`.
 		if len == 4 {
 			match string.parse::<u16>() {
-				Ok(y) => return Ok(Self::priv_y(y)),
+				// If the string is 4 characters long, but is less than 1000,
+				// there must be leading zeros
+				Ok(y) if y >= 1000 => return Ok(Self::priv_y(y)),
 				_     => return Err(Self::unknown()),
 			}
 		}
@@ -887,6 +889,17 @@ mod tests {
 		for i in 1000..10_000 {
 			assert!(Date::from_str(&format_compact!("{i}")).unwrap() == (i, 0, 0));
 		}
+	}
+
+	#[test]
+	fn invalid_years() {
+		assert!(Date::from_str_silent("0") == Date::unknown());
+		assert!(Date::from_str_silent("100") == Date::unknown());
+		assert!(Date::from_str_silent("010") == Date::unknown());
+		assert!(Date::from_str_silent("0010") == Date::unknown());
+		assert!(Date::from_str_silent("0100") == Date::unknown());
+		assert!(Date::from_str_silent("999") == Date::unknown());
+		assert!(Date::from_str_silent("0999") == Date::unknown());
 	}
 
 	#[test]
