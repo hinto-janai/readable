@@ -27,7 +27,7 @@ pub trait HeadTail: AsRef<str> {
 		}
 	}
 
-	/// Same as [`head()`] but the [`String`] ends with `...`
+	/// Same as [`HeadTail::head()`] but the [`String`] ends with `...`
 	///
 	/// This will return the full string without `...` if
 	/// the `len` is longer than the actual inner [`str`].
@@ -67,7 +67,7 @@ pub trait HeadTail: AsRef<str> {
 		s
 	}
 
-	/// Same as [`tail()`] but returns a [`String`] starting with `...`
+	/// Same as [`HeadTail::tail()`] but returns a [`String`] starting with `...`
 	///
 	/// This will return the full string without `...` if
 	/// the `len` is longer than the actual inner [`str`].
