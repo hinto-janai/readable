@@ -32,13 +32,13 @@ mod tests {
 	#[test]
 	fn itoa() {
 		for i in 0..u16::MAX {
-			assert!(itoa!(i) == format!("{i}"));
+			assert_eq!(itoa!(i), format!("{i}"));
 		}
 	}
 
 	#[test]
 	fn ryu() {
 		let i = 1111.1;
-		assert!(ryu!(i) == format!("{i}"));
+		assert_eq!(ryu!(i), format!("{i}"));
 	}
 }

@@ -292,58 +292,58 @@ mod tests {
 
 	#[test]
 	fn special() {
-		assert!(Percent::zero()    == "0.00%");
-		assert!(Percent::unknown() == "?.??%");
-		assert!(Percent::nan()     == NAN);
-		assert!(Percent::inf()     == INFINITY);
+		assert_eq!(Percent::zero(),    "0.00%");
+		assert_eq!(Percent::unknown(), "?.??%");
+		assert_eq!(Percent::nan(),     NAN);
+		assert_eq!(Percent::inf(),     INFINITY);
 
-		assert!(Percent::from(0.0) == "0.00%");
-		assert!(Percent::from(f64::NAN) == NAN);
-		assert!(Percent::from(f64::INFINITY) == INFINITY);
-		assert!(Percent::from(f64::NEG_INFINITY) == INFINITY);
+		assert_eq!(Percent::from(0.0), "0.00%");
+		assert_eq!(Percent::from(f64::NAN), NAN);
+		assert_eq!(Percent::from(f64::INFINITY), INFINITY);
+		assert_eq!(Percent::from(f64::NEG_INFINITY), INFINITY);
 	}
 
 	#[test]
 	fn percent() {
-		assert!(Percent::from(0.0)       == "0.00%");
-		assert!(Percent::from(0.001)     == "0.00%");
-		assert!(Percent::from(0.1)       == "0.10%");
-		assert!(Percent::from(1.0)       == "1.00%");
-		assert!(Percent::from(50.0)      == "50.00%");
-		assert!(Percent::from(100.0)     == "100.00%");
-		assert!(Percent::from(150.0)     == "150.00%");
-		assert!(Percent::from(1_000.0)   == "1,000.00%");
-		assert!(Percent::from(250_000.0) == "250,000.00%");
+		assert_eq!(Percent::from(0.0),       "0.00%");
+		assert_eq!(Percent::from(0.001),     "0.00%");
+		assert_eq!(Percent::from(0.1),       "0.10%");
+		assert_eq!(Percent::from(1.0),       "1.00%");
+		assert_eq!(Percent::from(50.0),      "50.00%");
+		assert_eq!(Percent::from(100.0),     "100.00%");
+		assert_eq!(Percent::from(150.0),     "150.00%");
+		assert_eq!(Percent::from(1_000.0),   "1,000.00%");
+		assert_eq!(Percent::from(250_000.0), "250,000.00%");
 	}
 
 	#[test]
 	fn percent_dot() {
-		assert!(Percent::new_1(0.0)        == "0.0%");
-		assert!(Percent::new_1(1_000.123_4) == "1,000.1%");
-		assert!(Percent::new_3(1_000.123_4) == "1,000.123%");
-		assert!(Percent::new_4(1_000.123_4) == "1,000.1234%");
+		assert_eq!(Percent::new_1(0.0),         "0.0%");
+		assert_eq!(Percent::new_1(1_000.123_4), "1,000.1%");
+		assert_eq!(Percent::new_3(1_000.123_4), "1,000.123%");
+		assert_eq!(Percent::new_4(1_000.123_4), "1,000.1234%");
 
-		assert!(Percent::new_1(0.1)            == "0.1%");
-		assert!(Percent::new_1(10_000.123_4)    == "10,000.1%");
-		assert!(Percent::new_3(100_000.123_4)   == "100,000.123%");
-		assert!(Percent::new_4(1_000_000.123_4) == "1,000,000.1234%");
+		assert_eq!(Percent::new_1(0.1),             "0.1%");
+		assert_eq!(Percent::new_1(10_000.123_4),    "10,000.1%");
+		assert_eq!(Percent::new_3(100_000.123_4),   "100,000.123%");
+		assert_eq!(Percent::new_4(1_000_000.123_4), "1,000,000.1234%");
 	}
 
 	#[test]
 	fn from_unsigned() {
-		assert!(Percent::from(1_u32)         == "1.00%");
-		assert!(Percent::from(1_000_u32)     == "1,000.00%");
-		assert!(Percent::from(10_000_u32)    == "10,000.00%");
-		assert!(Percent::from(100_000_u32)   == "100,000.00%");
-		assert!(Percent::from(1_000_000_u32) == "1,000,000.00%");
+		assert_eq!(Percent::from(1_u32),         "1.00%");
+		assert_eq!(Percent::from(1_000_u32),     "1,000.00%");
+		assert_eq!(Percent::from(10_000_u32),    "10,000.00%");
+		assert_eq!(Percent::from(100_000_u32),   "100,000.00%");
+		assert_eq!(Percent::from(1_000_000_u32), "1,000,000.00%");
 	}
 
 	#[test]
 	fn from_int() {
-		assert!(Percent::from(-1_i32)         == "-1.00%");
-		assert!(Percent::from(-1_000_i32)     == "-1,000.00%");
-		assert!(Percent::from(-10_000_i32)    == "-10,000.00%");
-		assert!(Percent::from(-100_000_i32)   == "-100,000.00%");
-		assert!(Percent::from(-1_000_000_i32) == "-1,000,000.00%");
+		assert_eq!(Percent::from(-1_i32),         "-1.00%");
+		assert_eq!(Percent::from(-1_000_i32),     "-1,000.00%");
+		assert_eq!(Percent::from(-10_000_i32),    "-10,000.00%");
+		assert_eq!(Percent::from(-100_000_i32),   "-100,000.00%");
+		assert_eq!(Percent::from(-1_000_000_i32), "-1,000,000.00%");
 	}
 }

@@ -827,24 +827,24 @@ mod tests {
 		let b = Date::from_str("2020-12-01").unwrap();
 		let c = Date::from_str("2020-12").unwrap();
 		let d = Date::from_str("2020-01").unwrap();
-		assert!(a.cmp(&b) == Ordering::Equal);
-		assert!(a.cmp(&c) == Ordering::Greater);
-		assert!(a.cmp(&d) == Ordering::Greater);
+		assert_eq!(a.cmp(&b), Ordering::Equal);
+		assert_eq!(a.cmp(&c), Ordering::Greater);
+		assert_eq!(a.cmp(&d), Ordering::Greater);
 
 		for i in 1..12 {
 			let s = format_compact!("2020-{:0>2}-01", i);
 			let b = Date::from_str(&s).unwrap();
-			assert!(a.cmp(&b) == Ordering::Greater);
+			assert_eq!(a.cmp(&b), Ordering::Greater);
 		}
 		for i in 2..32 {
 			let s = format_compact!("2020-12-{:0>2}", i);
 			let b = Date::from_str(&s).unwrap();
-			assert!(a.cmp(&b) == Ordering::Less);
+			assert_eq!(a.cmp(&b), Ordering::Less);
 		}
 		for i in 2021..9999 {
 			let s = format_compact!("{}-12-01", i);
 			let b = Date::from_str(&s).unwrap();
-			assert!(a.cmp(&b) == Ordering::Less);
+			assert_eq!(a.cmp(&b), Ordering::Less);
 		}
 	}
 
@@ -890,55 +890,66 @@ mod tests {
 
 	#[test]
 	fn invalid_years() {
-		assert!(Date::from_str_silent("0") == Date::unknown());
-		assert!(Date::from_str_silent("100") == Date::unknown());
-		assert!(Date::from_str_silent("010") == Date::unknown());
-		assert!(Date::from_str_silent("0010") == Date::unknown());
-		assert!(Date::from_str_silent("0100") == Date::unknown());
-		assert!(Date::from_str_silent("999") == Date::unknown());
-		assert!(Date::from_str_silent("0999") == Date::unknown());
+		assert_eq!(Date::from_str_silent("0"),    Date::unknown());
+		assert_eq!(Date::from_str_silent("100"),  Date::unknown());
+		assert_eq!(Date::from_str_silent("010"),  Date::unknown());
+		assert_eq!(Date::from_str_silent("0010"), Date::unknown());
+		assert_eq!(Date::from_str_silent("0100"), Date::unknown());
+		assert_eq!(Date::from_str_silent("999"),  Date::unknown());
+		assert_eq!(Date::from_str_silent("0999"), Date::unknown());
+	}
+
+	#[test]
+	fn invalid_dates() {
+		assert_eq!(Date::from_str_silent("12-25-0100"), Date::unknown());
+		assert_eq!(Date::from_str_silent("12250100"),   Date::unknown());
+		assert_eq!(Date::from_str_silent("01001225") ,  Date::unknown());
+		assert_eq!(Date::from_str_silent("25-12-0100"), Date::unknown());
+		assert_eq!(Date::from_str_silent("01000"),      Date::unknown());
+		assert_eq!(Date::from_str_silent("010000"),     Date::unknown());
+		assert_eq!(Date::from_str_silent("0100000"),    Date::unknown());
 	}
 
 	#[test]
 	fn from_str_ymd() {
-		assert!(Date::from_str("2020-12-25").unwrap() == EXPECTED);
-		assert!(Date::from_str("2020-12-25").unwrap() == EXPECTED_STR);
-		assert!(Date::from_str("2020 12 25").unwrap() == EXPECTED);
-		assert!(Date::from_str("2020 12 25").unwrap() == EXPECTED_STR);
-		assert!(Date::from_str("20201225").unwrap()   == EXPECTED);
-		assert!(Date::from_str("20201225").unwrap()   == EXPECTED_STR);
-		assert!(Date::from_str("2020/12/25").unwrap() == EXPECTED);
-		assert!(Date::from_str("2020/12/25").unwrap() == EXPECTED_STR);
-		assert!(Date::from_str("2020.12.25").unwrap() == EXPECTED);
-		assert!(Date::from_str("2020.12.25").unwrap() == EXPECTED_STR);
-		assert!(Date::from_str("2020_12_25").unwrap() == EXPECTED);
-		assert!(Date::from_str("2020_12_25").unwrap() == EXPECTED_STR);
+		assert_eq!(Date::from_str("2020-12-25").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("2020-12-25").unwrap(), EXPECTED_STR);
+		assert_eq!(Date::from_str("2020 12 25").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("2020 12 25").unwrap(), EXPECTED_STR);
+		assert_eq!(Date::from_str("20201225").unwrap(),   EXPECTED);
+		assert_eq!(Date::from_str("20201225").unwrap(),   EXPECTED_STR);
+		assert_eq!(Date::from_str("2020/12/25").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("2020/12/25").unwrap(), EXPECTED_STR);
+		assert_eq!(Date::from_str("2020.12.25").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("2020.12.25").unwrap(), EXPECTED_STR);
+		assert_eq!(Date::from_str("2020_12_25").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("2020_12_25").unwrap(), EXPECTED_STR);
 	}
 
 	#[test]
 	fn from_str_mdy() {
-		assert!(Date::from_str("12-25-2020").unwrap() == EXPECTED);
-		assert!(Date::from_str("12-25-2020").unwrap() == EXPECTED_STR);
-		assert!(Date::from_str("12 25 2020").unwrap() == EXPECTED);
-		assert!(Date::from_str("12 25 2020").unwrap() == EXPECTED_STR);
-		assert!(Date::from_str("12252020").unwrap()   == EXPECTED);
-		assert!(Date::from_str("12252020").unwrap()   == EXPECTED_STR);
-		assert!(Date::from_str("12/25/2020").unwrap() == EXPECTED);
-		assert!(Date::from_str("12/25/2020").unwrap() == EXPECTED_STR);
-		assert!(Date::from_str("12.25.2020").unwrap() == EXPECTED);
-		assert!(Date::from_str("12.25.2020").unwrap() == EXPECTED_STR);
-		assert!(Date::from_str("12_25_2020").unwrap() == EXPECTED);
-		assert!(Date::from_str("12_25_2020").unwrap() == EXPECTED_STR);
+		assert_eq!(Date::from_str("12-25-2020").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("12-25-2020").unwrap(), EXPECTED_STR);
+		assert_eq!(Date::from_str("12 25 2020").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("12 25 2020").unwrap(), EXPECTED_STR);
+		assert_eq!(Date::from_str("12252020").unwrap()  , EXPECTED);
+		assert_eq!(Date::from_str("12252020").unwrap()  , EXPECTED_STR);
+		assert_eq!(Date::from_str("12/25/2020").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("12/25/2020").unwrap(), EXPECTED_STR);
+		assert_eq!(Date::from_str("12.25.2020").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("12.25.2020").unwrap(), EXPECTED_STR);
+		assert_eq!(Date::from_str("12_25_2020").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("12_25_2020").unwrap(), EXPECTED_STR);
 	}
 
 	#[test]
 	fn from_str_dmy() {
-		assert!(Date::from_str("25-12-2020").unwrap() == EXPECTED);
-		assert!(Date::from_str("25 12 2020").unwrap() == EXPECTED);
-		assert!(Date::from_str("25122020").unwrap()   == EXPECTED);
-		assert!(Date::from_str("25/12/2020").unwrap() == EXPECTED);
-		assert!(Date::from_str("25.12.2020").unwrap() == EXPECTED);
-		assert!(Date::from_str("25_12_2020").unwrap() == EXPECTED);
+		assert_eq!(Date::from_str("25-12-2020").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("25 12 2020").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("25122020").unwrap()  , EXPECTED);
+		assert_eq!(Date::from_str("25/12/2020").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("25.12.2020").unwrap(), EXPECTED);
+		assert_eq!(Date::from_str("25_12_2020").unwrap(), EXPECTED);
 	}
 
 	//-------------------------------------------------------------------------------- Regex tests.

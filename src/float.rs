@@ -270,37 +270,37 @@ mod tests {
 
 	#[test]
 	fn special() {
-		assert!(Float::from(0.0) == "0.000");
-		assert!(Float::zero()    == "0.000");
-		assert!(Float::unknown() == UNKNOWN_FLOAT);
-		assert!(Float::nan()     == NAN);
-		assert!(Float::inf()     == INFINITY);
+		assert_eq!(Float::from(0.0), "0.000");
+		assert_eq!(Float::zero(),    "0.000");
+		assert_eq!(Float::unknown(), UNKNOWN_FLOAT);
+		assert_eq!(Float::nan(),     NAN);
+		assert_eq!(Float::inf(),     INFINITY);
 
-		assert!(Float::from(f64::NAN)          == NAN);
-		assert!(Float::from(f64::INFINITY)     == INFINITY);
-		assert!(Float::from(f64::NEG_INFINITY) == INFINITY);
+		assert_eq!(Float::from(f64::NAN),          NAN);
+		assert_eq!(Float::from(f64::INFINITY),     INFINITY);
+		assert_eq!(Float::from(f64::NEG_INFINITY), INFINITY);
 
-		assert!(Float::from(f32::NAN)          == NAN);
-		assert!(Float::from(f32::INFINITY)     == INFINITY);
-		assert!(Float::from(f32::NEG_INFINITY) == INFINITY);
+		assert_eq!(Float::from(f32::NAN),           NAN);
+		assert_eq!(Float::from(f32::INFINITY),      INFINITY);
+		assert_eq!(Float::from(f32::NEG_INFINITY), INFINITY);
 	}
 
 	#[test]
 	fn float() {
-		assert!(Float::from_0( 0.1)              == "0");
-		assert!(Float::from_1( 0.1)              == "0.1");
-		assert!(Float::from_2( 0.01)             == "0.01");
-		assert!(Float::from(        0.001)            == "0.001");
-		assert!(Float::from_4( 0.0001)           == "0.0001");
-		assert!(Float::from_5( 0.00001)          == "0.00001");
-		assert!(Float::from_6( 0.000001)         == "0.000001");
-		assert!(Float::from_7( 0.0000001)        == "0.0000001");
-		assert!(Float::from_8( 0.00000001)       == "0.00000001");
-		assert!(Float::from_9( 0.000000001)      == "0.000000001");
-		assert!(Float::from_10(0.0000000001)     == "0.0000000001");
-		assert!(Float::from_11(0.00000000001)    == "0.00000000001");
-		assert!(Float::from_12(0.000000000001)   == "0.000000000001");
-		assert!(Float::from_13(0.0000000000001)  == "0.0000000000001");
-		assert!(Float::from_14(0.00000000000001) == "0.00000000000001");
+		assert_eq!(Float::from_0(0.1),               "0");
+		assert_eq!(Float::from_1(0.1),               "0.1");
+		assert_eq!(Float::from_2(0.01),              "0.01");
+		assert_eq!(Float::from(0.001),               "0.001");
+		assert_eq!(Float::from_4(0.0001),            "0.0001");
+		assert_eq!(Float::from_5(0.00001),           "0.00001");
+		assert_eq!(Float::from_6(0.000001),          "0.000001");
+		assert_eq!(Float::from_7(0.0000001),         "0.0000001");
+		assert_eq!(Float::from_8(0.00000001),        "0.00000001");
+		assert_eq!(Float::from_9(0.000000001),       "0.000000001");
+		assert_eq!(Float::from_10(0.0000000001),     "0.0000000001");
+		assert_eq!(Float::from_11(0.00000000001),    "0.00000000001");
+		assert_eq!(Float::from_12(0.000000000001),   "0.000000000001");
+		assert_eq!(Float::from_13(0.0000000000001),  "0.0000000000001");
+		assert_eq!(Float::from_14(0.00000000000001), "0.00000000000001");
 	}
 }

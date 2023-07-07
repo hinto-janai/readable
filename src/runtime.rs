@@ -367,15 +367,14 @@ impl Buffer {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	
 
 	#[test]
 	fn all_uint() {
 		for i in 0..MAX_RUNTIME_U32 {
 			let rt = Runtime::from(i);
 			println!("rt:{} - i: {}", rt, i);
-			assert!(rt == i);
-			assert!(rt == i);
+			assert_eq!(rt, i);
+			assert_eq!(rt, i);
 			println!("{}", rt);
 		}
 	}
@@ -386,31 +385,31 @@ mod tests {
 		while (f as u32) < MAX_RUNTIME_U32 {
 			let rt = Runtime::from(f);
 			println!("rt: {} - f: {}", rt, f);
-			assert!(rt == f as u32);
+			assert_eq!(rt, f as u32);
 			f += 0.1;
 		}
 	}
 
 	#[test]
 	fn overflow_float() {
-		assert!(Runtime::from(MAX_RUNTIME_U32 as f64 + 1.0) == 0);
-		assert!(Runtime::from(MAX_RUNTIME_U32 as f64 + 1.0) == "?:??");
+		assert_eq!(Runtime::from(MAX_RUNTIME_U32 as f64 + 1.0), 0);
+		assert_eq!(Runtime::from(MAX_RUNTIME_U32 as f64 + 1.0), "?:??");
 	}
 
 	#[test]
 	fn overflow_uint() {
-		assert!(Runtime::from(MAX_RUNTIME_U32 + 1) == 0);
-		assert!(Runtime::from(MAX_RUNTIME_U32 + 1) == "?:??");
+		assert_eq!(Runtime::from(MAX_RUNTIME_U32 + 1), 0);
+		assert_eq!(Runtime::from(MAX_RUNTIME_U32 + 1), "?:??");
 	}
 
 	#[test]
 	fn special() {
-		assert!(Runtime::from(f32::NAN)          == UNKNOWN_RUNTIME);
-		assert!(Runtime::from(f32::INFINITY)     == UNKNOWN_RUNTIME);
-		assert!(Runtime::from(f32::NEG_INFINITY) == UNKNOWN_RUNTIME);
+		assert_eq!(Runtime::from(f32::NAN),          UNKNOWN_RUNTIME);
+		assert_eq!(Runtime::from(f32::INFINITY),     UNKNOWN_RUNTIME);
+		assert_eq!(Runtime::from(f32::NEG_INFINITY), UNKNOWN_RUNTIME);
 
-		assert!(Runtime::from(f64::NAN)          == UNKNOWN_RUNTIME);
-		assert!(Runtime::from(f64::INFINITY)     == UNKNOWN_RUNTIME);
-		assert!(Runtime::from(f64::NEG_INFINITY) == UNKNOWN_RUNTIME);
+		assert_eq!(Runtime::from(f64::NAN),          UNKNOWN_RUNTIME);
+		assert_eq!(Runtime::from(f64::INFINITY),     UNKNOWN_RUNTIME);
+		assert_eq!(Runtime::from(f64::NEG_INFINITY), UNKNOWN_RUNTIME);
 	}
 }

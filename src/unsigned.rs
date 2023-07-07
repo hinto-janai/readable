@@ -250,52 +250,52 @@ mod tests {
 
 	#[test]
 	fn unsigned() {
-		assert!(Unsigned::from(1_000_u64) == "1,000");
-		assert!(Unsigned::from(65_535_u64) == "65,535");
-		assert!(Unsigned::from(65_536_u64) == "65,536");
-		assert!(Unsigned::from(100_000_u64) == "100,000");
-		assert!(Unsigned::from(1_000_000_u64) == "1,000,000");
-		assert!(Unsigned::from(10_000_000_u64) == "10,000,000");
-		assert!(Unsigned::from(100_000_000_u64) == "100,000,000");
-		assert!(Unsigned::from(1_000_000_000_u64) == "1,000,000,000");
-		assert!(Unsigned::from(4_294_967_295_u64) == "4,294,967,295");
-		assert!(Unsigned::from(4_294_967_296_u64) == "4,294,967,296");
-		assert!(Unsigned::from(10_000_000_000_u64) == "10,000,000,000");
-		assert!(Unsigned::from(100_000_000_000_u64) == "100,000,000,000");
-		assert!(Unsigned::from(1_000_000_000_000_u64) == "1,000,000,000,000");
-		assert!(Unsigned::from(10_000_000_000_000_u64) == "10,000,000,000,000");
-		assert!(Unsigned::from(100_000_000_000_000_u64) == "100,000,000,000,000");
-		assert!(Unsigned::from(1_000_000_000_000_000_u64) == "1,000,000,000,000,000");
-		assert!(Unsigned::from(10_000_000_000_000_000_u64) == "10,000,000,000,000,000");
-		assert!(Unsigned::from(18_446_744_073_709_551_615_u64) == "18,446,744,073,709,551,615");
+		assert_eq!(Unsigned::from(1_000_u64),                      "1,000");
+		assert_eq!(Unsigned::from(65_535_u64),                     "65,535");
+		assert_eq!(Unsigned::from(65_536_u64),                     "65,536");
+		assert_eq!(Unsigned::from(100_000_u64),                    "100,000");
+		assert_eq!(Unsigned::from(1_000_000_u64),                  "1,000,000");
+		assert_eq!(Unsigned::from(10_000_000_u64),                 "10,000,000");
+		assert_eq!(Unsigned::from(100_000_000_u64),                "100,000,000");
+		assert_eq!(Unsigned::from(1_000_000_000_u64),              "1,000,000,000");
+		assert_eq!(Unsigned::from(4_294_967_295_u64),              "4,294,967,295");
+		assert_eq!(Unsigned::from(4_294_967_296_u64),              "4,294,967,296");
+		assert_eq!(Unsigned::from(10_000_000_000_u64),             "10,000,000,000");
+		assert_eq!(Unsigned::from(100_000_000_000_u64),            "100,000,000,000");
+		assert_eq!(Unsigned::from(1_000_000_000_000_u64),          "1,000,000,000,000");
+		assert_eq!(Unsigned::from(10_000_000_000_000_u64),         "10,000,000,000,000");
+		assert_eq!(Unsigned::from(100_000_000_000_000_u64),        "100,000,000,000,000");
+		assert_eq!(Unsigned::from(1_000_000_000_000_000_u64),      "1,000,000,000,000,000");
+		assert_eq!(Unsigned::from(10_000_000_000_000_000_u64),     "10,000,000,000,000,000");
+		assert_eq!(Unsigned::from(18_446_744_073_709_551_615_u64), "18,446,744,073,709,551,615");
 	}
 
 	#[test]
 	fn float() {
-		assert!(Unsigned::from(1_000.0) == "1,000");
-		assert!(Unsigned::from(65_535.0) == "65,535");
-		assert!(Unsigned::from(65_536.0) == "65,536");
-		assert!(Unsigned::from(100_000.0) == "100,000");
-		assert!(Unsigned::from(1_000_000.0) == "1,000,000");
-		assert!(Unsigned::from(10_000_000.0) == "10,000,000");
-		assert!(Unsigned::from(100_000_000.0) == "100,000,000");
-		assert!(Unsigned::from(1_000_000_000.0) == "1,000,000,000");
-		assert!(Unsigned::from(4_294_967_295.0) == "4,294,967,295");
-		assert!(Unsigned::from(4_294_967_296.0) == "4,294,967,296");
-		assert!(Unsigned::from(10_000_000_000.0) == "10,000,000,000");
-		assert!(Unsigned::from(100_000_000_000.0) == "100,000,000,000");
-		assert!(Unsigned::from(1_000_000_000_000.0) == "1,000,000,000,000");
-		assert!(Unsigned::from(10_000_000_000_000.0) == "10,000,000,000,000");
-		assert!(Unsigned::from(100_000_000_000_000.0) == "100,000,000,000,000");
-		assert!(Unsigned::from(1_000_000_000_000_000.0) == "1,000,000,000,000,000");
-		assert!(Unsigned::from(10_000_000_000_000_000.0) == "10,000,000,000,000,000");
-		assert!(Unsigned::from(18_446_744_073_709_551_615.0) == "18,446,744,073,709,551,615");
+		assert_eq!(Unsigned::from(1_000.0),                      "1,000");
+		assert_eq!(Unsigned::from(65_535.0),                     "65,535");
+		assert_eq!(Unsigned::from(65_536.0),                     "65,536");
+		assert_eq!(Unsigned::from(100_000.0),                    "100,000");
+		assert_eq!(Unsigned::from(1_000_000.0),                  "1,000,000");
+		assert_eq!(Unsigned::from(10_000_000.0),                 "10,000,000");
+		assert_eq!(Unsigned::from(100_000_000.0),                "100,000,000");
+		assert_eq!(Unsigned::from(1_000_000_000.0),              "1,000,000,000");
+		assert_eq!(Unsigned::from(4_294_967_295.0),              "4,294,967,295");
+		assert_eq!(Unsigned::from(4_294_967_296.0),              "4,294,967,296");
+		assert_eq!(Unsigned::from(10_000_000_000.0),             "10,000,000,000");
+		assert_eq!(Unsigned::from(100_000_000_000.0),            "100,000,000,000");
+		assert_eq!(Unsigned::from(1_000_000_000_000.0),          "1,000,000,000,000");
+		assert_eq!(Unsigned::from(10_000_000_000_000.0),         "10,000,000,000,000");
+		assert_eq!(Unsigned::from(100_000_000_000_000.0),        "100,000,000,000,000");
+		assert_eq!(Unsigned::from(1_000_000_000_000_000.0),      "1,000,000,000,000,000");
+		assert_eq!(Unsigned::from(10_000_000_000_000_000.0),     "10,000,000,000,000,000");
+		assert_eq!(Unsigned::from(18_446_744_073_709_551_615.0), "18,446,744,073,709,551,615");
 	}
 
 	#[test]
 	fn special() {
-		assert!(Unsigned::from(f64::NAN)          == crate::UNKNOWN);
-		assert!(Unsigned::from(f64::INFINITY)     == crate::UNKNOWN);
-		assert!(Unsigned::from(f64::NEG_INFINITY) == crate::UNKNOWN);
+		assert_eq!(Unsigned::from(f64::NAN),          crate::UNKNOWN);
+		assert_eq!(Unsigned::from(f64::INFINITY),     crate::UNKNOWN);
+		assert_eq!(Unsigned::from(f64::NEG_INFINITY), crate::UNKNOWN);
 	}
 }

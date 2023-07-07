@@ -126,11 +126,11 @@ mod tests {
 		let four_bytes = "desu";
 		let six_bytes  = "です";
 
-		assert!(four_bytes.len() == 4);
-		assert!(six_bytes.len()  == 6);
+		assert_eq!(four_bytes.len(), 4);
+		assert_eq!(six_bytes.len(),  6);
 
-		assert!(four_bytes.head(2) == "de");
-		assert!(six_bytes.head(1) == "で");
+		assert_eq!(four_bytes.head(2), "de");
+		assert_eq!(six_bytes.head(1),  "で");
 	}
 
 	#[test]
@@ -138,11 +138,11 @@ mod tests {
 		let four_bytes = "desu";
 		let six_bytes  = "です";
 
-		assert!(four_bytes.len() == 4);
-		assert!(six_bytes.len()  == 6);
+		assert_eq!(four_bytes.len(), 4);
+		assert_eq!(six_bytes.len(),  6);
 
-		assert!(four_bytes.head_dot(2) == "de...");
-		assert!(six_bytes.head_dot(1) == "で...");
+		assert_eq!(four_bytes.head_dot(2), "de...");
+		assert_eq!(six_bytes.head_dot(1),  "で...");
 	}
 
 	#[test]
@@ -150,11 +150,11 @@ mod tests {
 		let four_bytes = "desu";
 		let six_bytes  = "です";
 
-		assert!(four_bytes.len() == 4);
-		assert!(six_bytes.len()  == 6);
+		assert_eq!(four_bytes.len(), 4);
+		assert_eq!(six_bytes.len(),  6);
 
-		assert!(four_bytes.tail(2) == "su");
-		assert!(six_bytes.tail(1) == "す");
+		assert_eq!(four_bytes.tail(2), "su");
+		assert_eq!(six_bytes.tail(1),  "す");
 	}
 
 	#[test]
@@ -162,11 +162,11 @@ mod tests {
 		let four_bytes = "desu";
 		let six_bytes  = "です";
 
-		assert!(four_bytes.len() == 4);
-		assert!(six_bytes.len()  == 6);
+		assert_eq!(four_bytes.len(), 4);
+		assert_eq!(six_bytes.len(),  6);
 
-		assert!(four_bytes.tail_dot(2) == "...su");
-		assert!(six_bytes.tail_dot(1) == "...す");
+		assert_eq!(four_bytes.tail_dot(2), "...su");
+		assert_eq!(six_bytes.tail_dot(1),  "...す");
 	}
 
 	#[test]
@@ -174,13 +174,13 @@ mod tests {
 		let eight_bytes = "desukedo";
 		let twelve_bytes  = "ですけど";
 
-		assert!(eight_bytes.len() == 8);
-		assert!(twelve_bytes.len()  == 12);
+		assert_eq!(eight_bytes.len(),  8);
+		assert_eq!(twelve_bytes.len(), 12);
 
-		assert!(eight_bytes.head_tail(2, 2) == "de...do");
-		assert!(twelve_bytes.head_tail(1, 1) == "で...ど");
+		assert_eq!(eight_bytes.head_tail(2, 2),  "de...do");
+		assert_eq!(twelve_bytes.head_tail(1, 1), "で...ど");
 
-		assert!(eight_bytes.head_tail(4, 4) == "desukedo");
-		assert!(twelve_bytes.head_tail(2, 2) == "ですけど");
+		assert_eq!(eight_bytes.head_tail(4, 4),  "desukedo");
+		assert_eq!(twelve_bytes.head_tail(2, 2), "ですけど");
 	}
 }
