@@ -38,7 +38,7 @@ use once_cell::sync::Lazy;
 static NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\d{4}|[0-9][0-9][0-9][0-9][0-9]+)$").unwrap());
 
 // First `4` characters are a valid year.
-static YEAR: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d{4}.*$").unwrap());
+static YEAR: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}.*$").unwrap());
 
 // Number only - `YearMonthDay`
 static YM_NUM:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}[1-9].*$").unwrap());
@@ -49,18 +49,17 @@ static YMDD_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}[1-9](0[1-9
 static YMMDD_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}(0[1-9]|1[012])(0[1-9]|[12][0-9]|30|31).*$").unwrap());
 
 // Number only - `MonthDayYear`
-static MY_NUM:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{4}.*$").unwrap());
-//static MMY_NUM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^([0][1-9]|1[012])\d{4}.*$").unwrap());
-static MDY_NUM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9][1-9]\d{4}.*$").unwrap());
-static MMDY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])[1-9]\d{4}.*$").unwrap());
-static MDDY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9](0[1-9]|[12][0-9]|30|31)\d{4}.*$").unwrap());
-static MMDDY_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])(0[1-9]|[12][0-9]|30|31)\d{4}.*$").unwrap());
+static MY_NUM:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9][1-9]\d{3}.*$").unwrap());
+static MDY_NUM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9][1-9][1-9]\d{3}.*$").unwrap());
+static MMDY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])[1-9][1-9]\d{3}.*$").unwrap());
+static MDDY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9](0[1-9]|[12][0-9]|30|31)[1-9]\d{3}.*$").unwrap());
+static MMDDY_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])(0[1-9]|[12][0-9]|30|31)[1-9]\d{3}.*$").unwrap());
 
 // Number only - `DayMonthYear`
-static DMY_NUM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9][1-9]\d{4}.*$").unwrap());
-static DDMY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|3[01])[1-9]\d{4}.*$").unwrap());
-static DMMY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9](0[1-9]|1[012])\d{4}.*$").unwrap());
-static DDMMY_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|30|31)(0[1-9]|1[012])\d{4}.*$").unwrap());
+static DMY_NUM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9][1-9][1-9]\d{3}.*$").unwrap());
+static DDMY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|3[01])[1-9][1-9]\d{3}.*$").unwrap());
+static DMMY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9](0[1-9]|1[012])[1-9]\d{3}.*$").unwrap());
+static DDMMY_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|30|31)(0[1-9]|1[012])[1-9]\d{3}.*$").unwrap());
 
 // Separated - `YEAR MONTH DAY`
 static YM:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D[1-9].*$").unwrap());
@@ -71,18 +70,18 @@ static YMDD:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D[1-9]\D(0[1-9
 static YMMDD: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D(0[1-9]|1[012])\D(0[1-9]|[12][0-9]|30|31).*$").unwrap());
 
 // Separated - `MONTH DAY YEAR`
-static MY:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D\d{4}.*$").unwrap());
-static MMY:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^([0][1-9]|1[012])\D\d{4}.*$").unwrap());
-static MDY:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D[1-9]\D\d{4}.*$").unwrap());
-static MMDY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])\D[1-9]\D\d{4}.*$").unwrap());
-static MDDY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D(0[1-9]|[12][0-9]|30|31)\D\d{4}.*$").unwrap());
-static MMDDY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])\D(0[1-9]|[12][0-9]|30|31)\D\d{4}.*$").unwrap());
+static MY:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D[1-9]\d{3}.*$").unwrap());
+static MMY:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^([0][1-9]|1[012])\D[1-9]\d{3}.*$").unwrap());
+static MDY:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D[1-9]\D[1-9]\d{3}.*$").unwrap());
+static MMDY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])\D[1-9]\D[1-9]\d{3}.*$").unwrap());
+static MDDY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D(0[1-9]|[12][0-9]|30|31)\D[1-9]\d{3}.*$").unwrap());
+static MMDDY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])\D(0[1-9]|[12][0-9]|30|31)\D[1-9]\d{3}.*$").unwrap());
 
 // Separated - `DAY MONTH YEAR`
-static DMY:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D[1-9]\D\d{4}.*$").unwrap());
-static DDMY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|3[01])\D[1-9]\D\d{4}.*$").unwrap());
-static DMMY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D(0[1-9]|1[012])\D\d{4}.*$").unwrap());
-static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|30|31)\D(0[1-9]|1[012])\D\d{4}.*$").unwrap());
+static DMY:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D[1-9]\D[1-9]\d{3}.*$").unwrap());
+static DDMY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|3[01])\D[1-9]\D[1-9]\d{3}.*$").unwrap());
+static DMMY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D(0[1-9]|1[012])\D[1-9]\d{3}.*$").unwrap());
+static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|30|31)\D(0[1-9]|1[012])\D[1-9]\d{3}.*$").unwrap());
 
 //---------------------------------------------------------------------------------------------------- Functions.
 #[inline(always)]
@@ -517,7 +516,7 @@ impl Date {
 			match string.parse::<u16>() {
 				// If the string is 4 characters long, but is less than 1000,
 				// there must be leading zeros
-				Ok(y) if y >= 1000 => return Ok(Self::priv_y(y)),
+				Ok(y) if ok_year(y) => return Ok(Self::priv_y(y)),
 				_     => return Err(Self::unknown()),
 			}
 		}
