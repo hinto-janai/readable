@@ -7,6 +7,7 @@ mod _25;
 mod _50;
 mod _75;
 
+#[inline(always)]
 /// INVARIANT:
 /// Input must be `0.0..100.0`.
 pub fn inlined(f: f64) -> &'static str {

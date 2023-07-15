@@ -1,3 +1,4 @@
+#[inline(always)]
 pub(crate) fn inlined_75(f: f64) -> &'static str {
 	match f {
 		75.00..=75.01 => "75.01%",

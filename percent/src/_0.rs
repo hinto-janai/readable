@@ -1,3 +1,4 @@
+#[inline(always)]
 pub(crate) fn inlined_0(f: f64) -> &'static str {
 	if f < 0.1 {
 		return "0.00%";

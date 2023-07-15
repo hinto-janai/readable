@@ -4,6 +4,7 @@
 
 pub const UNKNOWN_RUNTIME: &str = "?:??";
 
+#[inline(always)]
 pub const fn inlined(u: u32) -> &'static [u8] {
 	if u > 359999 {
 		UNKNOWN_RUNTIME.as_bytes()
