@@ -24,11 +24,10 @@ jobs:
           ~/.cargo
           target
         key: audit
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
     - name: Install dependencies
-      run: |
-        cargo install cargo-audit
+      run: cargo install cargo-audit
     - name: Audit
       run: cargo audit

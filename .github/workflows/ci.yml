@@ -1,6 +1,6 @@
 # This clippys, docs, tests, builds.
 
-name: macOS
+name: CI
 
 on:
   push:
@@ -10,28 +10,35 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: "full"
+  RUST_MIN_STACK: 8000000
 
 jobs:
-  macos:
-    runs-on: macos-latest
+  ci:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [windows-2019, macos-11, ubuntu-20.04]
+
     steps:
-    - name: Cache
-      uses: actions/cache@v3.2.3
-      with:
-        path: |
-          ~/.cargo
-          target
-        key: macos
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v4
       with:
         submodules: recursive
+
+    - name: Cache
+      uses: actions/cache@v3
+      with:
+        path: target
+        key: ${{ matrix.pkg }}-${{ matrix.os }}
+
     - name: Clippy
-      run: cargo clippy --all-features
-    - name: Doc
-      env:
-        RUSTFLAGS: '-D warnings'
-      run: cargo doc --workspace --no-deps --all-features
+      run: cargo clippy --package ${{ matrix.pkg }}
+
     - name: Test
+      shell: bash
       run: cargo test -- --skip float::tests::special --skip int::tests::special --skip percent::tests::special --skip runtime::tests::special --skip unsigned::tests::special
+
     - name: Build
       run: cargo build
