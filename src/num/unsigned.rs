@@ -4,32 +4,60 @@ use serde::{Serialize,Deserialize};
 
 use std::num::*;
 use crate::macros::*;
-use crate::constants::*;
+use crate::num::constants::{
+	MAX_BUF_LEN,UNKNOWN_NUM_BUFFER,
+	UNKNOWN,ZERO_NUM_BUFFER,
+};
 
 //---------------------------------------------------------------------------------------------------- Unsigned
 /// Human readable unsigned integer.
 ///
-/// ## Creation
-/// For [`u8`], [`u16`], [`u32`], [`u64`], [`usize`] or any [`NonZeroU8`] variant:
+/// ## Construction
+/// For [`u8`], [`u16`], [`u32`], [`u64`], [`usize`] or any `NonZeroU*` variant:
 /// - Use [`Unsigned::from`]
 ///
-/// [`f32`] or [`f64`] inputs will work, but:
-/// - Signed floats will turn into `0`
-/// - Fractional parts will be ignored
-/// - Under/overflows will return [`Unsigned::unknown`]
-/// - Special floats like [`f64::NAN`] will return [`Unsigned::unknown`]
+/// [`f32`] or [`f64`] inputs must use [`Unsigned::try_from`].
+/// - (Negative) infinity floats ([`f32::INFINITY`], [`f32::NEG_INFINITY`])
+/// - NaN floats ([`f32::NAN`])
+/// - Signed floats (`-1.0`)
+/// will all lead to `Err(Unsigned::unknown)` being returned.
+/// ```rust
+/// # use readable::*;
+/// // Signed floats will fail.
+/// assert_eq!(Unsigned::try_from(-1.0), Err(Unsigned::unknown()));
 ///
-/// For [`i8`] and other signed integers:
-/// - You need to use [`Unsigned::try_from`]
-/// - [`Unsigned::unknown`] will be returned on error
+/// // Special floats like `f64::NAN` will fail.
+/// assert_eq!(Unsigned::try_from(f64::NAN), Err(Unsigned::unknown()));
+///
+/// // Fractional parts will be ignored (not rounded)
+/// assert_eq!(Unsigned::try_from(1.99).unwrap(), "1");
+///
+/// // A normal float.
+/// assert_eq!(Unsigned::try_from(1.0).unwrap(), "1");
+/// // Fractions are ignored.
+/// assert_eq!(Unsigned::try_from(1.1).unwrap(), "1");
+///
+/// // These all fail.
+/// assert!(Unsigned::try_from(-1.0).is_err());
+/// assert!(Unsigned::try_from(f32::NAN).is_err());
+/// assert!(Unsigned::try_from(f32::INFINITY).is_err());
+/// assert!(Unsigned::try_from(f32::NEG_INFINITY).is_err());
+/// ```
+///
+/// For [`i8`] and other signed integers, [`Unsigned::try_from`] must be used.
+/// ```rust
+/// # use readable::*;
+/// // You can use `Unsigned::try_from` for a fallible `Result`
+/// assert_eq!(Unsigned::try_from(i8::MAX).unwrap(), "127");
+/// ```
+/// [`Unsigned::unknown`] will be returned if `try_from` errors.
 ///
 /// ## Cloning
 /// [`Copy`] is available.
 ///
-/// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
-/// but a 26 byte array buffer, literally: `[u8; 26]`.
+/// The actual string used internally is not a [`String`], but a 26 byte array buffer (`[u8; 26]`).
 ///
-/// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
+/// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also either a [`String`].
 /// ```rust
 /// # use readable::Unsigned;
 /// let a = Unsigned::from(100_000_u64);
@@ -82,23 +110,23 @@ use crate::constants::*;
 /// ```rust
 /// # use readable::Unsigned;
 /// // From unsigned integers.
-/// assert!(Unsigned::from(100_u8)        == "100");
-/// assert!(Unsigned::from(10_000_u16)    == "10,000");
-/// assert!(Unsigned::from(100_000_u32)   == "100,000");
-/// assert!(Unsigned::from(1_000_000_u64) == "1,000,000");
+/// assert_eq!(Unsigned::from(100_u8),        "100");
+/// assert_eq!(Unsigned::from(10_000_u16),    "10,000");
+/// assert_eq!(Unsigned::from(100_000_u32),   "100,000");
+/// assert_eq!(Unsigned::from(1_000_000_u64), "1,000,000");
 ///
 /// // From floats.
-/// assert!(Unsigned::from(-1.0)        == "0");
-/// assert!(Unsigned::from(1_000.123)   == "1,000");
-/// assert!(Unsigned::from(100_000.123) == "100,000");
-/// assert!(Unsigned::from(100_000.123) == "100,000");
-/// assert!(Unsigned::from(f32::NAN)    == "???");
+/// assert_eq!(Unsigned::try_from(-1.0),                 Err(Unsigned::unknown()));
+/// assert_eq!(Unsigned::try_from(1_000.123).unwrap(),   "1,000");
+/// assert_eq!(Unsigned::try_from(100_000.123).unwrap(), "100,000");
+/// assert_eq!(Unsigned::try_from(100_000.123).unwrap(), "100,000");
+/// assert!(Unsigned::try_from(f32::NAN).is_err());
 ///
 /// // From signed integers.
-/// assert!(Unsigned::try_from(100_i8)         == Ok(Unsigned::from(100_u8)));
-/// assert!(Unsigned::try_from(-100_i8)        == Err(Unsigned::unknown()));
-/// assert!(Unsigned::try_from(1_000_000_i64)  == Ok(Unsigned::from(1_000_000_u32)));
-/// assert!(Unsigned::try_from(-1_000_000_i64) == Err(Unsigned::unknown()));
+/// assert_eq!(Unsigned::try_from(100_i8),         Ok(Unsigned::from(100_u8)));
+/// assert_eq!(Unsigned::try_from(-100_i8),        Err(Unsigned::unknown()));
+/// assert_eq!(Unsigned::try_from(1_000_000_i64),  Ok(Unsigned::from(1_000_000_u32)));
+/// assert_eq!(Unsigned::try_from(-1_000_000_i64), Err(Unsigned::unknown()));
 /// ```
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -115,7 +143,7 @@ impl Unsigned {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert!(Unsigned::zero() == 0);
+	/// assert_eq!(Unsigned::zero(), 0);
 	/// ```
 	pub const fn zero() -> Self {
 		Self(0, Buffer::zero())
@@ -124,13 +152,15 @@ impl Unsigned {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert!(Unsigned::unknown() == UNKNOWN);
+	/// # use readable::num::*;
+	/// assert_eq!(Unsigned::unknown(), UNKNOWN);
 	/// ```
 	pub const fn unknown() -> Self {
 		Self(0, Buffer::unknown())
 	}
 }
 
+//---------------------------------------------------------------------------------------------------- Unsigned
 macro_rules! impl_u {
 	($( $from:ty ),*) => {
 		$(
@@ -140,11 +170,18 @@ macro_rules! impl_u {
 					Self(u, Buffer::from_u(u))
 				}
 			}
+			impl From<&$from> for Unsigned {
+				fn from(uint: &$from) -> Self {
+					let u = *uint as u64;
+					Self(u, Buffer::from_u(u))
+				}
+			}
 		)*
 	}
 }
 impl_u!(u8,u16,u32,u64,usize);
 
+//---------------------------------------------------------------------------------------------------- NonZeroU*
 macro_rules! impl_nonu {
 	($( $from:ty ),*) => {
 		$(
@@ -162,17 +199,30 @@ impl_nonu! {
 	&NonZeroU8,&NonZeroU16,&NonZeroU32,&NonZeroU64,&NonZeroUsize
 }
 
+//---------------------------------------------------------------------------------------------------- Floats
 macro_rules! impl_f {
 	($from:ty) => {
-		/// This will silently return [`Self::unknown`]
-		/// if the input float is `NAN`, `INFINITY`, etc.
-		///
-		/// [`Self::zero`] will be returned on negative floats.
-		impl From<$from> for Unsigned {
-			fn from(float: $from) -> Self {
-				handle_nan_runtime!(float);
+		/// This will return [`Self::unknown`]
+		/// if the input float is `NAN`, `INFINITY`, or negative.
+		impl TryFrom<$from> for Unsigned {
+			type Error = Self;
+			fn try_from(float: $from) -> Result<Self, Self> {
+				#[cfg(not(feature = "ignore_nan_inf"))]
+				{
+					match float.classify() {
+						std::num::FpCategory::Normal   => (),
+						std::num::FpCategory::Nan      => return Err(Self::unknown()),
+						std::num::FpCategory::Infinite => return Err(Self::unknown()),
+						_ => (),
+					}
+				}
+
+				if float.is_sign_negative() {
+					return Err(Self::unknown());
+				}
+
 				let u = float as u64;
-				Self(u, Buffer::from_u(u))
+				Ok(Self(u, Buffer::from_u(u)))
 			}
 		}
 	}
@@ -180,7 +230,8 @@ macro_rules! impl_f {
 impl_f!(f32);
 impl_f!(f64);
 
-macro_rules! impl_try {
+//---------------------------------------------------------------------------------------------------- Int
+macro_rules! impl_i {
 	($( $from:ty ),*) => {
 		$(
 			/// This will return [`Self::unknown`] wrapped
@@ -197,8 +248,9 @@ macro_rules! impl_try {
 		)*
 	}
 }
-impl_try!(i8,i16,i32,i64,isize);
+impl_i!(i8,i16,i32,i64,isize);
 
+//---------------------------------------------------------------------------------------------------- NonZeroI*
 macro_rules! impl_noni {
 	($( $from:ty ),*) => {
 		$(
@@ -221,6 +273,7 @@ impl_noni! {
 	&NonZeroI8,&NonZeroI16,&NonZeroI32,&NonZeroI64,&NonZeroIsize
 }
 
+//---------------------------------------------------------------------------------------------------- Traits
 impl_math!(Unsigned, u64);
 impl_traits!(Unsigned, u64);
 
@@ -238,7 +291,7 @@ impl Buffer {
 
 	#[inline(always)]
 	fn from_u(u: u64) -> Self {
-		let (buf, len) = crate::buf::from_u(u);
+		let (buf, len) = crate::num::buf::from_u(u);
 		Self { buf, len }
 	}
 }
@@ -272,30 +325,30 @@ mod tests {
 
 	#[test]
 	fn float() {
-		assert_eq!(Unsigned::from(1_000.0),                      "1,000");
-		assert_eq!(Unsigned::from(65_535.0),                     "65,535");
-		assert_eq!(Unsigned::from(65_536.0),                     "65,536");
-		assert_eq!(Unsigned::from(100_000.0),                    "100,000");
-		assert_eq!(Unsigned::from(1_000_000.0),                  "1,000,000");
-		assert_eq!(Unsigned::from(10_000_000.0),                 "10,000,000");
-		assert_eq!(Unsigned::from(100_000_000.0),                "100,000,000");
-		assert_eq!(Unsigned::from(1_000_000_000.0),              "1,000,000,000");
-		assert_eq!(Unsigned::from(4_294_967_295.0),              "4,294,967,295");
-		assert_eq!(Unsigned::from(4_294_967_296.0),              "4,294,967,296");
-		assert_eq!(Unsigned::from(10_000_000_000.0),             "10,000,000,000");
-		assert_eq!(Unsigned::from(100_000_000_000.0),            "100,000,000,000");
-		assert_eq!(Unsigned::from(1_000_000_000_000.0),          "1,000,000,000,000");
-		assert_eq!(Unsigned::from(10_000_000_000_000.0),         "10,000,000,000,000");
-		assert_eq!(Unsigned::from(100_000_000_000_000.0),        "100,000,000,000,000");
-		assert_eq!(Unsigned::from(1_000_000_000_000_000.0),      "1,000,000,000,000,000");
-		assert_eq!(Unsigned::from(10_000_000_000_000_000.0),     "10,000,000,000,000,000");
-		assert_eq!(Unsigned::from(18_446_744_073_709_551_615.0), "18,446,744,073,709,551,615");
+		assert_eq!(Unsigned::try_from(1_000.0).unwrap(),                      "1,000");
+		assert_eq!(Unsigned::try_from(65_535.0).unwrap(),                     "65,535");
+		assert_eq!(Unsigned::try_from(65_536.0).unwrap(),                     "65,536");
+		assert_eq!(Unsigned::try_from(100_000.0).unwrap(),                    "100,000");
+		assert_eq!(Unsigned::try_from(1_000_000.0).unwrap(),                  "1,000,000");
+		assert_eq!(Unsigned::try_from(10_000_000.0).unwrap(),                 "10,000,000");
+		assert_eq!(Unsigned::try_from(100_000_000.0).unwrap(),                "100,000,000");
+		assert_eq!(Unsigned::try_from(1_000_000_000.0).unwrap(),              "1,000,000,000");
+		assert_eq!(Unsigned::try_from(4_294_967_295.0).unwrap(),              "4,294,967,295");
+		assert_eq!(Unsigned::try_from(4_294_967_296.0).unwrap(),              "4,294,967,296");
+		assert_eq!(Unsigned::try_from(10_000_000_000.0).unwrap(),             "10,000,000,000");
+		assert_eq!(Unsigned::try_from(100_000_000_000.0).unwrap(),            "100,000,000,000");
+		assert_eq!(Unsigned::try_from(1_000_000_000_000.0).unwrap(),          "1,000,000,000,000");
+		assert_eq!(Unsigned::try_from(10_000_000_000_000.0).unwrap(),         "10,000,000,000,000");
+		assert_eq!(Unsigned::try_from(100_000_000_000_000.0).unwrap(),        "100,000,000,000,000");
+		assert_eq!(Unsigned::try_from(1_000_000_000_000_000.0).unwrap(),      "1,000,000,000,000,000");
+		assert_eq!(Unsigned::try_from(10_000_000_000_000_000.0).unwrap(),     "10,000,000,000,000,000");
+		assert_eq!(Unsigned::try_from(18_446_744_073_709_551_615.0).unwrap(), "18,446,744,073,709,551,615");
 	}
 
 	#[test]
 	fn special() {
-		assert_eq!(Unsigned::from(f64::NAN),          crate::UNKNOWN);
-		assert_eq!(Unsigned::from(f64::INFINITY),     crate::UNKNOWN);
-		assert_eq!(Unsigned::from(f64::NEG_INFINITY), crate::UNKNOWN);
+		assert_eq!(Unsigned::try_from(f64::NAN),          Err(Unsigned::unknown()));
+		assert_eq!(Unsigned::try_from(f64::INFINITY),     Err(Unsigned::unknown()));
+		assert_eq!(Unsigned::try_from(f64::NEG_INFINITY), Err(Unsigned::unknown()));
 	}
 }

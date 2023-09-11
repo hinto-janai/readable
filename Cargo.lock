@@ -110,7 +110,7 @@ dependencies = [
 
 [[package]]
 name = "readable"
-version = "0.8.13"
+version = "1.0.0-rc.0"
 dependencies = [
  "bincode",
  "compact_str",

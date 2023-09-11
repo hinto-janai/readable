@@ -1,13 +1,23 @@
 //---------------------------------------------------------------------------------------------------- Use
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
-
 use crate::macros::*;
-use crate::constants::*;
-use compact_str::{format_compact};
-
+use compact_str::format_compact;
 use regex::Regex;
 use once_cell::sync::Lazy;
+
+//---------------------------------------------------------------------------------------------------- Constants
+/// Returned when using [`Date::unknown`] or error situations.
+pub const UNKNOWN_DATE: &str = "????-??-??";
+
+/// UTF-8 byte encoding of [`UNKNOWN_DATE`], aka: `????-??-??`
+///
+/// ```rust
+/// # use readable::*;
+/// # use readable::time::*;
+/// assert!(UNKNOWN_DATE.as_bytes() == UNKNOWN_DATE_BUFFER);
+/// ```
+pub const UNKNOWN_DATE_BUFFER: [u8; 10] = [63, 63, 63, 63, 45, 63, 63, 45, 63, 63];
 
 //---------------------------------------------------------------------------------------------------- Regexes
 // Length of the input string
@@ -902,7 +912,6 @@ mod tests {
 	#[test]
 	fn invalid_dates() {
 		assert_eq!(Date::from_str_silent("12-25-0100"), Date::unknown());
-		assert_eq!(Date::from_str_silent("12250100"),   Date::unknown());
 		assert_eq!(Date::from_str_silent("01001225") ,  Date::unknown());
 		assert_eq!(Date::from_str_silent("25-12-0100"), Date::unknown());
 		assert_eq!(Date::from_str_silent("01000"),      Date::unknown());

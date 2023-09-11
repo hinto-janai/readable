@@ -3,8 +3,22 @@
 use serde::{Serialize,Deserialize};
 
 use std::num::*;
-use crate::macros::*;
-use crate::constants::*;
+use crate::macros::{
+	handle_float,
+	handle_nan_string,
+	impl_common,
+	impl_const,
+	impl_isize,
+	impl_buffer,
+	impl_math,
+	impl_impl_math,
+	impl_traits,
+	buffer,
+};
+use crate::num::constants::{
+	MAX_BUF_LEN,UNKNOWN_NUM_BUFFER,UNKNOWN,
+	ZERO_NUM_BUFFER,
+};
 
 //---------------------------------------------------------------------------------------------------- Int
 /// Human readable signed integer.
@@ -112,7 +126,9 @@ impl Int {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert!(Int::zero() == 0);
+	/// assert_eq!(Int::zero(), 0);
+	/// assert_eq!(Int::zero(), "0");
+	/// assert_eq!(Int::zero() + Int::zero(), 0);
 	/// ```
 	pub const fn zero() -> Self {
 		Self(0, Buffer::zero())
@@ -121,7 +137,8 @@ impl Int {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert!(Int::unknown() == UNKNOWN);
+	/// # use readable::num::*;
+	/// assert_eq!(Int::unknown(), UNKNOWN);
 	/// ```
 	pub const fn unknown() -> Self {
 		Self(0, Buffer::unknown())
@@ -165,7 +182,7 @@ macro_rules! impl_f {
 		/// if the input float is `NAN`, `INFINITY`, or under/overflows.
 		impl From<$from> for Int {
 			fn from(float: $from) -> Self {
-				handle_nan_runtime!(float);
+				handle_float!(|| Self::unknown(), float);
 				let i = float as i64;
 				Self(i, Buffer::from_i(i))
 			}
@@ -233,7 +250,7 @@ impl Buffer {
 
 	#[inline(always)]
 	fn from_i(i: i64) -> Self {
-		let (buf, len) = crate::buf::from_i(i);
+		let (buf, len) = crate::num::buf::from_i(i);
 		Self { buf, len }
 	}
 }
@@ -312,8 +329,8 @@ mod tests {
 
 	#[test]
 	fn special() {
-		assert_eq!(Int::from(f64::NAN),          crate::UNKNOWN);
-		assert_eq!(Int::from(f64::INFINITY),     crate::UNKNOWN);
-		assert_eq!(Int::from(f64::NEG_INFINITY), crate::UNKNOWN);
+		assert_eq!(Int::from(f64::NAN),          UNKNOWN);
+		assert_eq!(Int::from(f64::INFINITY),     UNKNOWN);
+		assert_eq!(Int::from(f64::NEG_INFINITY), UNKNOWN);
 	}
 }

@@ -2,8 +2,11 @@
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
 use compact_str::{format_compact,CompactString};
-use crate::constants::*;
 use crate::macros::*;
+use crate::num::constants::{
+	UNKNOWN_PERCENT,NAN,INFINITY,
+	ZERO_PERCENT,
+};
 
 //---------------------------------------------------------------------------------------------------- Percent
 /// Human readable percentage.

@@ -1,9 +1,61 @@
 //---------------------------------------------------------------------------------------------------- Use
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
-use compact_str::{format_compact};
+use compact_str::format_compact;
 use crate::macros::*;
-use crate::constants::*;
+
+//---------------------------------------------------------------------------------------------------- Constants (Private)
+/// UTF-8 byte encoding of [`UNKNOWN_RUNTIME`], aka: `?:??`
+const UNKNOWN_RUNTIME_BUFFER: [u8; 8] = [63, 58, 63, 63, 0, 0, 0, 0];
+
+/// UTF-8 byte encoding of [`ZERO_RUNTIME`]
+const ZERO_RUNTIME_BUFFER: [u8; 8] = [48, 58, 48, 48, 0, 0, 0, 0];
+
+/// UTF-8 byte encoding of [`SECOND_RUNTIME`]
+const SECOND_RUNTIME_BUFFER: [u8; 8] = [48, 58, 48, 49, 0, 0, 0, 0];
+
+/// UTF-8 byte encoding of [`MINUTE_RUNTIME`]
+const MINUTE_RUNTIME_BUFFER: [u8; 8] = [49, 58, 48, 48, 0, 0, 0, 0];
+
+/// UTF-8 byte encoding of [`HOUR_RUNTIME`]
+const HOUR_RUNTIME_BUFFER: [u8; 8] = [49, 58, 48, 48, 58, 48, 48, 0];
+
+/// UTF-8 byte encoding of [`MAX_RUNTIME`]
+const MAX_RUNTIME_BUFFER: [u8; 8] = [57, 57, 58, 53, 57, 58, 53, 57];
+
+//---------------------------------------------------------------------------------------------------- Constants (Public)
+/// [`str`] returned when using [`Runtime::unknown`]
+pub const UNKNOWN_RUNTIME: &str = "?:??";
+
+/// [`str`] returned when using [`Runtime::zero`]
+pub const ZERO_RUNTIME: &str = "0:00";
+
+/// [`str`] returned when using [`Runtime::second`]
+pub const SECOND_RUNTIME: &str = "0:01";
+
+/// [`str`] returned when using [`Runtime::minute`]
+pub const MINUTE_RUNTIME: &str = "1:00";
+
+/// [`str`] returned when using [`Runtime::hour`]
+pub const HOUR_RUNTIME: &str = "1:00:00";
+
+/// [`str`] for the max time [`Runtime`] can handle
+pub const MAX_RUNTIME: &str = "99:59:59";
+
+/// [`u32`] returned when calling [`Runtime::zero`]
+pub const ZERO_RUNTIME_U32: u32 = 0;
+
+/// [`u32`] returned when calling [`Runtime::second`]
+pub const SECOND_RUNTIME_U32: u32 = 1;
+
+/// [`u32`] returned when calling [`Runtime::minute`]
+pub const MINUTE_RUNTIME_U32: u32 = 60;
+
+/// [`u32`] returned when calling [`Runtime::hour`]
+pub const HOUR_RUNTIME_U32: u32 = 3600;
+
+/// The max input to [`Runtime`] before it returns [`MAX_RUNTIME`]
+pub const MAX_RUNTIME_U32: u32 = 359999;
 
 //---------------------------------------------------------------------------------------------------- Runtime
 /// Human readable "audio/video runtime" in `H:M:S` format.
@@ -24,7 +76,7 @@ use crate::constants::*;
 /// ## Errors
 /// The max input is `359999` seconds, or: `99:59:59`.
 ///
-/// If the input is larger than [`MAX_RUNTIME`], [`UNKNOWN_RUNTIME`] is returned.
+/// If the input is larger than [`MAX_RUNTIME`], [`|| Self::unknown()`] is returned.
 ///
 /// ## Inlining
 /// If the feature flag `inline_runtime` is enabled, ALL possible outputs of
@@ -82,11 +134,11 @@ use crate::constants::*;
 /// it is just calling `.inner() $OPERATOR $NUMBER`.
 /// ```rust
 /// # use readable::*;
-/// assert!(Runtime::from(10_u32) + 10 == Runtime::from(20_u32));
-/// assert!(Runtime::from(10_u32) - 10 == Runtime::from(0_u32));
-/// assert!(Runtime::from(10_u32) / 10 == Runtime::from(1_u32));
-/// assert!(Runtime::from(10_u32) * 10 == Runtime::from(100_u32));
-/// assert!(Runtime::from(10_u32) % 10 == Runtime::from(0_u32));
+/// assert_eq!(Runtime::from(10_u32) + 10, Runtime::from(20_u32));
+/// assert_eq!(Runtime::from(10_u32) - 10, Runtime::from(0_u32));
+/// assert_eq!(Runtime::from(10_u32) / 10, Runtime::from(1_u32));
+/// assert_eq!(Runtime::from(10_u32) * 10, Runtime::from(100_u32));
+/// assert_eq!(Runtime::from(10_u32) % 10, Runtime::from(0_u32));
 /// ```
 /// Overflow example (won't panic, will return unknown):
 /// ```rust
@@ -99,22 +151,22 @@ use crate::constants::*;
 /// ```rust
 /// # use readable::Runtime;
 /// // Always round down.
-/// assert!(Runtime::from(11.1111) == "0:11");
-/// assert!(Runtime::from(11.9999) == "0:11");
+/// assert_eq!(Runtime::from(11.1111), "0:11");
+/// assert_eq!(Runtime::from(11.9999), "0:11");
 ///
-/// assert!(Runtime::from(111.111) == "1:51");
-/// assert!(Runtime::from(111.999) == "1:51");
+/// assert_eq!(Runtime::from(111.111), "1:51");
+/// assert_eq!(Runtime::from(111.999), "1:51");
 ///
-/// assert!(Runtime::from(11111.1) == "3:05:11");
-/// assert!(Runtime::from(11111.9) == "3:05:11");
+/// assert_eq!(Runtime::from(11111.1), "3:05:11");
+/// assert_eq!(Runtime::from(11111.9), "3:05:11");
 ///
-/// assert!(Runtime::from(0.0) == "0:00");
-/// assert!(Runtime::from(1.0) == "0:01");
-/// assert!(Runtime::from(1.9) == "0:01");
-/// assert!(Runtime::from(2.0) == "0:02");
+/// assert_eq!(Runtime::from(0.0), "0:00");
+/// assert_eq!(Runtime::from(1.0), "0:01");
+/// assert_eq!(Runtime::from(1.9), "0:01");
+/// assert_eq!(Runtime::from(2.0), "0:02");
 ///
-/// assert!(Runtime::from(f32::NAN) == "?:??");
-/// assert!(Runtime::from(f64::INFINITY) == "?:??");
+/// assert_eq!(Runtime::from(f32::NAN),      "?:??");
+/// assert_eq!(Runtime::from(f64::INFINITY), "?:??");
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
@@ -128,7 +180,7 @@ impl Runtime {
 	impl_common!(u32);
 	impl_const!();
 	impl_usize!();
-	impl_buffer!(MAX_BUF_LEN, UNKNOWN_RUNTIME_BUFFER, UNKNOWN_RUNTIME.len());
+	impl_buffer!(MAX_BUF_LEN, UNKNOWN_RUNTIME_BUFFER, Self::unknown().len());
 
 	#[inline]
 	/// ```rust
@@ -198,7 +250,7 @@ impl Runtime {
 	// Private function used in float `From`.
 	//
 	// INVARIANT:
-	// `handle_nan_runtime!()` should be
+	// `handle_float!()` should be
 	// called before this function.
 	fn priv_from(runtime: f64) -> Self {
 		#[cfg(feature = "inline_runtime")]
@@ -233,11 +285,12 @@ impl Runtime {
 	}
 }
 
+//---------------------------------------------------------------------------------------------------- Duration/Instant
 impl From<std::time::Duration> for Runtime {
 	#[inline]
 	fn from(runtime: std::time::Duration) -> Self {
 		let f = runtime.as_secs_f64();
-		handle_nan_runtime!(f);
+		handle_float!(|| Self::unknown(), f);
 		Self::priv_from(f)
 	}
 }
@@ -246,7 +299,7 @@ impl From<&std::time::Duration> for Runtime {
 	#[inline]
 	fn from(runtime: &std::time::Duration) -> Self {
 		let f = runtime.as_secs_f64();
-		handle_nan_runtime!(f);
+		handle_float!(|| Self::unknown(), f);
 		Self::priv_from(f)
 	}
 }
@@ -255,7 +308,7 @@ impl From<std::time::Instant> for Runtime {
 	#[inline]
 	fn from(runtime: std::time::Instant) -> Self {
 		let f = runtime.elapsed().as_secs_f64();
-		handle_nan_runtime!(f);
+		handle_float!(|| Self::unknown(), f);
 		Self::priv_from(f)
 	}
 }
@@ -264,27 +317,53 @@ impl From<&std::time::Instant> for Runtime {
 	#[inline]
 	fn from(runtime: &std::time::Instant) -> Self {
 		let f = runtime.elapsed().as_secs_f64();
-		handle_nan_runtime!(f);
+		handle_float!(|| Self::unknown(), f);
 		Self::priv_from(f)
 	}
 }
 
-impl From<f64> for Runtime {
-	fn from(runtime: f64) -> Self {
-		// Handle NaN/Inf.
-		handle_nan_runtime!(runtime);
-		Self::priv_from(runtime)
+//---------------------------------------------------------------------------------------------------- Floats
+macro_rules! impl_f {
+	($($from:ty),*) => {
+		$(
+			impl From<$from> for Runtime {
+				fn from(float: $from) -> Self {
+					#[cfg(not(feature = "ignore_nan_inf"))]
+					{
+						match float.classify() {
+							std::num::FpCategory::Normal   => (),
+							std::num::FpCategory::Nan      => return Self::unknown(),
+							std::num::FpCategory::Infinite => return Self::unknown(),
+							_ => (),
+						}
+					}
+
+					// Handle NaN/Inf.
+					Self::priv_from(float as f64)
+				}
+			}
+			impl From<&$from> for Runtime {
+				fn from(float: &$from) -> Self {
+					#[cfg(not(feature = "ignore_nan_inf"))]
+					{
+						match float.classify() {
+							std::num::FpCategory::Normal   => (),
+							std::num::FpCategory::Nan      => return Self::unknown(),
+							std::num::FpCategory::Infinite => return Self::unknown(),
+							_ => (),
+						}
+					}
+
+					// Handle NaN/Inf.
+					Self::priv_from(*float as f64)
+				}
+			}
+		)*
 	}
 }
+impl_f!(f32, f64);
 
-impl From<f32> for Runtime {
-	fn from(runtime: f32) -> Self {
-		// Handle NaN/Inf.
-		handle_nan_runtime!(runtime);
-		Self::priv_from(runtime as f64)
-	}
-}
-
+//---------------------------------------------------------------------------------------------------- Int
 macro_rules! impl_int {
 	($from:ty) => {
 		impl From<$from> for Runtime {
@@ -393,23 +472,53 @@ mod tests {
 	#[test]
 	fn overflow_float() {
 		assert_eq!(Runtime::from(MAX_RUNTIME_U32 as f64 + 1.0), 0);
-		assert_eq!(Runtime::from(MAX_RUNTIME_U32 as f64 + 1.0), "?:??");
+		assert_eq!(Runtime::from(MAX_RUNTIME_U32 as f64 + 1.0), Runtime::unknown());
 	}
 
 	#[test]
 	fn overflow_uint() {
 		assert_eq!(Runtime::from(MAX_RUNTIME_U32 + 1), 0);
-		assert_eq!(Runtime::from(MAX_RUNTIME_U32 + 1), "?:??");
+		assert_eq!(Runtime::from(MAX_RUNTIME_U32 + 1), Runtime::unknown());
 	}
 
 	#[test]
 	fn special() {
-		assert_eq!(Runtime::from(f32::NAN),          UNKNOWN_RUNTIME);
-		assert_eq!(Runtime::from(f32::INFINITY),     UNKNOWN_RUNTIME);
-		assert_eq!(Runtime::from(f32::NEG_INFINITY), UNKNOWN_RUNTIME);
+		assert_eq!(Runtime::from(f32::NAN),          Runtime::unknown());
+		assert_eq!(Runtime::from(f32::INFINITY),     Runtime::unknown());
+		assert_eq!(Runtime::from(f32::NEG_INFINITY), Runtime::unknown());
+		assert_eq!(Runtime::from(f64::NAN),          Runtime::unknown());
+		assert_eq!(Runtime::from(f64::INFINITY),     Runtime::unknown());
+		assert_eq!(Runtime::from(f64::NEG_INFINITY), Runtime::unknown());
+	}
 
-		assert_eq!(Runtime::from(f64::NAN),          UNKNOWN_RUNTIME);
-		assert_eq!(Runtime::from(f64::INFINITY),     UNKNOWN_RUNTIME);
-		assert_eq!(Runtime::from(f64::NEG_INFINITY), UNKNOWN_RUNTIME);
+	#[test]
+	fn unknown_runtime_buffer() {
+		assert!(UNKNOWN_RUNTIME.as_bytes()[..4] == UNKNOWN_RUNTIME_BUFFER[..4]);
+	}
+
+	#[test]
+	fn zero_runtime_buffer() {
+		assert!(ZERO_RUNTIME.as_bytes()[..3] == ZERO_RUNTIME_BUFFER[..3]);
+	}
+
+
+	#[test]
+	fn second_runtime_buffer() {
+		assert!(SECOND_RUNTIME.as_bytes()[..4] == SECOND_RUNTIME_BUFFER[..4]);
+	}
+
+	#[test]
+	fn minute_runtime_buffer() {
+		assert!(MINUTE_RUNTIME.as_bytes()[..4] == MINUTE_RUNTIME_BUFFER[..4]);
+	}
+
+	#[test]
+	fn hour_runtime_buffer() {
+		assert!(HOUR_RUNTIME.as_bytes()[..7] == HOUR_RUNTIME_BUFFER[..7]);
+	}
+
+	#[test]
+	fn max_runtime_buffer() {
+		assert!(MAX_RUNTIME.as_bytes() == MAX_RUNTIME_BUFFER);
 	}
 }

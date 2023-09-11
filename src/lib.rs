@@ -1,150 +1,151 @@
-//! Human **readable** data formatting.
+//! Human **readable** string utilities.
 //!
-//! This crate turns various data into human-readable strings.
+//! `readable` is a crate that:
+//! - Transforms various data types into human-readable strings (e.g [`Unsigned`])
+//! - Parses "raw" string data into human-readable versions (e.g [`Date`])
+//! - Provides various string types and utilities (e.g [`HeadTail`])
 //!
-//! Most of the internal strings are implemented as fixed length, stack allocated arrays that are [`Copy`](https://doc.rust-lang.org/stable/std/marker/trait.Copy.html)-able.
+//! Most of the strings are implemented as fixed length, stack allocated arrays that are [`Copy`](https://doc.rust-lang.org/stable/std/marker/trait.Copy.html)-able.
 //!
-//! # Feature flags
-//! | Flag             | Purpose |
-//! |------------------|---------|
-//! | `serde`          | Enables [`serde`](https://docs.rs/serde) on all types
-//! | `bincode`        | Enables [`bincode 2.0.0`](https://docs.rs/bincode/2.0.0-rc.3/bincode/index.html)'s `Encode/Decode` on all types
-//! | `ignore_nan_inf` | Disables checking `f64`'s for `f64::NAN`, `f64::INFINITY`, and `f64::NEG_INFINITY`
-//! | `inline_date`    | Inlines any `Date` that is in `YYYY-MM-HH` format and is between year `1900-2100`
-//! | `inline_time`    | Inlines any `Time` that is under `1 hour, 1 minute` (`0..=3660`)
-//! | `inline_runtime` | Inlines ALL of `Runtime` (`0:00..99:59:59`/`0..=359999`)
-//! | `full`           | Enables everything above
+//! Creation of `readable` types have relatively fast performance.
 //!
-//! **Warning:** The `inline_*` features are disabled by default. While they increase speed,
-//! they also _heavily_ increase build time and binary size.
-//!
+//! # Examples
 //! #### Unsigned integers:
 //! ```
 //! let a = readable::Unsigned::from(1000_u64);
 //!
-//! assert!(a == 1000_u64);
-//! assert!(a == "1,000");
+//! assert_eq!(a, 1000_u64);
+//! assert_eq!(a, "1,000");
 //! ```
 //!
 //! #### Signed integers:
 //! ```
 //! let a = readable::Int::from(-1000);
 //!
-//! assert!(a == -1000);
-//! assert!(a == "-1,000");
+//! assert_eq!(a, -1000);
+//! assert_eq!(a, "-1,000");
 //! ```
 //!
 //! #### Floats:
 //! ```
 //! let a = readable::Float::from(1000.123);
 //!
-//! assert!(a == 1000.123);
-//! assert!(a == "1,000.123");
+//! assert_eq!(a, 1000.123);
+//! assert_eq!(a, "1,000.123");
 //! ```
 //!
 //! #### Percents:
 //! ```
 //! let a = readable::Percent::from(1000.123);
 //!
-//! assert!(a == 1000.123);
-//! assert!(a == "1,000.12%");
+//! assert_eq!(a, 1000.123);
+//! assert_eq!(a, "1,000.12%");
 //! ```
 //!
 //! #### Runtime:
 //! ```
 //! let a = readable::Runtime::from(11111_u16);
 //!
-//! assert!(a == 11111);
-//! assert!(a == "3:05:11");
+//! assert_eq!(a, 11111);
+//! assert_eq!(a, "3:05:11");
 //! ```
 //!
 //! #### Time:
 //! ```
 //! let a = readable::Time::from(86399_u64);
 //!
-//! assert!(a == 86399_u64);
-//! assert!(a == "23 hours, 59 minutes, 59 seconds");
+//! assert_eq!(a, 86399_u64);
+//! assert_eq!(a, "23 hours, 59 minutes, 59 seconds");
 //! ```
 //!
 //! #### Date:
 //! ```rust
 //! let a = readable::Date::from_str("2014-12-31").unwrap();
 //!
-//! assert!(a == (2014, 12, 31));
-//! assert!(a == "2014-12-31");
+//! assert_eq!(a, (2014, 12, 31));
+//! assert_eq!(a, "2014-12-31");
 //! ```
 //!
 //! # Comparison
-//! All types implement `Display`, `PartialEq`, `PartialEq<&str>` and `PartialEq` for their inner number primitive.
+//! All types implement [`std::fmt::Display`], and [`PartialEq`] against [`str`] and numbers.
 //!
-//! Example 1:
+//! This is comparing `b`'s inner `String`:
 //! ```rust
 //! let a = std::time::Duration::from_secs(86399);
 //! let b = readable::Time::from(a);
 //!
-//! assert!(b == "23 hours, 59 minutes, 59 seconds");
+//! assert_eq!(b, "23 hours, 59 minutes, 59 seconds");
 //! ```
-//! This is comparing `b`'s inner `String`.
 //!
-//! Example 2:
+//! This is comparing `a`'s inner `i64`:
 //! ```rust
 //! let a = readable::Int::from(-1000);
 //!
-//! assert!(a == -1000);
+//! assert_eq!(a, -1000);
 //! ```
-//! This is comparing `a`'s inner `i64`.
 //!
-//! Example 3:
+//! This compares both the `u64` AND `String` inside `a` and `b`:
 //! ```rust
 //! let a = readable::Unsigned::from(1000_u64);
 //! let b = readable::Unsigned::from(1000_u64);
 //!
-//! assert!(a == b);
+//! assert_eq!(a, b);
 //! ```
-//! This compares both the `u64` AND `String` inside `a` and `b`.
 //!
 //! # Math
-//! Most types implement `+, -, /, *, %`, outputting a new `Self`.
+//! Most types implement the common math operators `+`, `-`, `/`, `*`, `%`, outputting a new `Self`.
 //!
-//! Example - `Add +`:
+//! #### `+` Addition
 //! ```rust
 //! let f1 = readable::Float::from(1.0);
 //! let f2 = readable::Float::from(2.0);
-//! let f3 = readable::Float::from(3.0);
 //!
-//! assert!(f1 + f2 == f3);
+//! assert_eq!(f1 + f2, 3.0);
 //! ```
-//! Example - `Sub -`:
+//! #### `-` Subtraction
 //! ```rust
 //! let p50 = readable::Percent::from(50.0);
 //! let p25 = readable::Percent::from(25.0);
 //!
-//! assert!(p50 - p25 == "25.00%");
+//! assert_eq!(p50 - p25, "25.00%");
 //! ```
-//! Example - `Div /`:
+//! #### `/` Division
 //! ```rust
 //! let u100 = readable::Unsigned::from(100_u64);
 //! let u10  = readable::Unsigned::from(10_u64);
 //!
-//! assert!(u100 / u10 == 10);
+//! assert_eq!(u100 / u10, 10);
 //! ```
-//! Example - `Mul *`:
+//! #### `*` Muliplication
 //! ```rust
 //! let u10 = readable::Unsigned::from(10_u64);
 //!
-//! assert!(u10 * u10 == readable::Unsigned::from(100_u64));
+//! assert_eq!(u10 * u10, readable::Unsigned::from(100_u64));
 //! ```
-//! Example - `Rem %`:
+//! #### `%` Modulo
 //! ```rust
 //! let u10 = readable::Unsigned::from(10_u64);
 //!
-//! assert!(u10 % u10 == 0);
+//! assert_eq!(u10 % u10, 0);
 //! ```
+//!
+//! # Feature Flags
+//! | Flag             | Purpose |
+//! |------------------|---------|
+//! | `serde`          | Enables [`serde`](https://docs.rs/serde) on all types
+//! | `bincode`        | Enables [`bincode 2.0.0`](https://docs.rs/bincode/2.0.0-rc.3/bincode/index.html)'s `Encode/Decode` on all types
+//! | `ignore_nan_inf` | Disables checking `f64`'s for `f64::NAN`, `f64::INFINITY`, and `f64::NEG_INFINITY`
+//! | `inline_date`    | Inlines any `Date` parsing that is in `YYYY-MM-HH` format and is between year `1900-2100`
+//! | `inline_time`    | Inlines any `Time` parsing that is under `1 hour, 1 minute` (`0..=3660`)
+//! | `inline_runtime` | Inlines ALL `Runtime` parsing (`0:00..99:59:59`/`0..=359999`)
+//! | `full`           | Enables everything above
+//!
+//! **Warning:** The `inline_*` features are disabled by default. While they increase performance (in most cases, you should test!), they also _heavily_ increase build time and binary size.
 
-//------ Docs
+//---------------------------------------------------------------------------------------------------- Docs
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
-//------ Lints
+//---------------------------------------------------------------------------------------------------- Lints
 #![forbid(
 	future_incompatible,
 	let_underscore,
@@ -180,39 +181,30 @@
 	nonstandard_style,
 )]
 
-pub(crate) mod buf;
+//---------------------------------------------------------------------------------------------------- Hidden imports
+#[doc(hidden)]
+pub use itoa as __readable_itoa;
+#[doc(hidden)]
+pub use ryu as __readable_ryu;
+
 pub(crate) mod macros;
 
-mod constants;
-pub use constants::*;
-
-mod date;
-pub use date::*;
-
-mod unsigned;
-pub use unsigned::*;
-
-mod int;
-pub use int::*;
-
-mod float;
-pub use float::*;
-
-mod percent;
-pub use percent::*;
-
-mod time;
-pub use time::*;
-
-mod runtime;
-pub use runtime::*;
+//mod constants;
+//pub use constants::*;
 
 mod headtail;
 pub use headtail::*;
 
 mod free;
 
-#[doc(hidden)]
-pub use itoa as __readable_itoa;
-#[doc(hidden)]
-pub use ryu as __readable_ryu;
+/// Number formatting
+pub mod num;
+pub use num::{
+	Unsigned,Int,Float,Percent,
+};
+
+/// Time formatting
+pub mod time;
+pub use time::{
+	Date,Runtime,Time,
+};

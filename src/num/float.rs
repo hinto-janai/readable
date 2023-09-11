@@ -1,10 +1,10 @@
 //---------------------------------------------------------------------------------------------------- Use
-#[cfg(feature = "serde")]
-use serde::{Serialize,Deserialize};
-
 use compact_str::{format_compact,CompactString};
-use crate::constants::*;
 use crate::macros::*;
+use crate::num::constants::{
+	NAN,UNKNOWN_FLOAT,
+	INFINITY,ZERO_FLOAT,
+};
 
 //---------------------------------------------------------------------------------------------------- Float
 /// Human readable float.
@@ -92,8 +92,7 @@ use crate::macros::*;
 /// // To prevent that, use 4 point.
 /// assert!(Float::from_4(1234.5678) == "1,234.5678");
 /// ```
-
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Float(f64, #[cfg_attr(feature = "bincode", bincode(with_serde))] CompactString);

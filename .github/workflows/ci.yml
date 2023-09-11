@@ -31,10 +31,10 @@ jobs:
       uses: actions/cache@v3
       with:
         path: target
-        key: ${{ matrix.pkg }}-${{ matrix.os }}
+        key: ${{ matrix.os }}
 
     - name: Clippy
-      run: cargo clippy --package ${{ matrix.pkg }}
+      run: cargo clippy
 
     - name: Test
       shell: bash

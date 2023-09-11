@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------------------------- Use
 #[cfg(feature = "serde")]
 use serde::{Serialize,Deserialize};
-use compact_str::{CompactString};
+use compact_str::CompactString;
 use std::fmt::Write;
 use crate::macros::*;
 

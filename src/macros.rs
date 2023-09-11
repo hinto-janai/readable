@@ -1,12 +1,12 @@
 //---------------------------------------------------------------------------------------------------- 1-off Buffer
-// This quickly creates a `crate::buf::Buffer` for 1-off, quick formatting.
+// This quickly creates a `crate::num::buf::Buffer` for 1-off, quick formatting.
 
 // Converts anything `i64` and below to a formatted `str`.
 macro_rules! str_i64 {
 	($number:expr) => {
 		{
-			let (buf, len) = crate::buf::from_i($number);
-			crate::buf::Buffer { buf, len }.as_str()
+			let (buf, len) = crate::num::buf::from_i($number);
+			crate::num::buf::Buffer { buf, len }.as_str()
 		}
 	}
 }
@@ -16,8 +16,8 @@ pub(crate) use str_i64;
 macro_rules! str_u64 {
 	($number:expr) => {
 		{
-			let (buf, len) = crate::buf::from_u($number);
-			crate::buf::Buffer { buf, len }.as_str()
+			let (buf, len) = crate::num::buf::from_u($number);
+			crate::num::buf::Buffer { buf, len }.as_str()
 		}
 	}
 }
@@ -48,7 +48,7 @@ macro_rules! buffer {
 		}
 
 		impl Buffer {
-			#[inline(always)]
+			#[inline]
 			const fn unknown() -> Self {
 				Self {
 					buf: $unknown_buffer,
@@ -56,34 +56,34 @@ macro_rules! buffer {
 				}
 			}
 
-			#[inline(always)]
+			#[inline]
 			#[allow(clippy::wrong_self_convention)]
 			const fn to_buf(&self) -> [u8; $max_len] {
 				self.buf
 			}
 
-			#[inline(always)]
+			#[inline]
 			const fn into_buf(self) -> [u8; $max_len] {
 				self.buf
 			}
 
-			#[inline(always)]
+			#[inline]
 			const fn as_buf(&self) -> &[u8; $max_len] {
 				&self.buf
 			}
 
-			#[inline(always)]
+			#[inline]
 			// Returns only the valid bytes.
 			fn as_bytes(&self) -> &[u8] {
 				&self.buf[..self.len]
 			}
 
-			#[inline(always)]
+			#[inline]
 			const fn is_empty(&self) -> bool {
 				self.len == 0
 			}
 
-			#[inline(always)]
+			#[inline]
 			fn as_str(&self) -> &str {
 				// SAFETY:
 				// The buffer at this point should be
@@ -91,12 +91,12 @@ macro_rules! buffer {
 				unsafe { std::str::from_utf8_unchecked(self.as_bytes()) }
 			}
 
-			#[inline(always)]
+			#[inline]
 			fn into_string(self) -> String {
 				self.as_str().to_string()
 			}
 
-		    #[inline(always)]
+		    #[inline]
 			const fn len(&self) -> usize {
 				self.len
 		    }
@@ -113,8 +113,8 @@ macro_rules! handle_nan_string {
 		{
 			match $float.classify() {
 				std::num::FpCategory::Normal   => (),
-				std::num::FpCategory::Nan      => return Self(f64::NAN, ::compact_str::CompactString::new(crate::constants::NAN)),
-				std::num::FpCategory::Infinite => return Self(f64::INFINITY, ::compact_str::CompactString::new(crate::constants::INFINITY)),
+				std::num::FpCategory::Nan      => return Self(f64::NAN, ::compact_str::CompactString::new(crate::num::NAN)),
+				std::num::FpCategory::Infinite => return Self(f64::INFINITY, ::compact_str::CompactString::new(crate::num::INFINITY)),
 				_ => (),
 			}
 		}
@@ -122,21 +122,23 @@ macro_rules! handle_nan_string {
 }
 pub(crate) use handle_nan_string;
 
-// "Handle NaN/Infinite" Macro for `Runtime`.
-macro_rules! handle_nan_runtime {
-	($float:ident) => {
-//		#[cfg(not(feature = "ignore_nan_inf"))]
+// "Handle NaN/Infinite"
+//
+// `fn handle_nan(unknown: Fn() -> Self, float: f32) -> Self`
+macro_rules! handle_float {
+	($unknown:expr, $float:ident) => {
+		#[cfg(not(feature = "ignore_nan_inf"))]
 		{
 			match $float.classify() {
 				std::num::FpCategory::Normal   => (),
-				std::num::FpCategory::Nan      => return Self::unknown(),
-				std::num::FpCategory::Infinite => return Self::unknown(),
+				std::num::FpCategory::Nan      => return $unknown(),
+				std::num::FpCategory::Infinite => return $unknown(),
 				_ => (),
 			}
 		}
 	}
 }
-pub(crate) use handle_nan_runtime;
+pub(crate) use handle_float;
 
 //---------------------------------------------------------------------------------------------------- Impl.
 // `Buffer`.
