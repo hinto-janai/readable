@@ -115,16 +115,20 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 }
 
 //---------------------------------------------------------------------------------------------------- `Date`
-/// A _recent_ date that is in `YEAR-MONTH-DAY` format
+/// A _recent_ date that is in `YEAR-MONTH-DAY` format, similar to [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)
+///
+/// [`Date`] differs from [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) in that:
+/// - It only allows years from `1000-9999`
+/// - It allows months and days to be truncated (e.g `2010` is a valid [`Date`])
 ///
 /// The inner "integer" type is a tuple of: `(u16, u8, u8)` representing the `(Year, Month, Day)`
 ///
-/// Any value being `0` means it is invalid:
+/// Any value being `0` means it is invalid, akin to a [`None`]:
 /// ```rust
 /// # use readable::Date;
 /// let a = Date::from_str("2020-12").unwrap();
 ///
-/// assert!(a == (2020, 12, 0));
+/// assert_eq!(a, (2020, 12, 0));
 /// ```
 ///
 /// - The year must be `1000-9999`
@@ -140,16 +144,26 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// let d2 = Date::from_ym(y, m).unwrap();
 /// let d3 = Date::from_y(y).unwrap();
 ///
-/// assert!(d1 == "2020-12-01");
-/// assert!(d2 == "2020-12");
-/// assert!(d3 == "2020");
+/// assert_eq!(d1, "2020-12-01");
+/// assert_eq!(d2, "2020-12");
+/// assert_eq!(d3, "2020");
 ///```
 ///
 /// ## String parsing and format
 /// To parse an abitrary string into a [`Date`], use: [`Date::from_str`].
 ///
-/// You can input a string that is _just_ numbers, or separated by a single byte, e.g:
+/// Although [`Date`] will always internally be `YEAR-MONTH-DAY`, the input string can be any of these formats:
+/// ```rust
+/// # use readable::Date;
+/// assert_eq!(Date::from_str("2022-12-31").unwrap(), "2022-12-31"); // YYYY-MM-DD
+/// assert_eq!(Date::from_str("2022-12").unwrap(),    "2022-12");    // YYYY-MM
+/// assert_eq!(Date::from_str("2022").unwrap(),       "2022");       // YYYY
+/// assert_eq!(Date::from_str("12-31-2022").unwrap(), "2022-12-31"); // MM-DD-YYYY
+/// assert_eq!(Date::from_str("12-2022").unwrap(),    "2022-12");    // MM-YYYY
+/// assert_eq!(Date::from_str("31-12-2022").unwrap(), "2022-12-31"); // DD-MM-YYYY
+/// ```
 ///
+/// You can input a string that is _just_ numbers, or separated by a single byte, e.g:
 /// ```rust
 /// # use readable::Date;
 /// let dates = [
@@ -166,6 +180,21 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 ///     assert!(date == "2020-12-31");
 /// }
 /// ```
+/// **Warning:** be aware that many `UTF-8` characters are _not_ a single byte in length.
+///
+/// The separator character doesn't need to be `-` and it doesn't need to exist at all:
+/// ```rust
+/// # use readable::Date;
+/// assert_eq!(Date::from_str("20221231").unwrap(), "2022-12-31"); // YYYYMMDD
+/// assert_eq!(Date::from_str("202212").unwrap(),   "2022-12");    // YYYYMM
+/// assert_eq!(Date::from_str("2022").unwrap(),     "2022");       // YYYY
+/// assert_eq!(Date::from_str("12312022").unwrap(), "2022-12-31"); // MMDDYYYY
+///
+/// // Some dates are ambiguous (122001 could be 2001-12 or 1220-01).
+/// // See further below for more examples.
+/// assert_eq!(Date::from_str("129000").unwrap(), "9000-01-02"); // MDYYYY
+/// ```
+
 ///
 /// Given an ambiguous date, the parsing function will prioritize:
 ///
@@ -182,23 +211,22 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// //   - 11-11-1111 (DMY)
 /// let ambiguous = "11111111";
 /// // Although, we prioritize YMD.
-/// assert!(Date::from_str(ambiguous).unwrap() == "1111-11-11");
+/// assert_eq!(Date::from_str(ambiguous).unwrap(), "1111-11-11");
 ///
 /// // This could be:
 /// //   - MDY
 /// //   - DMY
 /// let ambiguous = "12-12-1111";
 /// // We prioritize MDY over DMY.
-/// assert!(Date::from_str(ambiguous).unwrap() == "1111-12-12");
+/// assert_eq!(Date::from_str(ambiguous).unwrap(), "1111-12-12");
 ///
 /// // This cannot be MDY, so it must be DMY.
 /// let dmy = "13-11-1111";
-/// assert!(Date::from_str(dmy).unwrap() == "1111-11-13");
+/// assert_eq!(Date::from_str(dmy).unwrap(), "1111-11-13");
 /// ```
 ///
 /// Some errors can occur during string parsing:
-///
-/// - Year is less than `1000`, a signed number, or greater than [`u16::MAX`]
+/// - Year is not in-between `1000-9999`
 /// - Month is not in-between `1-12`
 /// - Day is not in-between `1-31`
 ///
@@ -214,17 +242,40 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// assert!(d3 == "1980-05");
 /// ```
 ///
-/// Bad Example:
-/// ```rust,should_panic
+/// ## Trailing Characters
+/// [`Date`] is quite lenient, as it will ignore trailing characters in a string if there is a valid match in the first characters, for example:
+/// ```rust
 /// # use readable::Date;
-/// let d1 = Date::from_str("10000-57-99").unwrap();
-/// let d2 = Date::from_str("2022.31.31").unwrap();
-/// let d3 = Date::from_str("-1231").unwrap();
+/// // This is an invalid year (10,000), although the first 4 characters
+/// // extracted _are_ a valid year (1000), so this gets a pass.
+/// assert_eq!(Date::from_str("10000-57-99").unwrap(), "1000");
+///
+/// // This is convenient when parsing bad data that
+/// // may have un-related trailing characters.
+/// assert_eq!(Date::from_str("1000bad-data").unwrap(), "1000"); // but we can still parse it.
+/// ```
+///
+/// This leniency causes [`Date`] to parses strings, even if it plainly looks incorrect (for convenience sake):
+/// ```rust
+/// # use readable::Date;
+/// // trailing 0 is ignored, year 1000 is extracted
+/// let d1 = Date::from_str("10000").unwrap();
+/// // 32nd day is ignored, year.month is extracted
+/// let d2 = Date::from_str("2022.12.32").unwrap();
+/// // 32/32 is ignored, year is extracted
+/// let d3 = Date::from_str("2000/32/32").unwrap();
+///
+/// assert_eq!(d1, "1000");
+/// assert_eq!(d2, "2022.12");
+/// assert_eq!(d3, "2000");
 /// ```
 ///
 /// ## Inlining
-/// If the feature flag `inline_date` is enabled, inputs that are in `YYYY-MM-DD` format
-/// that range from year `1900-2100` will cause [`Date::from_str`] to match on inlined static bytes.
+/// If the feature flag `inline_date` is enabled, inputs that are
+/// - In `YYYY-MM-DD` format
+/// - Range from year `1900-2100`
+/// 
+/// will cause [`Date::from_str`] to match on inlined static bytes.
 ///
 /// **Warning:** This feature is disabled by default. While it increases speed,
 /// it also _heavily_ increases build time and binary size.
@@ -245,10 +296,10 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 ///
 /// // Copy 'a', use 'b'.
 /// let b = a;
-/// assert!(b == "2014-04-22");
+/// assert_eq!(b, "2014-04-22");
 ///
 /// // We can still use 'a'
-/// assert!(a == "2014-04-22");
+/// assert_eq!(a, "2014-04-22");
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]

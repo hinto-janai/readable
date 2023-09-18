@@ -75,38 +75,38 @@ use crate::macros::*;
 /// ## Examples
 /// ```rust
 /// # use readable::Time;
-/// assert!(Time::from(0_u64)        == "0 seconds");
-/// assert!(Time::from(1_u64)        == "1 second");
-/// assert!(Time::from(2_u64)        == "2 seconds");
-/// assert!(Time::from(59_u64)       == "59 seconds");
-/// assert!(Time::from(60_u64)       == "1 minute");
-/// assert!(Time::from(61_u64)       == "1 minute, 1 second");
-/// assert!(Time::from(62_u64)       == "1 minute, 2 seconds");
-/// assert!(Time::from(120_u64)      == "2 minutes");
-/// assert!(Time::from(121_u64)      == "2 minutes, 1 second");
-/// assert!(Time::from(122_u64)      == "2 minutes, 2 seconds");
-/// assert!(Time::from(179_u64)      == "2 minutes, 59 seconds");
-/// assert!(Time::from(3599_u64)     == "59 minutes, 59 seconds");
-/// assert!(Time::from(3600_u64)     == "1 hour");
-/// assert!(Time::from(3601_u64)     == "1 hour, 1 second");
-/// assert!(Time::from(3602_u64)     == "1 hour, 2 seconds");
-/// assert!(Time::from(3660_u64)     == "1 hour, 1 minute");
-/// assert!(Time::from(3720_u64)     == "1 hour, 2 minutes");
-/// assert!(Time::from(86399_u64)    == "23 hours, 59 minutes, 59 seconds");
-/// assert!(Time::from(86400_u64)    == "1 day");
-/// assert!(Time::from(86401_u64)    == "1 day, 1 second");
-/// assert!(Time::from(86402_u64)    == "1 day, 2 seconds");
-/// assert!(Time::from(86460_u64)    == "1 day, 1 minute");
-/// assert!(Time::from(86520_u64)    == "1 day, 2 minutes");
-/// assert!(Time::from(90000_u64)    == "1 day, 1 hour");
-/// assert!(Time::from(93600_u64)    == "1 day, 2 hours");
-/// assert!(Time::from(604799_u64)   == "6 days, 23 hours, 59 minutes, 59 seconds");
-/// assert!(Time::from(604800_u64)   == "7 days");
-/// assert!(Time::from(2630016_u64)  == "1 month");
-/// assert!(Time::from(3234815_u64)  == "1 month, 6 days, 23 hours, 59 minutes, 59 seconds");
-/// assert!(Time::from(5260032_u64)  == "2 months");
-/// assert!(Time::from(31557600_u64) == "1 year");
-/// assert!(Time::from(63115200_u64) == "2 years");
+/// assert_eq!(Time::from(0_u64),        "0 seconds");
+/// assert_eq!(Time::from(1_u64),        "1 second");
+/// assert_eq!(Time::from(2_u64),        "2 seconds");
+/// assert_eq!(Time::from(59_u64),       "59 seconds");
+/// assert_eq!(Time::from(60_u64),       "1 minute");
+/// assert_eq!(Time::from(61_u64),       "1 minute, 1 second");
+/// assert_eq!(Time::from(62_u64),       "1 minute, 2 seconds");
+/// assert_eq!(Time::from(120_u64),      "2 minutes");
+/// assert_eq!(Time::from(121_u64),      "2 minutes, 1 second");
+/// assert_eq!(Time::from(122_u64),      "2 minutes, 2 seconds");
+/// assert_eq!(Time::from(179_u64),      "2 minutes, 59 seconds");
+/// assert_eq!(Time::from(3599_u64),     "59 minutes, 59 seconds");
+/// assert_eq!(Time::from(3600_u64),     "1 hour");
+/// assert_eq!(Time::from(3601_u64),     "1 hour, 1 second");
+/// assert_eq!(Time::from(3602_u64),     "1 hour, 2 seconds");
+/// assert_eq!(Time::from(3660_u64),     "1 hour, 1 minute");
+/// assert_eq!(Time::from(3720_u64),     "1 hour, 2 minutes");
+/// assert_eq!(Time::from(86399_u64),    "23 hours, 59 minutes, 59 seconds");
+/// assert_eq!(Time::from(86400_u64),    "1 day");
+/// assert_eq!(Time::from(86401_u64),    "1 day, 1 second");
+/// assert_eq!(Time::from(86402_u64),    "1 day, 2 seconds");
+/// assert_eq!(Time::from(86460_u64),    "1 day, 1 minute");
+/// assert_eq!(Time::from(86520_u64),    "1 day, 2 minutes");
+/// assert_eq!(Time::from(90000_u64),    "1 day, 1 hour");
+/// assert_eq!(Time::from(93600_u64),    "1 day, 2 hours");
+/// assert_eq!(Time::from(604799_u64),   "6 days, 23 hours, 59 minutes, 59 seconds");
+/// assert_eq!(Time::from(604800_u64),   "7 days");
+/// assert_eq!(Time::from(2630016_u64),  "1 month");
+/// assert_eq!(Time::from(3234815_u64),  "1 month, 6 days, 23 hours, 59 minutes, 59 seconds");
+/// assert_eq!(Time::from(5260032_u64),  "2 months");
+/// assert_eq!(Time::from(31557600_u64), "1 year");
+/// assert_eq!(Time::from(63115200_u64), "2 years");
 /// assert_eq!(
 ///     Time::from(u64::MAX),
 ///     "584542046090 years, 7 months, 15 days, 17 hours, 5 minutes, 3 seconds",
@@ -160,8 +160,8 @@ impl Time {
 	#[inline]
 	/// ```rust
 	/// # use readable::Time;
-	/// assert!(Time::zero() == 0_u64);
-	/// assert!(Time::zero() == "0 seconds");
+	/// assert_eq!(Time::zero(), 0_u64);
+	/// assert_eq!(Time::zero(), "0 seconds");
 	/// ```
 	pub const fn zero() -> Self {
 		Self(0, CompactString::new_inline("0 seconds"))
@@ -170,8 +170,8 @@ impl Time {
 	#[inline]
 	/// ```rust
 	/// # use readable::Time;
-	/// assert!(Time::second() == 1_u64);
-	/// assert!(Time::second() == "1 second");
+	/// assert_eq!(Time::second(), 1_u64);
+	/// assert_eq!(Time::second(), "1 second");
 	/// ```
 	pub const fn second() -> Self {
 		Self(1, CompactString::new_inline("1 second"))
@@ -180,8 +180,8 @@ impl Time {
 	#[inline]
 	/// ```rust
 	/// # use readable::Time;
-	/// assert!(Time::minute() == 60_u64);
-	/// assert!(Time::minute() == "1 minute");
+	/// assert_eq!(Time::minute(), 60_u64);
+	/// assert_eq!(Time::minute(), "1 minute");
 	/// ```
 	pub const fn minute() -> Self {
 		Self(60, CompactString::new_inline("1 minute"))
@@ -190,8 +190,8 @@ impl Time {
 	#[inline]
 	/// ```rust
 	/// # use readable::Time;
-	/// assert!(Time::hour() == 3600_u64);
-	/// assert!(Time::hour() == "1 hour");
+	/// assert_eq!(Time::hour(), 3600_u64);
+	/// assert_eq!(Time::hour(), "1 hour");
 	/// ```
 	pub const fn hour() -> Self {
 		Self(3600, CompactString::new_inline("1 hour"))
@@ -200,8 +200,8 @@ impl Time {
 	#[inline]
 	/// ```rust
 	/// # use readable::Time;
-	/// assert!(Time::day() == 86400_u64);
-	/// assert!(Time::day() == "1 day");
+	/// assert_eq!(Time::day(), 86400_u64);
+	/// assert_eq!(Time::day(), "1 day");
 	/// ```
 	pub const fn day() -> Self {
 		Self(86400, CompactString::new_inline("1 day"))
@@ -210,8 +210,8 @@ impl Time {
 	#[inline]
 	/// ```rust
 	/// # use readable::Time;
-	/// assert!(Time::month() == 2630016_u64);
-	/// assert!(Time::month() == "1 month");
+	/// assert_eq!(Time::month(), 2630016_u64);
+	/// assert_eq!(Time::month(), "1 month");
 	/// ```
 	pub const fn month() -> Self {
 		Self(2630016, CompactString::new_inline("1 month"))
@@ -220,8 +220,8 @@ impl Time {
 	#[inline]
 	/// ```rust
 	/// # use readable::Time;
-	/// assert!(Time::year() == 31557600_u64);
-	/// assert!(Time::year() == "1 year");
+	/// assert_eq!(Time::year(), 31557600_u64);
+	/// assert_eq!(Time::year(), "1 year");
 	/// ```
 	pub const fn year() -> Self {
 		Self(31557600, CompactString::new_inline("1 year"))
@@ -265,15 +265,15 @@ impl From<u64> for Time {
 			return Self::zero()
 		}
 
-		let years = secs / 31_557_600;  // 365.25d
-		let ydays = secs % 31_557_600;
-		let months = ydays / 2_630_016;  // 30.44d
-		let mdays = ydays % 2_630_016;
-		let days = mdays / 86400;
+		let years    = secs / 31_557_600;  // 365.25d
+		let ydays    = secs % 31_557_600;
+		let months   = ydays / 2_630_016;  // 30.44d
+		let mdays    = ydays % 2_630_016;
+		let days     = mdays / 86400;
 		let day_secs = mdays % 86400;
-		let hours = day_secs / 3600;
-		let minutes = day_secs % 3600 / 60;
-		let seconds = day_secs % 60;
+		let hours    = day_secs / 3600;
+		let minutes  = day_secs % 3600 / 60;
+		let seconds  = day_secs % 60;
 
 		let started = &mut false;
 		let mut string = CompactString::with_capacity(8);
