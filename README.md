@@ -1,7 +1,7 @@
 # Readable
-![readable](https://github.com/hinto-janai/readable/assets/101352116/2b4c0c1b-c80e-4b7a-a8b9-b86375382db9)
-
 [![CI](https://github.com/hinto-janai/readable/actions/workflows/ci.yml/badge.svg)](https://github.com/hinto-janai/readable/actions/workflows/ci.yml) [![crates.io](https://img.shields.io/crates/v/readable.svg)](https://crates.io/crates/readable) [![docs.rs](https://docs.rs/readable/badge.svg)](https://docs.rs/readable)
+
+![readable](https://github.com/hinto-janai/readable/assets/101352116/2b4c0c1b-c80e-4b7a-a8b9-b86375382db9)
 
 Human **readable** string utilities.
 

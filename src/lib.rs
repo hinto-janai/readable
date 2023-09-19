@@ -50,8 +50,11 @@ pub(crate) mod macros;
 //mod constants;
 //pub use constants::*;
 
-mod headtail;
-pub use headtail::*;
+/// General string utilities
+pub mod str;
+pub use str::{
+	Str,HeadTail,
+};
 
 mod free;
 
@@ -61,7 +64,7 @@ pub use num::{
 	Unsigned,Int,Float,Percent,
 };
 
-/// Time formatting
+/// Time & date formatting
 pub mod time;
 pub use time::{
 	Date,Runtime,Time,
