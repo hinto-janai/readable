@@ -41,8 +41,10 @@
 
 //---------------------------------------------------------------------------------------------------- Hidden imports
 #[doc(hidden)]
+#[cfg(feature = "itoa")]
 pub use itoa as __readable_itoa;
 #[doc(hidden)]
+#[cfg(feature = "ryu")]
 pub use ryu as __readable_ryu;
 
 pub(crate) mod macros;

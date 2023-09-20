@@ -34,6 +34,7 @@
 /// assert_eq!(readable::itoa!(i128::MIN), "-170141183460469231731687303715884105728");
 /// ```
 #[macro_export]
+#[cfg(feature = "itoa")]
 macro_rules! itoa {
 	($integer:expr) => {{
 		$crate::__readable_itoa::Buffer::new().format($integer)
@@ -58,6 +59,7 @@ macro_rules! itoa {
 ///
 /// ## Example
 #[macro_export]
+#[cfg(feature = "ryu")]
 macro_rules! ryu {
 	($float:expr) => {{
 		#[cfg(feature = "ignore_nan_inf")]
@@ -78,6 +80,7 @@ mod tests {
 	use super::*;
 
 	#[test]
+	#[cfg(feature = "itoa")]
 	fn itoa() {
 		for i in 0..u16::MAX {
 			let s = format!("{i}");
@@ -87,6 +90,7 @@ mod tests {
 	}
 
 	#[test]
+	#[cfg(feature = "ryu")]
 	fn ryu() {
 		let i = 1111.1;
 		let s = format!("{i}");

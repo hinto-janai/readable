@@ -45,7 +45,7 @@ pub const UNKNOWN_DATE_BUFFER: [u8; 10] = [63, 63, 63, 63, 45, 63, 63, 45, 63, 6
 // 10 == Y.MM.DD || MM.DD.Y || DD.MM.Y
 
 // Number (+space) checker.
-static NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\d{4}|[0-9][0-9][0-9][0-9][0-9]+)$").unwrap());
+static NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\d{4}|[0-9][0-9][0-9][0-9]+)$").unwrap());
 
 // First `4` characters are a valid year.
 static YEAR: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}.*$").unwrap());
@@ -73,7 +73,7 @@ static DDMMY_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|30|
 
 // Separated - `YEAR MONTH DAY`
 static YM:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D[1-9].*$").unwrap());
-static YMM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D([0][1-9]|1[012]).*$").unwrap());
+static YMM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D(0[1-9]|1[012]).*$").unwrap());
 static YMD:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D[1-9]\D[1-9].*$").unwrap());
 static YMMD:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D(0[1-9]|1[012])\D[1-9].*$").unwrap());
 static YMDD:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D[1-9]\D(0[1-9]|[12][0-9]|30|31).*$").unwrap());
@@ -120,6 +120,7 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// [`Date`] differs from [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) in that:
 /// - It only allows years from `1000-9999`
 /// - It allows months and days to be truncated (e.g `2010` is a valid [`Date`])
+/// - It is _very_ lenient when parsing strings
 ///
 /// The inner "integer" type is a tuple of: `(u16, u8, u8)` representing the `(Year, Month, Day)`
 ///
@@ -128,6 +129,7 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// # use readable::Date;
 /// let a = Date::from_str("2020-12").unwrap();
 ///
+/// assert_eq!(a, "2020-12");
 /// assert_eq!(a, (2020, 12, 0));
 /// ```
 ///
@@ -152,32 +154,42 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// ## String parsing and format
 /// To parse an abitrary string into a [`Date`], use: [`Date::from_str`].
 ///
-/// Although [`Date`] will always internally be `YEAR-MONTH-DAY`, the input string can be any of these formats:
+/// Although [`Date`] will always internally be `YYYY-MM-DD`, the input string can be any of these formats:
 /// ```rust
 /// # use readable::Date;
 /// assert_eq!(Date::from_str("2022-12-31").unwrap(), "2022-12-31"); // YYYY-MM-DD
+/// assert_eq!(Date::from_str("2022-01-01").unwrap(), "2022-01-01"); // YYYY-M-D
 /// assert_eq!(Date::from_str("2022-12").unwrap(),    "2022-12");    // YYYY-MM
+/// assert_eq!(Date::from_str("2022-1").unwrap(),     "2022-01");    // YYYY-M
 /// assert_eq!(Date::from_str("2022").unwrap(),       "2022");       // YYYY
 /// assert_eq!(Date::from_str("12-31-2022").unwrap(), "2022-12-31"); // MM-DD-YYYY
+/// assert_eq!(Date::from_str("1-31-2022").unwrap(),  "2022-01-31"); // M-DD-YYYY
+/// assert_eq!(Date::from_str("12-1-2022").unwrap(),  "2022-12-01"); // MM-D-YYYY
+/// assert_eq!(Date::from_str("1-5-2022").unwrap(),   "2022-01-05"); // M-D-YYYY
 /// assert_eq!(Date::from_str("12-2022").unwrap(),    "2022-12");    // MM-YYYY
+/// assert_eq!(Date::from_str("1-2022").unwrap(),     "2022-01");    // M-YYYY
 /// assert_eq!(Date::from_str("31-12-2022").unwrap(), "2022-12-31"); // DD-MM-YYYY
+/// assert_eq!(Date::from_str("31-1-2022").unwrap(),  "2022-01-31"); // DD-M-YYYY
+///
+/// // This one is ambiguous, `Date` will always assume M-D-YYYY over D-M-YYYY
+/// assert_eq!(Date::from_str("3-1-2022").unwrap(), "2022-03-01");
 /// ```
 ///
 /// You can input a string that is _just_ numbers, or separated by a single byte, e.g:
 /// ```rust
 /// # use readable::Date;
 /// let dates = [
+///     Date::from_str("20201231").unwrap(),
 ///     Date::from_str("2020-12-31").unwrap(),
 ///     Date::from_str("2020/12/31").unwrap(),
 ///     Date::from_str("2020.12.31").unwrap(),
 ///     Date::from_str("2020_12_31").unwrap(),
 ///     Date::from_str("2020 12 31").unwrap(),
-///     Date::from_str("20201231").unwrap(),
 /// ];
 ///
 /// for date in dates {
-///     assert!(date == (2020, 12, 31));
-///     assert!(date == "2020-12-31");
+///     assert_eq!(date, (2020, 12, 31));
+///     assert_eq!(date, "2020-12-31");
 /// }
 /// ```
 /// **Warning:** be aware that many `UTF-8` characters are _not_ a single byte in length.
@@ -194,7 +206,6 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// // See further below for more examples.
 /// assert_eq!(Date::from_str("129000").unwrap(), "9000-01-02"); // MDYYYY
 /// ```
-
 ///
 /// Given an ambiguous date, the parsing function will prioritize:
 ///
@@ -243,7 +254,8 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// ```
 ///
 /// ## Trailing Characters
-/// [`Date`] is quite lenient, as it will ignore trailing characters in a string if there is a valid match in the first characters, for example:
+/// [`Date`] is very lenient when parsing strings, as it will ignore trailing
+/// characters if there is a valid match in the first characters, for example:
 /// ```rust
 /// # use readable::Date;
 /// // This is an invalid year (10,000), although the first 4 characters
@@ -255,26 +267,31 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// assert_eq!(Date::from_str("1000bad-data").unwrap(), "1000"); // but we can still parse it.
 /// ```
 ///
-/// This leniency causes [`Date`] to parses strings, even if it plainly looks incorrect (for convenience sake):
+/// This leniency causes [`Date`] to parse some incorrect strings,
+/// even if it plainly looks incorrect (for convenience sake):
 /// ```rust
 /// # use readable::Date;
 /// // trailing 0 is ignored, year 1000 is extracted
 /// let d1 = Date::from_str("10000").unwrap();
 /// // 32nd day is ignored, year.month is extracted
 /// let d2 = Date::from_str("2022.12.32").unwrap();
-/// // 32/32 is ignored, year is extracted
+/// // `2/32` is ignored, but `3` is a valid month,
+/// // so both the year & month 3 is extracted
 /// let d3 = Date::from_str("2000/32/32").unwrap();
+/// // random trailing data is ignored
+/// let d4 = Date::from_str("2000/12/25aaaaaa").unwrap();
 ///
 /// assert_eq!(d1, "1000");
-/// assert_eq!(d2, "2022.12");
-/// assert_eq!(d3, "2000");
+/// assert_eq!(d2, "2022-12");
+/// assert_eq!(d3, "2000-03");
+/// assert_eq!(d4, "2000-12-25");
 /// ```
 ///
 /// ## Inlining
 /// If the feature flag `inline_date` is enabled, inputs that are
 /// - In `YYYY-MM-DD` format
 /// - Range from year `1900-2100`
-/// 
+///
 /// will cause [`Date::from_str`] to match on inlined static bytes.
 ///
 /// **Warning:** This feature is disabled by default. While it increases speed,
@@ -517,22 +534,30 @@ impl Date {
 		}
 	}
 
+	#[inline]
 	#[allow(clippy::should_implement_trait)]
 	/// Parse arbitrary strings for a date.
 	///
 	/// If the complete date cannot be parsed, this function will
-	/// attempt to extract at least the year, e.g:
+	/// attempt to extract as much as it can, which may lead to
+	/// surprising results. Read [`Date`]'s documentation for more info.
+	///
+	/// Example:
 	/// ```rust
 	/// # use readable::Date;
+	/// // Parsed as `YYYY-M` (2022-9)
 	/// let a = Date::from_str("2022-99-99").unwrap();
+	/// // Parsed as `YYYY-MM` (2022-03)
 	/// let b = Date::from_str("2022-03-32").unwrap();
+	/// // Parsed as `YYYY-M` (2022-3)
 	/// let c = Date::from_str("2022-32-00").unwrap();
+	/// // Parsed as `YYYY` (2022)
 	/// let d = Date::from_str("2022-00-31").unwrap();
 	///
-	/// assert!(a == "2022");
-	/// assert!(b == "2022");
-	/// assert!(c == "2022");
-	/// assert!(d == "2022");
+	/// assert_eq!(a, (2022, 9, 0));
+	/// assert_eq!(b, (2022, 3, 0));
+	/// assert_eq!(c, (2022, 3, 0));
+	/// assert_eq!(d, (2022, 0, 0));
 	/// ```
 	///
 	/// If an [`Err`] is returned, it will contain a [`Date`]
@@ -549,6 +574,7 @@ impl Date {
 		Self::priv_from_str(string)
 	}
 
+	#[inline]
 	/// Same as [`Date::from_str`] but silently returns an [`UNKNOWN_DATE`]
 	/// on error that isn't wrapped in a [`Result::Err`].
 	pub fn from_str_silent(string: &str) -> Self {
@@ -558,7 +584,7 @@ impl Date {
 		}
 	}
 
-	#[inline(always)]
+	#[inline]
 	fn priv_from_str(string: &str) -> Result<Self, Self> {
 		let len = string.len();
 
@@ -731,6 +757,11 @@ impl Date {
 					let m = string[..2].parse::<u8>().unwrap();
 					let y = string[3..].parse::<u16>().unwrap();
 					return Ok(Self::priv_ym(y, m));
+				// Fallback, try to at least parse YEAR + MONTH or at least YEAR.
+				} else if YM.is_match(string) {
+					let y = string[..4].parse::<u16>().unwrap();
+					let m = string[5..6].parse::<u8>().unwrap();
+					return Ok(Self::priv_ym(y, m));
 				} else if YEAR.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					return Ok(Self::priv_y(y));
@@ -754,6 +785,15 @@ impl Date {
 					let m = string[2..3].parse::<u8>().unwrap();
 					let y = string[4..].parse::<u16>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
+				// Fallback, try to at least parse YEAR + MONTH or at least YEAR.
+				} else if YMM.is_match(string) {
+					let y = string[..4].parse::<u16>().unwrap();
+					let m = string[5..7].parse::<u8>().unwrap();
+					return Ok(Self::priv_ym(y, m));
+				} else if YM.is_match(string) {
+					let y = string[..4].parse::<u16>().unwrap();
+					let m = string[5..6].parse::<u8>().unwrap();
+					return Ok(Self::priv_ym(y, m));
 				} else if YEAR.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					return Ok(Self::priv_y(y));
@@ -791,6 +831,15 @@ impl Date {
 					let m = string[3..4].parse::<u8>().unwrap();
 					let y = string[5..].parse::<u16>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
+				// Fallback, try to at least parse YEAR + MONTH or at least YEAR.
+				} else if YMM.is_match(string) {
+					let y = string[..4].parse::<u16>().unwrap();
+					let m = string[5..7].parse::<u8>().unwrap();
+					return Ok(Self::priv_ym(y, m));
+				} else if YM.is_match(string) {
+					let y = string[..4].parse::<u16>().unwrap();
+					let m = string[5..6].parse::<u8>().unwrap();
+					return Ok(Self::priv_ym(y, m));
 				} else if YEAR.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					return Ok(Self::priv_y(y));
@@ -814,6 +863,15 @@ impl Date {
 					let m = string[3..5].parse::<u8>().unwrap();
 					let y = string[6..10].parse::<u16>().unwrap();
 					return Ok(Self::priv_ymd(y, m, d));
+				// Fallback, try to at least parse YEAR + MONTH or at least YEAR.
+				} else if YMM.is_match(string) {
+					let y = string[..4].parse::<u16>().unwrap();
+					let m = string[5..7].parse::<u8>().unwrap();
+					return Ok(Self::priv_ym(y, m));
+				} else if YM.is_match(string) {
+					let y = string[..4].parse::<u16>().unwrap();
+					let m = string[5..6].parse::<u8>().unwrap();
+					return Ok(Self::priv_ym(y, m));
 				} else if YEAR.is_match(string) {
 					let y = string[..4].parse::<u16>().unwrap();
 					return Ok(Self::priv_y(y));
@@ -829,7 +887,9 @@ impl Date {
 impl_traits!(Date, (u16, u8, u8));
 
 //---------------------------------------------------------------------------------------------------- Date Buffer.
-// "9999-12-31".len() == 10
+/// ```rust
+/// assert_eq!("9999-12-31".len(), 10);
+/// ```
 const MAX_BUF_LEN: usize = 10;
 
 buffer!(MAX_BUF_LEN, UNKNOWN_DATE_BUFFER, UNKNOWN_DATE.len());
