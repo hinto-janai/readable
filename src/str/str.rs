@@ -100,7 +100,7 @@ impl<const N: usize> Str<N> {
 	///
 	/// This should `==` to `N` in valid cases.
 	///
-	/// # Compile-time panic
+	/// ## Compile-time panic
 	/// This associated constant will cause [`Str`] constructor
 	/// functions to panic at compile time is `N > 255`.
 	pub const CAPACITY: u8 = {
@@ -111,7 +111,7 @@ impl<const N: usize> Str<N> {
 		}
 	};
 
-	/// Returns an empty [`Str`]
+	/// Returns an empty [`Str`].
 	///
 	/// ```rust
 	/// # use readable::Str;
@@ -131,45 +131,12 @@ impl<const N: usize> Str<N> {
 		}
 	}
 
-	/// Check this [`Str`] for correctness.
-	///
-	/// When constructing/receiving a [`Str`] outside of
-	/// its constructors, it may not be guaranteed that
-	/// the invariants are upheld.
-	///
-	/// This function will return `true` if:
-	/// - Internal length is greater than the internal byte array
-	/// - Inner byte array is longer than `255`
-	/// - `.as_str()` would return invalid UTF-8
-	///
-	/// ```rust
-	/// # use readable::Str;
-	/// // Create `Str` with maximum 5 length.
-	/// let mut string = Str::<5>::new();
-	/// assert_eq!(string.invalid(), false);
-	///
-	/// // Unsafely set the length to 10.
-	/// unsafe { string.set_len(10); }
-	/// // This string is now invalid.
-	/// assert_eq!(string.invalid(), true);
-	/// ```
-	pub fn invalid(&self) -> bool {
-		let len     = self.len as usize;
-		let buf_len = self.buf.len();
-
-		if {
-			len > buf_len ||
-			buf_len > 255 ||
-			std::str::from_utf8(&self.buf[..len]).is_err()
-		} {
-			return true;
-		}
-
-		false
-	}
-
 	/// Create a [`Self`] from static bytes.
 	///
+	/// The length of the input doesn't need to be the
+	/// same as `N`, it just needs to be equal or less.
+	///
+	/// Exact length:
 	/// ```rust
 	/// # use readable::Str;
 	/// const BYTES: [u8; 3] = *b"abc";
@@ -177,8 +144,17 @@ impl<const N: usize> Str<N> {
 	///
 	/// assert_eq!(STR, "abc");
 	/// ```
+	/// Slightly less length is okay too:
+	/// ```rust
+	/// # use readable::Str;
+	/// const BYTES: [u8; 2] = *b"ab";
+	/// const STR: Str<3> = Str::from_static_bytes(&BYTES);
 	///
-	/// # Errors
+	/// assert_eq!(STR.len(), 2);
+	/// assert_eq!(STR, "ab");
+	/// ```
+	///
+	/// # Compile-time panic
 	/// This function will panic at compile time if either:
 	/// - The `byte` length is longer than `N`
 	/// - The byte's are not valid UTF-8 bytes
@@ -218,15 +194,28 @@ impl<const N: usize> Str<N> {
 
 	/// Create a [`Self`] from a static [`str`].
 	///
+	/// The length of the input doesn't need to be the
+	/// same as `N`, it just needs to be equal or less.
+	///
+	/// Exact length:
 	/// ```rust
 	/// # use readable::Str;
-	/// const S: &str = "123";
-	/// const STR: Str<3> = Str::from_static_str(S);
+	/// const S: &str = "abc";
+	/// const STR: Str<3> = Str::from_static_str(&S);
 	///
-	/// assert_eq!(STR, "123");
+	/// assert_eq!(STR, "abc");
+	/// ```
+	/// Slightly less length is okay too:
+	/// ```rust
+	/// # use readable::Str;
+	/// const S: &str = "ab";
+	/// const STR: Str<3> = Str::from_static_str(&S);
+	///
+	/// assert_eq!(STR.len(), 2);
+	/// assert_eq!(STR, "ab");
 	/// ```
 	///
-	/// # Errors
+	/// ## Compile-time panic
 	/// This function will panic at compile time
 	/// if the [`str`] length is longer than `N`.
 	///
@@ -240,35 +229,142 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
-	/// Return all the bytes of this [`Str`], whether valid UTF-8 or not
+	/// Return all the bytes of this [`Str`], whether valid UTF-8 or not.
+	///
+	/// ``` rust
+	/// # use readable::Str;
+	/// let mut string = Str::<10>::new();
+	/// string.push_str("hello").unwrap();
+	///
+	/// // The string length is 5, but the slice
+	/// // returned is the full capacity, 10.
+	/// assert_eq!(string.as_slice().len(), 10);
+	/// ```
 	pub const fn as_slice(&self) -> &[u8] {
 		&self.buf.as_slice()
 	}
 
 	#[inline]
 	/// Return all the bytes of this [`Str`] (mutably), whether valid UTF-8 or not
-	fn as_mut_slice(&mut self) -> &mut [u8] {
+	///
+	/// ## Safety
+	/// The caller must ensure that the content of the slice is valid
+	/// UTF-8 before the borrow ends and the underlying [`Str`] is used.
+	///
+	/// The caller must also ensure the `len` is correctly set
+	/// with [`Str::set_len`] or [`Str::set_len_u8`].
+	///
+	/// ``` rust
+	/// # use readable::Str;
+	/// let mut string = Str::<5>::new();
+	/// string.push_str("hi").unwrap();
+	/// assert_eq!(string, "hi");
+	/// assert_eq!(string.len(), 2);
+	///
+	/// // Safety: We must ensure we leave
+	/// // leave the bytes as valid UTF-8 bytes
+	/// // and that we set the length correctly.
+	/// unsafe {
+	/// 	// Mutate to valid UTF-8 bytes.
+	/// 	let mut_ref = string.as_mut_slice();
+	/// 	mut_ref.copy_from_slice(&b"world"[..]);
+	/// 	// Set the new length.
+	/// 	string.set_len(5);
+	/// }
+	///
+	/// assert_eq!(string, "world");
+	/// assert_eq!(string.len(), 5);
+	/// ```
+	pub unsafe fn as_mut_slice(&mut self) -> &mut [u8] {
 		self.buf.as_mut_slice()
 	}
 
 	#[inline]
 	/// Return the length of the _valid_ UTF-8 bytes of this [`Str`]
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut s = Str::<5>::new();
+	/// s.push_str("h").unwrap();
+	/// assert_eq!(s.len(), 1_usize);
+	///
+	/// s.push_str("ello").unwrap();
+	/// assert_eq!(s.len(), 5_usize);
+	/// ```
 	pub const fn len(&self) -> usize {
 		self.len as usize
 	}
 
 	#[inline]
 	/// Return the length of the _valid_ UTF-8 bytes of this [`Str`] as a [`u8`]
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut s = Str::<5>::new();
+	/// s.push_str("h").unwrap();
+	/// assert_eq!(s.len_u8(), 1_u8);
+	///
+	/// s.push_str("ello").unwrap();
+	/// assert_eq!(s.len_u8(), 5_u8);
+	/// ```
 	pub const fn len_u8(&self) -> u8 {
 		self.len
 	}
 
 	#[inline]
+	/// Returns the maximum capacity (`Self::CAPACITY`) of this [`Str`].
+	///
+	/// Should be exactly equal to `N`.
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// //        This is N (usize)    This is CAPACITY (u8)
+	/// //               |           /       |
+	/// //               |           |       |
+	/// //               v           v       v
+	/// assert_eq!(Str::<10>::CAPACITY,  10_u8);
+	///
+	/// let s = Str::<10>::new();
+	/// assert_eq!(s.capacity(), 10_u8);
+	/// ```
+	pub const fn capacity(&self) -> u8 {
+		Self::CAPACITY
+	}
+
+	#[inline]
 	/// Set the length of the _valid_ UTF-8 bytes of this [`Str`]
 	///
-	/// # Safety
+	/// This will usually be used when manually mutating [`Str`] with [`Str::as_mut_slice()`].
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut s = Str::<3>::new();
+	/// assert_eq!(s.len(), 0);
+	///
+	/// unsafe { s.set_len(3); } // <- Using the `Str`
+	/// assert_eq!(s.len(), 3);  //    beyond this point
+	///                          //    is a bad idea.
+	///
+	/// // This wouldn't be undefined behavior,
+	/// // but the inner buffer is all zeros.
+	/// assert_eq!(s.as_str(), "\0\0\0");
+	///
+	/// // Overwrite the bytes.
+	/// unsafe {
+	/// 	let mut_ref = s.as_mut_slice();
+	/// 	mut_ref[0] = b'a';
+	/// 	mut_ref[1] = b'b';
+	/// 	mut_ref[2] = b'c';
+	/// }
+	/// // Should be safe from this point.
+	/// assert_eq!(s.as_str(), "abc");
+	/// assert_eq!(s.len(),    3);
+	/// ```
+	///
+	/// ## Safety
 	/// Other functions will rely on the internal length
-	/// to be correct, so this must be used correctly.
+	/// to be correct, so the caller must ensure this length
+	/// is actually correct.
 	pub unsafe fn set_len(&mut self, len: usize) {
 		self.len = len as u8;
 	}
@@ -276,78 +372,187 @@ impl<const N: usize> Str<N> {
 	#[inline]
 	/// Set the length of the _valid_ UTF-8 bytes of this [`Str`]
 	///
-	/// # Safety
+	/// This will usually be used when manually mutating [`Str`] with [`Str::as_mut_slice()`].
+	///
+	/// ## Safety
 	/// Other functions will rely on the internal length
-	/// to be correct, so this must be used correctly.
+	/// to be correct, so the caller must ensure this length
+	/// is actually correct.
 	pub unsafe fn set_len_u8(&mut self, len: u8) {
 		self.len = len;
 	}
 
 	#[inline]
 	/// How many available bytes are left in this [`Str`]
-	/// before the [`Self::Self::CAPACITY`] is completely filled
+	/// before the [`Self::CAPACITY`] is completely filled.
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut s = Str::<5>::new();
+	/// s.push_str("hi");
+	/// assert_eq!(s.remaining(), 3);
+	/// ```
 	pub fn remaining(&self) -> usize {
 		(Self::CAPACITY - self.len) as usize
 	}
 
 	#[inline]
-	/// Returns only the valid `UTF-8` bytes of this [`Str`] as a byte slice
+	/// Returns only the valid `UTF-8` bytes of this [`Str`] as a byte slice.
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// let s = Str::<10>::from_static_str("hello");
+	/// assert_eq!(s.as_valid_slice().len(), 5);
+	/// ```
 	pub fn as_valid_slice(&self) -> &[u8] {
 		&self.as_slice()[..self.len()]
 	}
 
 	#[inline]
 	/// Returns only the valid `UTF-8` bytes of this [`Str`] as a `Vec<u8>`
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// let s = Str::<10>::from_static_str("hello");
+	/// assert_eq!(s.into_valid_vec().len(), 5);
+	/// ```
 	pub fn into_valid_vec(self) -> Vec<u8> where Self: Sized {
-		// SAFETY: asd
 		self.as_valid_slice().to_vec()
 	}
 
-	#[inline]
-	/// Clears all bytes of this [`Str`]
-	pub fn clear(&mut self) {
-		// SAFETY: `.set_len()` must be correctly implemented.
-		unsafe { self.set_len(0); }
-		self.as_mut_slice().fill(0);
+	/// Check this [`Str`] for correctness.
+	///
+	/// When constructing/receiving a [`Str`] outside of
+	/// its constructors, it may not be guaranteed that
+	/// the invariants are upheld.
+	///
+	/// This function will return `true` if:
+	/// - Internal length is greater than the internal byte array
+	/// - Inner byte array is longer than `255`
+	/// - `.as_str()` would return invalid UTF-8
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// // Create `Str` with maximum 5 length.
+	/// let mut string = Str::<5>::new();
+	/// assert_eq!(string.invalid(), false);
+	///
+	/// // Unsafely set the length to 10.
+	/// unsafe { string.set_len(10); }
+	/// // This string is now invalid.
+	/// assert_eq!(string.invalid(), true);
+	/// ```
+	pub fn invalid(&self) -> bool {
+		let len     = self.len as usize;
+		let buf_len = self.buf.len();
+
+		if {
+			len > buf_len ||
+			buf_len > 255 ||
+			std::str::from_utf8(&self.buf[..len]).is_err()
+		} {
+			return true;
+		}
+
+		false
 	}
 
 	#[inline]
-	/// If this [`Str`] is empty
+	/// Clears all bytes of this [`Str`].
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// // Create a string.
+	/// let mut s = Str::<5>::from_static_str("hello");
+	/// assert_eq!(s, "hello");
+	///
+	/// // Clear the string.
+	/// s.clear();
+	/// assert_eq!(s, "");
+	/// assert!(s.empty());
+	/// ```
+	///
+	/// ## Safety
+	/// This does not actually mutate any bytes,
+	/// it simply sets the internal length to `0`.
+	///
+	/// Do not rely on this to clear the actual bytes.
+	pub fn clear(&mut self) {
+		// SAFETY: We are manually setting the length.
+		unsafe { self.set_len(0); }
+	}
+
+	#[inline]
+	/// If this [`Str`] is empty.
+	///
+	/// ``` rust
+	/// # use readable::Str;
+	/// let mut s = Str::<10>::new();
+	/// assert_eq!(s, "");
+	/// assert!(s.empty());
+	///
+	/// s.push_str("a").unwrap();
+	/// assert!(!s.empty());
+	/// ```
 	pub fn empty(&self) -> bool {
 		self.len == 0
 	}
 
 	#[inline]
-	/// If this [`Str`] is full (no more capacity left)
+	/// If this [`Str`] is full (no more capacity left).
+	///
+	/// ``` rust
+	/// # use readable::Str;
+	/// let mut s = Str::<3>::new();
+	/// assert_eq!(s.len(), 0);
+	/// assert!(!s.full());
+	///
+	/// s.push_str("123").unwrap();
+	/// assert_eq!(s.len(), 3);
+	/// assert!(s.full());
+	/// ```
 	pub fn full(&self) -> bool {
 		self.len == Self::CAPACITY
 	}
 
 	#[inline]
-	/// This [`Str`], as a valid UTF-8 [`str`]
+	/// This [`Str`], as a valid UTF-8 [`str`].
+	///
+	/// ``` rust
+	/// # use readable::Str;
+	/// let s = Str::<5>::from_static_str("hello");
+	/// assert_eq!(s.as_str(), "hello");
+	/// ```
 	pub fn as_str(&self) -> &str {
 		// SAFETY: `.as_valid_slice()` must be correctly implemented.
+		// The internal state must be correct.
 		unsafe { std::str::from_utf8_unchecked(self.as_valid_slice()) }
 	}
 
 	#[inline]
-	/// This [`Str`], as a valid UTF-8 [`String`]
-	pub fn to_string(&self) -> String {
-		self.as_str().to_string()
-	}
-
-	#[inline]
 	/// Consumes `self` into a [`String`]
+	/// ``` rust
+	/// # use readable::Str;
+	/// let s = Str::<5>::from_static_str("hello");
+	///
+	/// let s: String = s.into_string();
+	/// assert_eq!(s, "hello");
+	/// ```
 	pub fn into_string(self) -> String where Self: Sized {
-		// SAFETY: internal `buf/len` must be correct.
+		// SAFETY: The internal state must be correct.
 		unsafe { String::from_utf8_unchecked(self.into_valid_vec()) }
 	}
 
 	/// Overwrites `self` with the [`str`] `s`.
 	///
+	/// The input `s` must be the exact same length
+	/// as `N` or this function will error.
+	///
 	/// If the copy was successful, [`Result::Ok`] is returned with the new length of the string.
 	///
-	/// If the copy failed, [`Result::Err`] is returned with how many extra bytes couldn't fit.
+	/// If the copy failed because `s.len() > N`, [`Result::Err`] is returned with how many extra bytes couldn't fit.
+	///
+	/// If the copy failed because `s.len() != N`, [`Result::Err`] is returned as `Err(0)`.
 	///
 	/// ```rust
 	/// # use readable::Str;
@@ -356,6 +561,10 @@ impl<const N: usize> Str<N> {
 	/// // Input string is 4 in length, we can't copy it.
 	/// // There is 1 extra byte that can't fit.
 	/// assert_eq!(string.copy_str("abcd"), Err(1));
+	///
+	/// // Input string is 2 in length, not exactly 3.
+	/// // `Err(0)` will be returned to indicate this.
+	/// assert_eq!(string.copy_str("ab"), Err(0));
 	/// ```
 	pub fn copy_str(&mut self, s: impl AsRef<str>) -> Result<usize, usize> {
 		let s       = s.as_ref();
@@ -364,10 +573,15 @@ impl<const N: usize> Str<N> {
 
 		if s_len > N {
 			Err(s_len - N)
+		} else if s_len != N {
+			Err(0)
 		} else {
-			// SAFETY: `.set_len()` must be correctly implemented.
-			unsafe { self.set_len(s_len) };
-			self.as_mut_slice().copy_from_slice(&s_bytes[..s_len]);
+			// SAFETY: We are directly mutating the bytes and length.
+			// We know the correct values.
+			unsafe {
+				self.as_mut_slice().copy_from_slice(&s_bytes[..s_len]);
+				self.set_len(s_len);
+			}
 			Ok(s_len)
 		}
 	}
@@ -388,9 +602,9 @@ impl<const N: usize> Str<N> {
 	/// ```
 	///
 	/// # Panics
-	/// Instead of erroring, this function will panic if the input `s` is too long to fit.
-	/// Overwrites `self` with the [`str`] `s`.
+	/// Instead of erroring, this function will panic if the input `s.len() != N`.
 	///
+	/// Input too long:
 	/// ```rust,should_panic
 	/// # use readable::Str;
 	/// let mut string = Str::<3>::new();
@@ -398,21 +612,39 @@ impl<const N: usize> Str<N> {
 	/// // Input string is 5 in length, this will panic.
 	/// string.copy_str_unchecked("abcd");
 	/// ```
+	/// Input not long enough:
+	/// ```rust,should_panic
+	/// # use readable::Str;
+	/// let mut string = Str::<3>::new();
+	///
+	/// // Input string is 2 in length, this will panic.
+	/// string.copy_str_unchecked("ab");
+	/// ```
+	/// Input is just right:
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut string = Str::<3>::new();
+	/// string.copy_str_unchecked("abc");
+	/// assert_eq!(string, "abc")
+	/// ```
 	pub fn copy_str_unchecked(&mut self, s: impl AsRef<str>) -> usize {
 		let s       = s.as_ref();
 		let s_bytes = s.as_bytes();
 		let s_len   = s.len();
 
-		self.as_mut_slice().copy_from_slice(&s_bytes[..s_len]);
-		// SAFETY: `.set_len()` must be correctly implemented.
-		unsafe { self.set_len(s_len) };
+		// SAFETY: We are directly mutating the bytes and length.
+		// We know the correct values.
+		unsafe {
+			self.as_mut_slice().copy_from_slice(&s_bytes[..s_len]);
+			self.set_len(s_len);
+		}
 		s_len
 	}
 
 	/// Appends `self` with the [`str`] `s`.
 	///
 	/// If the push was successful (or `s` was empty),
-	/// [`Result::Ok`]is returned with the new length of the string.
+	/// [`Result::Ok`] is returned with the new length of the string.
 	///
 	/// If the push failed, [`Result::Err`] is returned
 	/// with how many extra bytes couldn't fit.
@@ -458,12 +690,72 @@ impl<const N: usize> Str<N> {
 			let self_len = self.len();
 			let new_len  = s_len + self.len();
 
-			// SAFETY: `.set_len()` must be correctly implemented.
-			unsafe { self.set_len(new_len) };
 
-			let self_slice = self.as_mut_slice();
-			self_slice[self_len..new_len].copy_from_slice(s_bytes);
+			// SAFETY: We are directly mutating the bytes and length.
+			// We know the correct values.
+			unsafe {
+				self.as_mut_slice()[self_len..new_len].copy_from_slice(s_bytes);
+				self.set_len(new_len);
+			}
 			Ok(new_len)
+		}
+	}
+	
+	/// Appends `self` with the [`str`] `s`.
+	///
+	/// If the push was successful (or `s` was empty),
+	/// a `usize` is returned, representing the new length of the string.
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut s = Str::<5>::new();
+	/// assert_eq!(s.push_str_unchecked("wow"), 3);
+	/// ```
+	///
+	/// ## Panics
+	/// If the push failed, this function panics.
+	///
+	/// Input string is `>` than capacity:
+	/// ```rust,should_panic
+	/// # use readable::Str;
+	/// let mut s = Str::<3>::new();
+	/// s.push_str_unchecked("abcd");
+	/// ```
+	///
+	/// [`Str`] has no more remaining capacity:
+	/// ```rust,should_panic
+	/// # use readable::Str;
+	/// let mut s = Str::<4>::from_static_str("wow");
+	/// assert_eq!(s.len(),       3);
+	/// assert_eq!(s.remaining(), 1);
+	///
+	/// // This won't fit, will panic.
+	/// s.push_str_unchecked("wow");
+	/// ```
+	pub fn push_str_unchecked(&mut self, s: impl AsRef<str>) -> usize {
+		let s       = s.as_ref();
+		let s_bytes = s.as_bytes();
+		let s_len   = s.len();
+
+		if s_len == 0 {
+			return self.len as usize;
+		}
+
+		let remaining = self.remaining();
+
+		if s_len > remaining {
+			panic!("no more space - remaining: {remaining}, input length: {s_len}");
+		} else {
+			let self_len = self.len();
+			let new_len  = s_len + self.len();
+
+			// SAFETY: We are directly mutating the bytes and length.
+			// We know the correct values.
+			unsafe {
+				self.as_mut_slice()[self_len..new_len].copy_from_slice(s_bytes);
+				self.set_len(new_len);
+			}
+			new_len
 		}
 	}
 }
@@ -504,7 +796,7 @@ impl<const N: usize> std::convert::TryFrom<&str> for Str<N> {
 	/// assert_eq!(Str::<3>::try_from("abcd"), Err(1));
 	/// ```
 	///
-	/// # Compile-time panic
+	/// ## Compile-time panic
 	/// This function will panic at compile time if `N > 255`.
 	/// ```rust,ignore
 	/// # use readable::Str;
