@@ -414,7 +414,11 @@ impl<const N: usize> Str<N> {
 	/// ```rust
 	/// # use readable::Str;
 	/// let s = Str::<10>::from_static_str("hello");
-	/// assert_eq!(s.into_valid_vec().len(), 5);
+	/// let v = s.into_valid_vec();
+	/// assert_eq!(v.len(), 5);
+	///
+	/// let s = unsafe { String::from_utf8_unchecked(v) };
+	/// assert_eq!(s, "hello");
 	/// ```
 	pub fn into_valid_vec(self) -> Vec<u8> where Self: Sized {
 		self.as_valid_slice().to_vec()
@@ -478,6 +482,31 @@ impl<const N: usize> Str<N> {
 	///
 	/// Do not rely on this to clear the actual bytes.
 	pub fn clear(&mut self) {
+		// SAFETY: We are manually setting the length.
+		unsafe { self.set_len(0); }
+	}
+
+	/// Zeros all bytes of this [`Str`] and sets the length to `0`
+	///
+	/// Unlike [`Str::clear()`], this actually sets all
+	/// the bytes in the internal array to `0`.
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// // Create a string.
+	/// let mut s = Str::<5>::from_static_str("hello");
+	/// assert_eq!(s, "hello");
+	///
+	/// // Zero the string.
+	/// s.zero();
+	/// assert_eq!(s, "");
+	/// assert!(s.empty());
+	/// ```
+	pub fn zero(&mut self) {
+		// should be a fast 0 memset.
+		// https://github.com/rust-lang/rfcs/issues/2067
+		self.buf.fill(0);
+
 		// SAFETY: We are manually setting the length.
 		unsafe { self.set_len(0); }
 	}
