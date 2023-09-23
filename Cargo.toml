@@ -15,8 +15,12 @@ all-features = true
 rustc-args = ["--cfg", "docsrs"]
 
 [features]
-default        = ["itoa", "ryu"]
-full           = ["serde", "bincode", "ignore_nan_inf", "inline_date", "inline_time", "inline_runtime"]
+default        = ["str", "num", "time", "toa"]
+full           = ["serde", "bincode"]
+str            = []
+num            = []
+time           = []
+toa            = []
 ignore_nan_inf = []
 inline_date    = ["readable-inlined-date"]
 inline_time    = ["readable-inlined-time"]
@@ -26,8 +30,6 @@ inline_runtime = ["readable-inlined-runtime"]
 [dependencies]
 paste       = "1.0.14"
 seq-macro   = "0.3.5"
-itoa        = { version = "1.0.9", optional = true }
-ryu         = { version = "1.0.15", optional = true }
 compact_str = { version = "0.7.1", features = ["bytes", "serde"] }
 regex       = { version = "1.9.5" }
 serde       = { version = "1.0.188", features = ["derive"], optional = true }

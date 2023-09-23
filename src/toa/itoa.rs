@@ -10,15 +10,12 @@
     clippy::unreadable_literal
 )]
 
-use crate::fast::udiv128;
+use crate::toa::udiv128;
 
 use core::mem::{self, MaybeUninit};
 use core::{ptr, slice, str};
 use std::borrow::Borrow;
 use std::fmt::write;
-
-#[cfg(feature = "no-panic")]
-use no_panic::no_panic;
 
 //---------------------------------------------------------------------------------------------------- Itoa
 /// Fast integer to string conversion
@@ -44,8 +41,6 @@ use no_panic::no_panic;
 /// ```
 ///
 /// ## Size
-/// [`Itoa`] is `42` bytes.
-///
 /// ```rust
 /// assert_eq!(std::mem::size_of::<readable::Itoa>(), 42);
 /// ```
@@ -123,6 +118,132 @@ impl Itoa {
 	}
 }
 
+//---------------------------------------------------------------------------------------------------- ItoaTmp
+/// A short-lived version of [`Itoa`]
+///
+/// This version doesn't save the formatting
+/// computation, and is meant for cases where the
+/// lifetime of the formatted output [`&str`] is very brief.
+///
+/// This version has less overhead, but the string
+/// must be formatted everytime you need it.
+///
+/// See [`crate::itoa!()`] for a quick 1-line format macro.
+///
+/// ```rust
+/// # use readable::ItoaTmp;
+/// assert_eq!(ItoaTmp::new().format(10), "10");
+/// ```
+///
+/// You could keep a [`ItoaTmp`] around to use it
+/// as a factory to keep formatting new strings,
+/// as it will reuse the inner buffer:
+/// ```rust
+/// # use readable::ItoaTmp;
+/// let mut itoa = ItoaTmp::new();
+///
+/// assert_eq!(itoa.format(10), "10");
+/// assert_eq!(itoa.format(20), "20");
+/// assert_eq!(itoa.format(30), "30");
+/// ```
+///
+/// ## Size
+/// ```rust
+/// assert_eq!(std::mem::size_of::<readable::ItoaTmp>(), 40);
+/// ```
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[derive(Copy, Clone, Debug)]
+pub struct ItoaTmp {
+	bytes: [MaybeUninit<u8>; I128_MAX_LEN],
+}
+
+impl ItoaTmp {
+	#[inline]
+	/// Create a new [`ItoaTmp`].
+	pub const fn new() -> Self {
+		Self { bytes: [MaybeUninit::<u8>::uninit(); I128_MAX_LEN] }
+	}
+
+	/// Format an [`Integer`] into a [`&str`] with an existing [`ItoaTmp`]
+	///
+	/// ```rust
+	/// # use readable::ItoaTmp;
+	/// // We can cheaply reuse this.
+	/// let mut itoa = ItoaTmp::new();
+	///
+	/// assert_eq!(itoa.format(1),    "1");
+	/// assert_eq!(itoa.format(10),   "10");
+	/// assert_eq!(itoa.format(100),  "100");
+	/// assert_eq!(itoa.format(1000), "1000");
+	/// ```
+	pub fn format<I: Integer>(&mut self, integer: I) -> &str {
+		// Safety: I trust dtolnay
+        let (len, offset) = integer.write(unsafe {
+            &mut *(&mut self.bytes as *mut [MaybeUninit<u8>; I128_MAX_LEN]
+                as *mut <I as private::Sealed>::Itoa)
+        });
+		unsafe {
+			let slice = slice::from_raw_parts(
+				self.bytes.as_ptr().offset(offset) as *const u8,
+				len,
+			);
+			std::str::from_utf8_unchecked(slice)
+		}
+	}
+}
+
+/// Quickly format an integer to a [`&str`]
+///
+/// This creates an [`ItoaTmp`] from an [`Integer`], returns the output [`&str`], and immediately goes out of scope.
+///
+/// The function signature would look something like:
+/// ```rust,ignore
+/// fn itoa<I: Integer>(integer: I) -> &'tmp str
+/// where
+/// 	'tmp: FreedAtEndOfStatement
+/// ```
+///
+/// [`ItoaTmp`] is created and immediately dropped, thus it cannot be stored:
+/// ```rust,ignore
+/// # use readable::itoa;
+/// let x = itoa!(10);
+///         ^^^^^^^^^- temporary value is freed at the end of this statement
+///
+/// assert_eq!(x, "10");
+/// ------------------- compile error: borrow later used here
+/// ```
+///
+/// You must use the [`&str`] in 1 single statement:
+/// ```rust
+/// # use readable::itoa;
+/// assert_eq!(itoa!(10), "10"); // ok
+///
+/// if itoa!(10) == "10" {
+/// 	// ok
+/// }
+///
+/// // ok
+/// let string: String = itoa!(10).to_string();
+/// assert_eq!(string, "10");
+/// ```
+///
+/// The macro expands to `ItoaTmp::new().format(x)`:
+/// ```rust
+/// # use readable::itoa;
+/// // These are the same.
+///
+/// itoa!(10);
+///
+/// readable::ItoaTmp::new().format(10);
+/// ```
+#[macro_export]
+macro_rules! itoa {
+	($into_dtoa:expr) => {{
+		$crate::ItoaTmp::new().format($into_dtoa)
+	}};
+}
+
 //---------------------------------------------------------------------------------------------------- Itoa Traits
 impl std::ops::Deref for Itoa {
 	type Target = str;
@@ -176,6 +297,20 @@ impl std::fmt::Display for Itoa {
 
 //---------------------------------------------------------------------------------------------------- Integer
 /// An integer that can be written into an [`Itoa`].
+///
+/// ```rust
+/// # use readable::Itoa;
+/// let itoa = Itoa::new(-2147483648_i64);
+/// assert_eq!(itoa, "-2147483648");
+///
+/// // NonZero types work too.
+/// let itoa = Itoa::new(std::num::NonZeroU32::new(1000).unwrap());
+/// assert_eq!(itoa, "1000");
+///
+/// // ⚠️ Manual lossy conversion.
+///	let itoa = Itoa::new(134.425 as u8);
+/// assert_eq!(itoa, "134"); // decimal truncated
+/// ```
 pub trait Integer: private::Sealed {}
 
 // Seal to prevent downstream implementations of the Integer trait.
@@ -205,7 +340,6 @@ macro_rules! impl_Integer {
 
             #[allow(unused_comparisons)]
             #[inline]
-            #[cfg_attr(feature = "no-panic", no_panic)]
             fn write(self, buf: &mut [MaybeUninit<u8>; $max_len]) -> (usize, isize) {
                 let is_nonnegative = self >= 0;
                 let mut n = if is_nonnegative {
@@ -268,6 +402,22 @@ macro_rules! impl_Integer {
     )*};
 }
 
+macro_rules! impl_non_zero {
+	($($max_len:expr => $t:ident => $inner:ty),*) => {$(
+		impl Integer for $t {}
+
+        impl private::Sealed for $t {
+            type Itoa = [MaybeUninit<u8>; $max_len];
+
+            #[allow(unused_comparisons)]
+            #[inline]
+            fn write(self, buf: &mut [MaybeUninit<u8>; $max_len]) -> (usize, isize) {
+				private::Sealed::write(self.get(), buf)
+			}
+		}
+	)*};
+}
+
 const I8_MAX_LEN: usize = 4;
 const U8_MAX_LEN: usize = 3;
 const I16_MAX_LEN: usize = 6;
@@ -288,14 +438,44 @@ impl_Integer!(
 
 impl_Integer!(I64_MAX_LEN => i64, U64_MAX_LEN => u64 as u64);
 
+use std::num::{
+	NonZeroI8,
+	NonZeroU8,
+	NonZeroI16,
+	NonZeroU16,
+	NonZeroI32,
+	NonZeroU32,
+	NonZeroI64,
+	NonZeroU64,
+	NonZeroI128,
+	NonZeroU128,
+	NonZeroIsize,
+	NonZeroUsize,
+};
+
+impl_non_zero! {
+    I8_MAX_LEN  => NonZeroI8  => i8,
+    U8_MAX_LEN  => NonZeroU8  => u8,
+    I16_MAX_LEN => NonZeroI16 => i16,
+    U16_MAX_LEN => NonZeroU16 => u16,
+    I32_MAX_LEN => NonZeroI32 => i32,
+    U32_MAX_LEN => NonZeroU32 => u32
+}
+
 #[cfg(target_pointer_width = "16")]
 impl_Integer!(I16_MAX_LEN => isize, U16_MAX_LEN => usize as u16);
+#[cfg(target_pointer_width = "16")]
+impl_non_zero!(I16_MAX_LEN => NonZeroIsize => i16, U16_MAX_LEN => NonZeroUsize => u16);
 
 #[cfg(target_pointer_width = "32")]
 impl_Integer!(I32_MAX_LEN => isize, U32_MAX_LEN => usize as u32);
+#[cfg(target_pointer_width = "32")]
+impl_non_zero!(I32_MAX_LEN => NonZeroIsize => i32, U32_MAX_LEN => NonZeroUsize => u32);
 
 #[cfg(target_pointer_width = "64")]
 impl_Integer!(I64_MAX_LEN => isize, U64_MAX_LEN => usize as u64);
+#[cfg(target_pointer_width = "64")]
+impl_non_zero!(I64_MAX_LEN => NonZeroIsize => i64, U64_MAX_LEN => NonZeroUsize => u64);
 
 macro_rules! impl_Integer128 {
     ($($max_len:expr => $t:ident),*) => {$(
@@ -306,7 +486,6 @@ macro_rules! impl_Integer128 {
 
             #[allow(unused_comparisons)]
             #[inline]
-            #[cfg_attr(feature = "no-panic", no_panic)]
             fn write(self, buf: &mut [MaybeUninit<u8>; $max_len]) -> (usize, isize) {
                 let is_nonnegative = self >= 0;
                 let n = if is_nonnegative {
@@ -365,6 +544,7 @@ const U128_MAX_LEN: usize = 39;
 const I128_MAX_LEN: usize = 40;
 
 impl_Integer128!(I128_MAX_LEN => i128, U128_MAX_LEN => u128);
+impl_non_zero!(I128_MAX_LEN => NonZeroI128 => i128, U128_MAX_LEN => NonZeroU128 => u128);
 
 //---------------------------------------------------------------------------------------------------- TESTS
 #[cfg(test)]

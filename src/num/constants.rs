@@ -28,8 +28,6 @@ pub(super) const MAX_BUF_LEN: usize = 26;
 pub const COMMA: u8 = b',';
 
 /// The string returned when encountering a [`f32::NAN`] or [`f64::NAN`]
-/// ```rust
-/// ```
 pub const NAN: &str = "NaN";
 
 /// The string returned when encountering an `INFINITY` variant of an `f32/f64`.

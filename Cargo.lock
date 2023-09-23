@@ -114,14 +114,12 @@ version = "0.10.0"
 dependencies = [
  "bincode",
  "compact_str",
- "itoa",
  "once_cell",
  "paste",
  "readable-inlined-date",
  "readable-inlined-runtime",
  "readable-inlined-time",
  "regex",
- "ryu",
  "seq-macro",
  "serde",
 ]

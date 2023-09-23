@@ -3,14 +3,16 @@
 
 ![readable](https://github.com/hinto-janai/readable/assets/101352116/2b4c0c1b-c80e-4b7a-a8b9-b86375382db9)
 
-Human **readable** string utilities.
+Human **readable** strings.
 
-`readable`:
+This library:
 - Transforms various data types into human-readable strings
-- Parses "raw" string data into human-readable versions
+- Parses raw string data into human-readable versions
 - Provides various string types and utilities
 
-Most of the strings are implemented as fixed length, stack allocated arrays that are [`Copy`](https://doc.rust-lang.org/stable/std/marker/trait..html)-able.
+All of the strings are implemented as fixed length, stack allocated arrays that are [`Copy`](https://doc.rust-lang.org/stable/std/marker/trait..html)-able.
+
+In general, `readable` types are often used where you need to quickly format some data into a more human-friendly string, display it, then throw it away (although most `readable` types are perfectly fine to permanently store).
 
 Creation of `readable` types is relatively performant.
 
@@ -59,7 +61,8 @@ assert_eq!(a, "2014-12-31");
 ```
 
 ## Comparison
-All types implement `std::fmt::Display`, and `PartialEq` against `str` and numbers.
+All number types implement `PartialEq` against `str` and their internal numbers.
+
 This is comparing `b`'s inner `String`:
 ```rust
 let a = std::time::Duration::from_secs(86399);
@@ -78,8 +81,8 @@ let b = readable::Unsigned::from(1000_u64);
 assert_eq!(a, b);
 ```
 
-## Math
-Most types implement the common math operators `+`, `-`, `/`, `*`, `%`, outputting a new `Self`.
+## Arithmetic
+All number types implement the common arithmetic operators `+`, `-`, `/`, `*`, `%`, outputting a new `Self`.
 #### `+` Addition
 ```rust
 let f1 = readable::Float::from(1.0);
@@ -113,11 +116,26 @@ assert_eq!(u10 % u10, 0);
 | Flag             | Purpose |
 |------------------|---------|
 | `serde`          | Enables [`serde`](https://docs.rs/serde) on all types
-| `bincode`        | Enables [`bincode 2.0.0`](https://docs.rs/bincode/2.0.0-rc.3/bincode/index.html)'s `Encode/Decode` on all types
-| `ignore_nan_inf` | Disables checking `f64`'s for `f64::NAN`, `f64::INFINITY`, and `f64::NEG_INFINITY`
+| `bincode`        | Enables [`bincode 2.0.0-rc.3`](https://docs.rs/bincode/2.0.0-rc.3/bincode/index.html)'s `Encode/Decode` on all types
 | `inline_date`    | Inlines any `Date` parsing that is in `YYYY-MM-HH` format and is between year `1900-2100`
 | `inline_time`    | Inlines any `Time` parsing that is under `1 hour, 1 minute` (`0..=3660`)
 | `inline_runtime` | Inlines ALL `Runtime` parsing (`0:00..99:59:59`/`0..=359999`)
 | `full`           | Enables everything above
 
 **Warning:** The `inline_*` features are disabled by default. While they increase performance (in most cases, you should test!), they also _heavily_ increase build time and binary size.
+
+## Re-Exports
+Types are separated per module depending on what type of data they take as input, and what type of data they output.
+```rust
+use readable::num::{ // Number formatting
+	Unsigned, // Formats u8, u16, u32, etc...
+	Int,      // Formats i8, i16, i32, etc...
+};
+```
+
+All major types are exported to the root, so they can be imported without specifiying the full path:
+```rust,ignore
+use readable::HeadTail; // shorter, preferred.
+
+use readable::str::HeadTail; // longer
+```

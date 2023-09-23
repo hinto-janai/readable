@@ -23,8 +23,6 @@
 use core::mem::{self, MaybeUninit};
 use core::slice;
 use core::str;
-#[cfg(feature = "no-panic")]
-use no_panic::no_panic;
 
 //----------------------------------------------------------------------------------------------------
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -56,8 +54,6 @@ use no_panic::no_panic;
 // the License.
 
 use core::ptr;
-#[cfg(feature = "no-panic")]
-use no_panic::no_panic;
 
 /*
 inline unsigned CountDecimalDigit32(uint32_t n) {
@@ -78,7 +74,6 @@ inline unsigned CountDecimalDigit32(uint32_t n) {
 */
 
 #[inline]
-#[cfg_attr(feature = "no-panic", no_panic)]
 fn count_decimal_digit32(n: u32) -> usize {
     if n < 10 {
         1
@@ -130,7 +125,6 @@ inline char* WriteExponent(int K, char* buffer) {
 */
 
 #[inline]
-#[cfg_attr(feature = "no-panic", no_panic)]
 unsafe fn write_exponent(mut k: isize, mut buffer: *mut u8) -> *mut u8 {
     if k < 0 {
         *buffer = b'-';
@@ -160,7 +154,6 @@ inline char* Prettify(char* buffer, int length, int k, int maxDecimalPlaces) {
 */
 
 #[inline]
-#[cfg_attr(feature = "no-panic", no_panic)]
 unsafe fn prettify(buffer: *mut u8, length: isize, k: isize) -> *mut u8 {
     let kk = length + k; // 10^(kk-1) <= v < 10^kk
 
@@ -309,7 +302,7 @@ unsafe fn prettify(buffer: *mut u8, length: isize, k: isize) -> *mut u8 {
     }
 }
 
-macro_rules! dtoa {
+macro_rules! dtoa_inner {
     (
         floating_type: $fty:ty,
         significand_type: $sigty:ty,
@@ -335,7 +328,7 @@ macro_rules! dtoa {
         */
 
         #[inline]
-        #[cfg_attr(feature = "no-panic", no_panic)]
+    
         unsafe fn grisu_round(buffer: *mut u8, len: isize, delta: $sigty, mut rest: $sigty, ten_kappa: $sigty, wp_w: $sigty) {
             while rest < wp_w && delta - rest >= ten_kappa &&
                 (rest + ten_kappa < wp_w || // closer
@@ -358,7 +351,7 @@ macro_rules! dtoa {
 
         // Returns length and k.
         #[inline]
-        #[cfg_attr(feature = "no-panic", no_panic)]
+    
         unsafe fn digit_gen(w: DiyFp, mp: DiyFp, mut delta: $sigty, buffer: *mut u8, mut k: isize) -> (isize, isize) {
             static POW10: [$sigty; 10] = [ 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 ];
             let one = DiyFp::new(1 << -mp.e, mp.e);
@@ -487,7 +480,7 @@ macro_rules! dtoa {
 
         // Returns length and k.
         #[inline]
-        #[cfg_attr(feature = "no-panic", no_panic)]
+    
         unsafe fn grisu2(value: $fty, buffer: *mut u8) -> (isize, isize) {
             let v = DiyFp::from(value);
             let (w_m, w_p) = v.normalized_boundaries();
@@ -526,7 +519,7 @@ macro_rules! dtoa {
         */
 
         #[inline]
-        #[cfg_attr(feature = "no-panic", no_panic)]
+    
         unsafe fn dtoa(buf: &mut [MaybeUninit<u8>; 25], mut value: $fty) -> &str {
             if value == 0.0 {
                 if value.is_sign_negative() {
@@ -559,8 +552,7 @@ const NEG_INFINITY: &str = "-inf";
 //---------------------------------------------------------------------------------------------------- Dtoa
 /// Fast float to string conversion
 ///
-/// This struct represents a stack-based string converted from an [`Float`]
-/// ([`f32`] & [`f64`]).
+/// This struct represents a stack-based string converted from an [`IntoDtoa`] (number).
 ///
 /// It internally uses [`dtoa`](https://docs.rs/dtoa) by `dtolnay`,
 /// however [`Dtoa`] stores the string computation and can be turned into a [`&str`]
@@ -572,16 +564,14 @@ const NEG_INFINITY: &str = "-inf";
 /// ## Example
 /// ```rust
 /// # use readable::Dtoa;
-/// let dtoa = Dtoa::new(1000.0);
-/// assert_eq!(dtoa, "1000.0");
+/// let dtoa = Dtoa::new(0.0);
+/// assert_eq!(dtoa, "0.0");
 ///
 /// let copy = dtoa;
 /// assert_eq!(dtoa.as_str(), copy.as_str());
 /// ```
 ///
 /// ## Size
-/// [`Dtoa`] is `26` bytes.
-///
 /// ```rust
 /// assert_eq!(std::mem::size_of::<readable::Dtoa>(), 26);
 /// ```
@@ -603,7 +593,7 @@ impl Default for Dtoa {
 impl Dtoa {
 	/// Create a new [`Dtoa`].
 	///
-	/// Takes any [`Float`] ([`f32`], [`f64`]).
+	/// Takes any [`IntoDtoa`] ([`f32`], [`f64`]).
 	///
 	/// This function will properly format non-finite floats.
 	///
@@ -622,11 +612,11 @@ impl Dtoa {
 	/// let dtoa = Dtoa::new(f64::NEG_INFINITY);
 	/// assert_eq!(dtoa, "-inf");
 	/// ```
-	#[cfg_attr(feature = "no-panic", no_panic)]
-    pub fn new<F: Float>(float: F) -> Self {
-        if float.is_nonfinite() {
+
+    pub fn new<N: IntoDtoa>(num: N) -> Self {
+        if num.is_nonfinite() {
 			let mut bytes = [MaybeUninit::<u8>::uninit(); 25];
-            let string = float.format_nonfinite();
+            let string = num.format_nonfinite();
 			for (i, byte) in string.as_bytes().into_iter().enumerate() {
 				bytes[i].write(*byte);
 			}
@@ -635,13 +625,13 @@ impl Dtoa {
 				bytes,
 			}
         } else {
-            Self::new_finite(float)
+            Self::new_finite(num)
         }
     }
 
 	/// Create a new [`Dtoa`].
 	///
-	/// Takes any [`Float`] ([`f32`], [`f64`]).
+	/// Takes any [`IntoDtoa`].
 	///
 	/// This function **will not** properly format non-finite floats.
 	///
@@ -663,12 +653,19 @@ impl Dtoa {
 	/// let dtoa = Dtoa::new_finite(f64::NEG_INFINITY);
 	/// assert_eq!(dtoa, "-1.797693134862316e308");
 	/// ```
-	#[cfg_attr(feature = "no-panic", no_panic)]
-    pub fn new_finite<F: Float>(float: F) -> Self {
+
+    pub fn new_finite<N: IntoDtoa>(num: N) -> Self {
+		let mut input = [MaybeUninit::<u8>::uninit(); 25];
+		let string = num.write(&mut input);
+
 		let mut bytes = [MaybeUninit::<u8>::uninit(); 25];
-		let len = float.write(&mut bytes).len() as u8;
+
+		for (i, byte) in string.as_bytes().into_iter().enumerate() {
+			bytes[i].write(*byte);
+		}
+
 		Self {
-			len,
+			len: string.len() as u8,
 			bytes,
 		}
     }
@@ -692,6 +689,158 @@ impl Dtoa {
 			std::str::from_utf8_unchecked(slice)
 		}
 	}
+}
+
+//---------------------------------------------------------------------------------------------------- DtoaTmp
+/// A short-lived version of [`Dtoa`]
+///
+/// This version doesn't save the formatting
+/// computation, and is meant for cases where the
+/// lifetime of the formatted output [`&str`] is very brief.
+///
+/// This version has less overhead, but the string
+/// must be formatted everytime you need it.
+///
+/// See [`crate::dtoa!()`] for a quick 1-line format macro.
+///
+/// ```rust
+/// # use readable::DtoaTmp;
+/// assert_eq!(DtoaTmp::new().format(1.0), "1.0");
+/// ```
+///
+/// You could keep a [`DtoaTmp`] around to use it
+/// as a factory to keep formatting new strings,
+/// as it will reuse the inner buffer:
+/// ```rust
+/// # use readable::DtoaTmp;
+/// let mut dtoa = DtoaTmp::new();
+///
+/// assert_eq!(dtoa.format(1.0), "1.0");
+/// assert_eq!(dtoa.format(2.0), "2.0");
+/// assert_eq!(dtoa.format(3.0), "3.0");
+/// ```
+///
+/// ## Size
+/// ```rust
+/// assert_eq!(std::mem::size_of::<readable::DtoaTmp>(), 25);
+/// ```
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[derive(Copy, Clone, Debug)]
+pub struct DtoaTmp {
+	bytes: [MaybeUninit<u8>; 25],
+}
+
+impl DtoaTmp {
+	/// Create a new [`DtoaTmp`].
+	#[inline]
+	pub const fn new() -> Self {
+		Self { bytes: [MaybeUninit::<u8>::uninit(); 25] }
+	}
+
+	/// Format an [`IntoDtoa`] into a [`&str`] with an existing [`DtoaTmp`]
+	///
+	/// This function will properly format non-finite floats.
+	///
+	/// See [`DtoaTmp::format_finite()`] if you know your float is finite
+	/// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
+	///
+	/// ```rust
+	/// # use readable::DtoaTmp;
+	/// // We can cheaply reuse this.
+	/// let mut dtoa = DtoaTmp::new();
+	///
+	/// assert_eq!(dtoa.format(18.425),  "18.425");
+	/// assert_eq!(dtoa.format(19.0918), "19.0918");
+	/// assert_eq!(dtoa.format(1.0),     "1.0");
+	///
+	/// assert_eq!(dtoa.format(f32::NAN),          "NaN");
+	/// assert_eq!(dtoa.format(f32::INFINITY),     "inf");
+	/// assert_eq!(dtoa.format(f32::NEG_INFINITY), "-inf");
+	/// ```
+	pub fn format<N: IntoDtoa>(&mut self, num: N) -> &str {
+		if num.is_nonfinite() {
+			num.format_nonfinite()
+		} else {
+			num.write(&mut self.bytes)
+		}
+	}
+
+	#[inline]
+	/// Format an [`IntoDtoa`] into a [`&str`] with an existing [`DtoaTmp`]
+	///
+	/// This function **will not** properly format non-finite floats.
+	///
+	/// See [`DtoaTmp::format()`] for non-finite float formatting
+	/// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
+	///
+	/// ```rust
+	/// # use readable::DtoaTmp;
+	/// // We can cheaply reuse this.
+	/// let mut dtoa = DtoaTmp::new();
+	///
+	/// assert_eq!(dtoa.format_finite(18.425),  "18.425");
+	/// assert_eq!(dtoa.format_finite(19.0918), "19.0918");
+	///
+	/// // This is safe, but the output strings will be incorrect.
+	/// assert_eq!(dtoa.format_finite(f64::NAN),          "2.696539702293474e308");
+	/// assert_eq!(dtoa.format_finite(f64::INFINITY),     "1.797693134862316e308");
+	/// assert_eq!(dtoa.format_finite(f64::NEG_INFINITY), "-1.797693134862316e308");
+	/// ```
+	pub fn format_finite<N: IntoDtoa>(&mut self, num: N) -> &str {
+		num.write(&mut self.bytes)
+	}
+}
+
+#[macro_export]
+/// Quickly format a float to a [`&str`]
+///
+/// This creates a [`DtoaTmp`] from an [`IntoDtoa`], returns the output [`&str`], and immediately goes out of scope.
+///
+/// The function signature would look something like:
+/// ```rust,ignore
+/// fn dtoa<N: IntoDtoa>(num: N) -> &'tmp str
+/// where
+/// 	'tmp: FreedAtEndOfStatement
+/// ```
+///
+/// [`DtoaTmp`] is created and immediately dropped, thus it cannot be stored:
+/// ```rust,ignore
+/// # use readable::dtoa;
+/// let x = dtoa!(1.0);
+///         ^^^^^^^^^^- temporary value is freed at the end of this statement
+///
+/// assert_eq!(x, "1.0");
+/// -------------------- compile error: borrow later used here
+/// ```
+///
+/// You must use the [`&str`] in 1 single statement:
+/// ```rust
+/// # use readable::dtoa;
+/// assert_eq!(dtoa!(1.0), "1.0"); // ok
+///
+/// if dtoa!(f32::NAN) == "NaN" {
+/// 	// ok
+/// }
+///
+/// // ok
+/// let string: String = dtoa!(f32::INFINITY).to_string();
+/// assert_eq!(string, "inf");
+/// ```
+///
+/// The macro expands to `DtoaTmp::new().format(x)`:
+/// ```rust
+/// # use readable::dtoa;
+/// // These are the same.
+///
+/// dtoa!(1.0);
+///
+/// readable::DtoaTmp::new().format(1.0);
+/// ```
+macro_rules! dtoa {
+	($into_dtoa:expr) => {{
+		$crate::DtoaTmp::new().format($into_dtoa)
+	}};
 }
 
 //---------------------------------------------------------------------------------------------------- Dtoa Traits
@@ -733,7 +882,7 @@ impl PartialEq<String> for Dtoa {
 	}
 }
 
-impl<T: Float> std::convert::From<T> for Dtoa {
+impl<T: IntoDtoa> std::convert::From<T> for Dtoa {
 	fn from(float: T) -> Self {
 		Self::new(float)
 	}
@@ -745,14 +894,84 @@ impl std::fmt::Display for Dtoa {
 	}
 }
 
-//---------------------------------------------------------------------------------------------------- Float
-/// An integer that can be written into a [`Dtoa`].
-pub trait Float: private::Sealed {}
+//---------------------------------------------------------------------------------------------------- IntoDtoa
+/// Numbers that can losslessly be written into a [`Dtoa`].
+///
+/// Non-floating point numbers (not [`f32`] or [`f64`]) will be casted with `as` before creation.
+///
+/// Precision is 100% lossless for any integer that is 32 bits or less.
+///
+/// 64/128-bit integers may be lossy, so they aren't implemented for [`IntoDtoa`].
+///
+/// ```rust
+/// # use readable::Dtoa;
+/// let dtoa_from_float = Dtoa::new(-2147483648.0_f64);
+/// assert_eq!(dtoa_from_float, "-2147483648.0");
+///
+/// // Casted to `f64` before creation.
+/// let dtoa_from_int = Dtoa::new(-2147483648_i32);
+/// assert_eq!(dtoa_from_int, "-2147483648.0");
+///
+/// // This code is basically the same as the above.
+/// let dtoa = Dtoa::new(-2147483648_i32 as f64);
+/// assert_eq!(dtoa, "-2147483648.0");
+///
+/// // u32 conversion is lossless.
+/// let mut i = 1_u64;
+/// while i <= u32::MAX as u64 {
+/// 	let dtoa   = Dtoa::new(i as u32);
+/// 	let string = format!("{i}.0");
+/// 	assert_eq!(dtoa, string);
+/// 	i *= 10;
+/// }
+///
+/// // i32 conversion is lossless.
+/// let mut i = -1_i64;
+/// while i >= i32::MIN as i64 {
+/// 	let dtoa   = Dtoa::new(i as i32);
+/// 	let string = format!("{i}.0");
+/// 	assert_eq!(dtoa, string);
+/// 	i *= 10;
+/// }
+///
+/// // NonZero types work too.
+/// let dtoa = Dtoa::new(std::num::NonZeroU32::new(1000).unwrap());
+/// assert_eq!(dtoa, "1000.0");
+///
+/// // ⚠️ Manual lossy conversion.
+///	let dtoa = Dtoa::new(u64::MAX as f64);
+/// assert_ne!(dtoa, format!("{}.0", u64::MAX)) // not equal
+/// ```
+pub trait IntoDtoa: private::Sealed {}
 
-impl Float for f32 {}
-impl Float for f64 {}
+use std::num::{
+	NonZeroI8,
+	NonZeroI16,
+	NonZeroI32,
+	NonZeroU8,
+	NonZeroU16,
+	NonZeroU32,
+};
 
-// Seal to prevent downstream implementations of Float trait.
+macro_rules! impl_float {
+	($( $target_type:ty ),* $(,)?) => {
+		$(
+			impl IntoDtoa for $target_type {}
+		)*
+	};
+}
+impl_float! {
+	f32,f64,u8,u16,u32,i8,i16,i32,
+	NonZeroI8,
+	NonZeroI16,
+	NonZeroI32,
+	NonZeroU8,
+	NonZeroU16,
+	NonZeroU32,
+}
+
+//---------------------------------------------------------------------------------------------------- Impl
+// Seal to prevent downstream implementations of IntoDtoa trait.
 mod private {
     pub trait Sealed: Copy {
         fn is_nonfinite(self) -> bool;
@@ -761,9 +980,67 @@ mod private {
     }
 }
 
+macro_rules! impl_int {
+	($( $int:ty => $target_float:ty ),* $(,)?) => {$(
+		impl private::Sealed for $int {
+			#[inline]
+			fn is_nonfinite(self) -> bool {
+				false // Integer can't be NaN
+			}
+
+			#[cold]
+			fn format_nonfinite(self) -> &'static str {
+				// private::Sealed::format_nonfinite(self as $target_float)
+				unreachable!() // Integer can't be NaN
+			}
+
+			#[inline]
+			fn write(self, buf: &mut [core::mem::MaybeUninit<u8>; 25]) -> &str {
+				private::Sealed::write(self as $target_float, buf)
+			}
+		}
+	)*};
+}
+macro_rules! impl_non_zero {
+	($( $int:ty => $target_float:ty ),* $(,)?) => {$(
+		impl private::Sealed for $int {
+			#[inline]
+			fn is_nonfinite(self) -> bool {
+				false // Integer can't be NaN
+			}
+
+			#[cold]
+			fn format_nonfinite(self) -> &'static str {
+				// private::Sealed::format_nonfinite(self.get() as $target_float)
+				unreachable!() // Integer can't be NaN
+			}
+
+			#[inline]
+			fn write(self, buf: &mut [core::mem::MaybeUninit<u8>; 25]) -> &str {
+				private::Sealed::write(self.get() as $target_float, buf)
+			}
+		}
+	)*};
+}
+impl_int! {
+	u8  => f32,
+	u16 => f32,
+	u32 => f64,
+	i8  => f32,
+	i16 => f32,
+	i32 => f64,
+}
+impl_non_zero! {
+	NonZeroI8  => f32,
+	NonZeroI16 => f32,
+	NonZeroI32 => f64,
+	NonZeroU8  => f32,
+	NonZeroU16 => f32,
+	NonZeroU32 => f64,
+}
+
 impl private::Sealed for f32 {
     #[inline]
-    #[cfg_attr(feature = "no-panic", no_panic)]
     fn is_nonfinite(self) -> bool {
         const EXP_MASK: u32 = 0x7f800000;
         let bits = self.to_bits();
@@ -771,7 +1048,6 @@ impl private::Sealed for f32 {
     }
 
     #[cold]
-    #[cfg_attr(feature = "no-panic", no_panic)]
     fn format_nonfinite(self) -> &'static str {
         const MANTISSA_MASK: u32 = 0x007fffff;
         const SIGN_MASK: u32 = 0x80000000;
@@ -787,7 +1063,7 @@ impl private::Sealed for f32 {
 
     #[inline]
     fn write(self, buf: &mut [MaybeUninit<u8>; 25]) -> &str {
-        dtoa! {
+        dtoa_inner! {
             floating_type: f32,
             significand_type: u32,
             exponent_type: i32,
@@ -809,7 +1085,6 @@ impl private::Sealed for f32 {
 
 impl private::Sealed for f64 {
     #[inline]
-    #[cfg_attr(feature = "no-panic", no_panic)]
     fn is_nonfinite(self) -> bool {
         const EXP_MASK: u64 = 0x7ff0000000000000;
         let bits = self.to_bits();
@@ -817,7 +1092,6 @@ impl private::Sealed for f64 {
     }
 
     #[cold]
-    #[cfg_attr(feature = "no-panic", no_panic)]
     fn format_nonfinite(self) -> &'static str {
         const MANTISSA_MASK: u64 = 0x000fffffffffffff;
         const SIGN_MASK: u64 = 0x8000000000000000;
@@ -833,7 +1107,7 @@ impl private::Sealed for f64 {
 
     #[inline]
     fn write(self, buf: &mut [MaybeUninit<u8>; 25]) -> &str {
-        dtoa! {
+        dtoa_inner! {
             floating_type: f64,
             significand_type: u64,
             exponent_type: isize,

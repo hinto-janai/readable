@@ -4,12 +4,12 @@ mod diyfp;
 #[macro_use]
 mod dtoa;
 pub use dtoa::{
-	Dtoa,Float,
+	Dtoa,IntoDtoa,DtoaTmp,
 };
 
 //---------------------------------------------------------------------------------------------------- Itoa
 mod itoa;
 mod udiv128;
 pub use itoa::{
-	Itoa,Integer
+	Itoa,ItoaTmp,Integer
 };

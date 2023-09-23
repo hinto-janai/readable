@@ -27,8 +27,6 @@
 // the License.
 
 use core::ops::{Mul, Sub};
-#[cfg(feature = "no-panic")]
-use no_panic::no_panic;
 
 #[derive(Copy, Clone, Debug)]
 pub(super) struct DiyFp<F, E> {
@@ -37,7 +35,6 @@ pub(super) struct DiyFp<F, E> {
 }
 
 impl<F, E> DiyFp<F, E> {
-    #[cfg_attr(feature = "no-panic", no_panic)]
 	pub(super) fn new(f: F, e: E) -> Self {
         DiyFp { f, e }
     }
@@ -49,7 +46,6 @@ where
 {
     type Output = Self;
 
-    #[cfg_attr(feature = "no-panic", no_panic)]
     fn sub(self, rhs: Self) -> Self {
         DiyFp {
             f: self.f - rhs.f,
@@ -61,7 +57,6 @@ where
 impl Mul for DiyFp<u32, i32> {
     type Output = Self;
 
-    #[cfg_attr(feature = "no-panic", no_panic)]
     fn mul(self, rhs: Self) -> Self {
         let mut tmp = self.f as u64 * rhs.f as u64;
         tmp += 1u64 << 31; // mult_round
@@ -75,7 +70,6 @@ impl Mul for DiyFp<u32, i32> {
 impl Mul for DiyFp<u64, isize> {
     type Output = Self;
 
-    #[cfg_attr(feature = "no-panic", no_panic)]
     fn mul(self, rhs: Self) -> Self {
         let m32 = 0xFFFFFFFFu64;
         let a = self.f >> 32;
@@ -112,7 +106,7 @@ macro_rules! diyfp {
         cached_powers_e: $cached_powers_e:expr,
         min_power: $min_power:expr,
     ) => {
-        type DiyFp = crate::fast::diyfp::DiyFp<$sigty, $expty>;
+        type DiyFp = crate::toa::diyfp::DiyFp<$sigty, $expty>;
 
         impl DiyFp {
             // Preconditions:
@@ -136,7 +130,6 @@ macro_rules! diyfp {
                 }
             }
             */
-            #[cfg_attr(feature = "no-panic", no_panic)]
             unsafe fn from(d: $fty) -> Self {
                 let u: $mask_type = mem::transmute(d);
 
@@ -166,7 +159,6 @@ macro_rules! diyfp {
                 return res;
             }
             */
-            #[cfg_attr(feature = "no-panic", no_panic)]
             fn normalize(self) -> DiyFp {
                 let mut res = self;
                 while (res.f & (1 << ($diy_significand_size - 1))) == 0 {
@@ -192,7 +184,6 @@ macro_rules! diyfp {
                 return res;
             }
             */
-            #[cfg_attr(feature = "no-panic", no_panic)]
             fn normalize_boundary(self) -> DiyFp {
                 let mut res = self;
                 while (res.f & $hidden_bit << 1) == 0 {
@@ -222,7 +213,6 @@ macro_rules! diyfp {
                 *minus = mi;
             }
             */
-            #[cfg_attr(feature = "no-panic", no_panic)]
             fn normalized_boundaries(self) -> (DiyFp, DiyFp) {
                 let pl = DiyFp::new((self.f << 1) + 1, self.e - 1).normalize_boundary();
                 let mut mi = if self.f == $hidden_bit {
@@ -251,7 +241,6 @@ macro_rules! diyfp {
         }
         */
         #[inline]
-        #[cfg_attr(feature = "no-panic", no_panic)]
         fn get_cached_power(e: $expty) -> (DiyFp, isize) {
             let dk = (3 - $diy_significand_size - e) as f64 * 0.30102999566398114f64
                 - ($min_power + 1) as f64;

@@ -26,7 +26,7 @@ pub(crate) use str_u64;
 macro_rules! itoa {
 	($number:expr) => {
 		{
-			::itoa::Buffer::new().format($number).as_bytes()
+			crate::Itoa::new($number).as_bytes()
 		}
 	}
 }

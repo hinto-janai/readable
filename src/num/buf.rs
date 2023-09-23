@@ -37,8 +37,8 @@ impl Buffer {
 #[inline]
 #[allow(clippy::match_overlapping_arm)]
 pub(crate) fn from_u(u: u64) -> ([u8; MAX_BUF_LEN], usize) {
-	let mut buffer = itoa::Buffer::new();
-	let string = &buffer.format(u).as_bytes();
+	let string = crate::Itoa::new(u);
+	let string = string.as_bytes();
 	let mut buf = [0_u8; MAX_BUF_LEN];
 
 	let len = match u {
@@ -71,8 +71,8 @@ pub(crate) fn from_u(u: u64) -> ([u8; MAX_BUF_LEN], usize) {
 #[inline]
 #[allow(clippy::match_overlapping_arm)]
 pub(crate) fn from_i(i: i64) -> ([u8; MAX_BUF_LEN], usize) {
-	let mut buffer = itoa::Buffer::new();
-	let string = &buffer.format(i).as_bytes();
+	let string = crate::Itoa::new(i);
+	let string = string.as_bytes();
 	let mut buf = [0_u8; MAX_BUF_LEN];
 
 	if i.is_negative() {
