@@ -1,11 +1,15 @@
 //---------------------------------------------------------------------------------------------------- Use
-#[cfg(feature = "serde")]
-use serde::{Serialize,Deserialize};
 use compact_str::{format_compact,CompactString};
-use crate::macros::*;
 use crate::num::constants::{
 	UNKNOWN_PERCENT,NAN,INFINITY,
 	ZERO_PERCENT,
+};
+use crate::macros::{
+	return_bad_float,str_64,
+	impl_common,impl_not_const,
+	impl_usize,impl_isize,
+	impl_math,impl_traits,
+	impl_impl_math,
 };
 
 //---------------------------------------------------------------------------------------------------- Percent
@@ -108,7 +112,7 @@ use crate::num::constants::{
 /// assert!(Percent::from(-1_000_i32)  == "-1,000.00%");
 /// assert!(Percent::from(-10_000_i32) == "-10,000.00%");
 /// ```
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Percent(f64, #[cfg_attr(feature = "bincode", bincode(with_serde))] CompactString);
@@ -119,10 +123,10 @@ macro_rules! impl_new {
 		paste::item! {
 			#[doc = "Same as [`Percent::from`] but with `" $num "` floating point."]
 			pub fn [<new_ $num>](f: f64) -> Self {
-				handle_nan_string!(f);
+				return_bad_float!(f, Self::nan, Self::inf);
 
 				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
-				Self(f, format_compact!("{}.{}%", str_u64!(f as u64), fract))
+				Self(f, format_compact!("{}.{}%", str_64!(f as u64), fract))
 			}
 		}
 	}
@@ -200,9 +204,8 @@ impl Percent {
 	/// | 50.123 | `50%`
 	/// | 100.1  | `100%`
 	pub fn new_0(f: f64) -> Self {
-		handle_nan_string!(f);
-
-		Self(f, format_compact!("{}%", str_u64!(f as u64)))
+		return_bad_float!(f, Self::nan, Self::inf);
+		Self(f, format_compact!("{}%", str_64!(f as u64)))
 	}
 
 	impl_new!(1);
@@ -220,7 +223,7 @@ macro_rules! impl_u {
 				fn from(number: $number) -> Self {
 					let f = number as f64;
 
-					Self(f, format_compact!("{}.00%", str_u64!(number as u64)))
+					Self(f, format_compact!("{}.00%", str_64!(number as u64)))
 				}
 			}
 		)*
@@ -237,7 +240,7 @@ macro_rules! impl_i {
 				fn from(number: $number) -> Self {
 					let f = number as f64;
 
-					Self(f, format_compact!("{}.00%", str_i64!(number as i64)))
+					Self(f, format_compact!("{}.00%", str_64!(number as i64)))
 				}
 			}
 		)*
@@ -247,44 +250,20 @@ impl_i!(i8,i16,i32);
 
 impl From<f32> for Percent {
 	#[inline]
-	fn from(number: f32) -> Self {
-		#[cfg(not(feature = "ignore_nan_inf"))]
-		{
-			let fpcat = number.classify();
-			use std::num::FpCategory;
-			match fpcat {
-				FpCategory::Normal   => (),
-				FpCategory::Nan      => return Self(number as f64, CompactString::new(NAN)),
-				FpCategory::Infinite => return Self(number as f64, CompactString::new(INFINITY)),
-				_ => (),
-			}
-		}
-
-		let f = number as f64;
-
-		let fract = &format_compact!("{:.2}", number.fract())[2..];
-		Self(f, format_compact!("{}.{}%", str_u64!(number as u64), fract))
+	fn from(f: f32) -> Self {
+		return_bad_float!(f, Self::nan, Self::inf);
+		Self::from(f as f64)
 	}
 }
 
 impl From<f64> for Percent {
 	#[inline]
 	fn from(f: f64) -> Self {
-		#[cfg(not(feature = "ignore_nan_inf"))]
-		{
-			let fpcat = f.classify();
-			use std::num::FpCategory;
-			match fpcat {
-				FpCategory::Normal   => (),
-				FpCategory::Nan      => return Self(f, CompactString::new(NAN)),
-				FpCategory::Infinite => return Self(f, CompactString::new(INFINITY)),
-				_ => (),
-			}
-		}
+		return_bad_float!(f, Self::nan, Self::inf);
 
 		let fract = &format_compact!("{:.2}", f.fract())[2..];
 
-		Self(f, format_compact!("{}.{}%", str_u64!(f as u64), fract))
+		Self(f, format_compact!("{}.{}%", str_64!(f as u64), fract))
 	}
 }
 

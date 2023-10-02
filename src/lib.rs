@@ -42,9 +42,6 @@
 //---------------------------------------------------------------------------------------------------- Hidden imports
 pub(crate) mod macros;
 
-//mod constants;
-//pub use constants::*;
-
 #[cfg(feature = "str")]
 /// General string utilities
 pub mod str;
@@ -59,6 +56,7 @@ pub mod num;
 pub use num::{
 	Unsigned,Int,Float,Percent,
 };
+pub(crate) use toa::Itoa64;
 
 #[cfg(feature = "time")]
 /// Human-readable time & date formatting

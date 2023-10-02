@@ -238,9 +238,9 @@ impl<const N: usize> Str<N> {
 	///
 	/// // The string length is 5, but the slice
 	/// // returned is the full capacity, 10.
-	/// assert_eq!(string.as_slice().len(), 10);
+	/// assert_eq!(string.as_bytes_all().len(), 10);
 	/// ```
-	pub const fn as_slice(&self) -> &[u8] {
+	pub const fn as_bytes_all(&self) -> &[u8] {
 		&self.buf.as_slice()
 	}
 
@@ -266,7 +266,7 @@ impl<const N: usize> Str<N> {
 	/// // and that we set the length correctly.
 	/// unsafe {
 	/// 	// Mutate to valid UTF-8 bytes.
-	/// 	let mut_ref = string.as_mut_slice();
+	/// 	let mut_ref = string.as_bytes_all_mut();
 	/// 	mut_ref.copy_from_slice(&b"world"[..]);
 	/// 	// Set the new length.
 	/// 	string.set_len(5);
@@ -275,7 +275,7 @@ impl<const N: usize> Str<N> {
 	/// assert_eq!(string, "world");
 	/// assert_eq!(string.len(), 5);
 	/// ```
-	pub unsafe fn as_mut_slice(&mut self) -> &mut [u8] {
+	pub unsafe fn as_bytes_all_mut(&mut self) -> &mut [u8] {
 		self.buf.as_mut_slice()
 	}
 
@@ -334,7 +334,7 @@ impl<const N: usize> Str<N> {
 	#[inline]
 	/// Set the length of the _valid_ UTF-8 bytes of this [`Str`]
 	///
-	/// This will usually be used when manually mutating [`Str`] with [`Str::as_mut_slice()`].
+	/// This will usually be used when manually mutating [`Str`] with [`Str::as_bytes_all_mut()`].
 	///
 	/// ```rust
 	/// # use readable::Str;
@@ -351,7 +351,7 @@ impl<const N: usize> Str<N> {
 	///
 	/// // Overwrite the bytes.
 	/// unsafe {
-	/// 	let mut_ref = s.as_mut_slice();
+	/// 	let mut_ref = s.as_bytes_all_mut();
 	/// 	mut_ref[0] = b'a';
 	/// 	mut_ref[1] = b'b';
 	/// 	mut_ref[2] = b'c';
@@ -372,7 +372,7 @@ impl<const N: usize> Str<N> {
 	#[inline]
 	/// Set the length of the _valid_ UTF-8 bytes of this [`Str`]
 	///
-	/// This will usually be used when manually mutating [`Str`] with [`Str::as_mut_slice()`].
+	/// This will usually be used when manually mutating [`Str`] with [`Str::as_bytes_all_mut()`].
 	///
 	/// ## Safety
 	/// Other functions will rely on the internal length
@@ -392,7 +392,7 @@ impl<const N: usize> Str<N> {
 	/// s.push_str("hi");
 	/// assert_eq!(s.remaining(), 3);
 	/// ```
-	pub fn remaining(&self) -> usize {
+	pub const fn remaining(&self) -> usize {
 		(Self::CAPACITY - self.len) as usize
 	}
 
@@ -402,10 +402,10 @@ impl<const N: usize> Str<N> {
 	/// ```rust
 	/// # use readable::Str;
 	/// let s = Str::<10>::from_static_str("hello");
-	/// assert_eq!(s.as_valid_slice().len(), 5);
+	/// assert_eq!(s.as_bytes().len(), 5);
 	/// ```
-	pub fn as_valid_slice(&self) -> &[u8] {
-		&self.as_slice()[..self.len()]
+	pub fn as_bytes(&self) -> &[u8] {
+		&self.buf[..self.len()]
 	}
 
 	#[inline]
@@ -414,14 +414,14 @@ impl<const N: usize> Str<N> {
 	/// ```rust
 	/// # use readable::Str;
 	/// let s = Str::<10>::from_static_str("hello");
-	/// let v = s.into_valid_vec();
+	/// let v = s.into_vec();
 	/// assert_eq!(v.len(), 5);
 	///
 	/// let s = unsafe { String::from_utf8_unchecked(v) };
 	/// assert_eq!(s, "hello");
 	/// ```
-	pub fn into_valid_vec(self) -> Vec<u8> where Self: Sized {
-		self.as_valid_slice().to_vec()
+	pub fn into_vec(self) -> Vec<u8> where Self: Sized {
+		self.as_bytes().to_vec()
 	}
 
 	/// Check this [`Str`] for correctness.
@@ -523,7 +523,7 @@ impl<const N: usize> Str<N> {
 	/// s.push_str("a").unwrap();
 	/// assert!(!s.empty());
 	/// ```
-	pub fn empty(&self) -> bool {
+	pub const fn empty(&self) -> bool {
 		self.len == 0
 	}
 
@@ -540,7 +540,7 @@ impl<const N: usize> Str<N> {
 	/// assert_eq!(s.len(), 3);
 	/// assert!(s.full());
 	/// ```
-	pub fn full(&self) -> bool {
+	pub const fn full(&self) -> bool {
 		self.len == Self::CAPACITY
 	}
 
@@ -555,7 +555,7 @@ impl<const N: usize> Str<N> {
 	pub fn as_str(&self) -> &str {
 		// SAFETY: `.as_valid_slice()` must be correctly implemented.
 		// The internal state must be correct.
-		unsafe { std::str::from_utf8_unchecked(self.as_valid_slice()) }
+		unsafe { std::str::from_utf8_unchecked(self.as_bytes()) }
 	}
 
 	#[inline]
@@ -569,7 +569,7 @@ impl<const N: usize> Str<N> {
 	/// ```
 	pub fn into_string(self) -> String where Self: Sized {
 		// SAFETY: The internal state must be correct.
-		unsafe { String::from_utf8_unchecked(self.into_valid_vec()) }
+		unsafe { String::from_utf8_unchecked(self.into_vec()) }
 	}
 
 	/// Overwrites `self` with the [`str`] `s`.
@@ -608,7 +608,7 @@ impl<const N: usize> Str<N> {
 			// SAFETY: We are directly mutating the bytes and length.
 			// We know the correct values.
 			unsafe {
-				self.as_mut_slice().copy_from_slice(&s_bytes[..s_len]);
+				self.as_bytes_all_mut().copy_from_slice(&s_bytes[..s_len]);
 				self.set_len(s_len);
 			}
 			Ok(s_len)
@@ -664,7 +664,7 @@ impl<const N: usize> Str<N> {
 		// SAFETY: We are directly mutating the bytes and length.
 		// We know the correct values.
 		unsafe {
-			self.as_mut_slice().copy_from_slice(&s_bytes[..s_len]);
+			self.as_bytes_all_mut().copy_from_slice(&s_bytes[..s_len]);
 			self.set_len(s_len);
 		}
 		s_len
@@ -723,13 +723,13 @@ impl<const N: usize> Str<N> {
 			// SAFETY: We are directly mutating the bytes and length.
 			// We know the correct values.
 			unsafe {
-				self.as_mut_slice()[self_len..new_len].copy_from_slice(s_bytes);
+				self.as_bytes_all_mut()[self_len..new_len].copy_from_slice(s_bytes);
 				self.set_len(new_len);
 			}
 			Ok(new_len)
 		}
 	}
-	
+
 	/// Appends `self` with the [`str`] `s`.
 	///
 	/// If the push was successful (or `s` was empty),
@@ -781,10 +781,18 @@ impl<const N: usize> Str<N> {
 			// SAFETY: We are directly mutating the bytes and length.
 			// We know the correct values.
 			unsafe {
-				self.as_mut_slice()[self_len..new_len].copy_from_slice(s_bytes);
+				self.as_bytes_all_mut()[self_len..new_len].copy_from_slice(s_bytes);
 				self.set_len(new_len);
 			}
 			new_len
+		}
+	}
+
+	///
+	pub const unsafe fn from_raw(len: u8, buf: [u8; N]) -> Self {
+		Self {
+			len,
+			buf,
 		}
 	}
 }

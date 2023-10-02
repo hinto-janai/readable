@@ -1,9 +1,18 @@
 //---------------------------------------------------------------------------------------------------- Use
 use compact_str::{format_compact,CompactString};
-use crate::macros::*;
-use crate::num::constants::{
-	NAN,UNKNOWN_FLOAT,
-	INFINITY,ZERO_FLOAT,
+use crate::num::{
+	Unsigned,Int,
+	constants::{
+		NAN,UNKNOWN_FLOAT,
+		INFINITY,ZERO_FLOAT,
+	},
+};
+use crate::macros::{
+	return_bad_float,str_64,
+	impl_common,impl_not_const,
+	impl_usize,impl_isize,
+	impl_math,impl_traits,
+	impl_impl_math,
 };
 
 //---------------------------------------------------------------------------------------------------- Float
@@ -28,15 +37,25 @@ use crate::num::constants::{
 /// assert!(f9 == 3.000000000);
 ///```
 ///
+/// ## Warning
+/// This type (and this library in general) is meant for fast and
+/// simple data formatting, and not necessarily correctness.
+///
+/// [`Float`] internally converts to a `u64` to add commas and as such
+/// the maximum input values for [`Float`] before it starts becoming
+/// inaccurate is somewhere right before [`u64::MAX`].
+///
+/// Formatting [`Float`] is also quite slower than [`Unsigned`] and [`Int`].
+///
 /// ## Cloning
-/// [`Clone`] may be expensive:
+/// [`Clone`] may be a heap allocation clone:
 /// ```rust
 /// # use readable::Float;
-/// // Probably cheap (stack allocated string).
+/// // Stack allocated string.
 /// let a = Float::from(100.0);
 /// let b = a.clone();
 ///
-/// // Probably expensive (heap allocated string).
+/// // Heap allocated string.
 /// let a = Float::from(f64::MAX);
 /// let b = a.clone();
 /// ```
@@ -47,9 +66,7 @@ use crate::num::constants::{
 /// The documentation will still refer to the inner string as a `String`. Anything returned will also be a `String`.
 ///
 /// ## Float Errors
-/// - Inputting [`f64::NAN`], [`f64::INFINITY`], [`f64::NEG_INFINITY`] or the [`f32`] variants returns errors
-///
-/// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
+/// Inputting [`f64::NAN`], [`f64::INFINITY`], [`f64::NEG_INFINITY`] or the [`f32`] variants returns errors
 ///
 /// ## Math
 /// These operators are overloaded. They will always output a new [`Self`]:
@@ -63,9 +80,6 @@ use crate::num::constants::{
 /// - Combined with another [`Self`]: `Float::from(1.0) + Float::from(1.0)`
 /// - Or with the inner number itself: `Float::from(1.0) + 1.0`
 ///
-/// They also have the same `panic!()` behavior on overflow as the normal ones, because internally,
-/// it is just calling `.inner() $OPERATOR $NUMBER`.
-///
 /// ```rust
 /// # use readable::*;
 /// // Regular operators.
@@ -75,22 +89,16 @@ use crate::num::constants::{
 /// assert!(Float::from(10.0) * 10.0 == Float::from(100.0));
 /// assert!(Float::from(10.0) % 10.0 == Float::from(0.0));
 /// ```
-/// Overflow example (floats don't panic in this case):
-/// ```rust
-/// # use readable::*;
-/// let n = Float::from(f64::MAX) + f64::MAX;
-/// assert!(n.is_inf());
-/// ```
 ///
 /// # Examples
 /// ```rust
 /// # use readable::Float;
-/// assert!(Float::from(0.0) == "0.000");
+/// assert_eq!(Float::from(0.0), "0.000");
 ///
 /// // This gets rounded up to '.568'
-/// assert!(Float::from(1234.5678) == "1,234.568");
+/// assert_eq!(Float::from(1234.5678), "1,234.568");
 /// // To prevent that, use 4 point.
-/// assert!(Float::from_4(1234.5678) == "1,234.5678");
+/// assert_eq!(Float::from_4(1234.5678), "1,234.5678");
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
@@ -100,16 +108,17 @@ pub struct Float(f64, #[cfg_attr(feature = "bincode", bincode(with_serde))] Comp
 impl_math!(Float, f64);
 impl_traits!(Float, f64);
 
+//---------------------------------------------------------------------------------------------------- Float Impl
 // Implements `from_X` functions.
 macro_rules! impl_new {
 	( $num:tt ) => {
 		paste::item! {
 			#[doc = "Same as [`Float::from`] but with `" $num "` floating point."]
 			pub fn [<from_ $num>](f: f64) -> Self {
-				handle_nan_string!(f);
+				return_bad_float!(f, Self::nan, Self::inf);
 
 				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
-				Self(f, format_compact!("{}.{}", str_u64!(f as u64), fract))
+				Self(f, format_compact!("{}.{}", str_64!(f as u64), fract))
 			}
 		}
 	}
@@ -179,18 +188,16 @@ impl Float {
 	/// | 50.123 | `50`
 	/// | 100.1  | `100`
 	pub fn from_0(f: f64) -> Self {
-		handle_nan_string!(f);
-		Self(f, CompactString::from(str_u64!(f as u64)))
+		return_bad_float!(f, Self::nan, Self::inf);
+		Self(f, CompactString::from(str_64!(f as u64)))
 	}
 
-	impl_new!(1);
-	impl_new!(2);
-
-	seq_macro::seq!(N in 4..=14 {
+	seq_macro::seq!(N in 1..=14 {
 		impl_new!(N);
 	});
 }
 
+//---------------------------------------------------------------------------------------------------- From `u*`
 // Implementation Macro.
 macro_rules! impl_u {
 	($( $number:ty ),*) => {
@@ -198,67 +205,46 @@ macro_rules! impl_u {
 			impl From<$number> for Float {
 				#[inline]
 				fn from(number: $number) -> Self {
-					Self(number as f64, format_compact!("{}.000", str_u64!(number as u64)))
+					Self(number as f64, format_compact!("{}.000", str_64!(number as u64)))
 				}
 			}
 		)*
 	}
 }
-impl_u!(u8,u16,u32);
+impl_u!(u8,u16,u32,u64,usize);
 
+//---------------------------------------------------------------------------------------------------- From `i*`
 macro_rules! impl_i {
 	($($number:ty),*) => {
 		$(
 			impl From<$number> for Float {
 				#[inline]
 				fn from(number: $number) -> Self {
-					Self(number as f64, format_compact!("{}.000", str_i64!(number as i64)))
+					Self(number as f64, format_compact!("{}.000", str_64!(number as i64)))
 				}
 			}
 		)*
 	}
 }
-impl_i!(i8,i16,i32);
+impl_i!(i8,i16,i32,i64,isize);
 
+//---------------------------------------------------------------------------------------------------- From `f32/f64`
 impl From<f32> for Float {
 	#[inline]
-	fn from(number: f32) -> Self {
-		#[cfg(not(feature = "ignore_nan_inf"))]
-		{
-			let fpcat = number.classify();
-			use std::num::FpCategory;
-			match fpcat {
-				FpCategory::Normal   => (),
-				FpCategory::Nan      => return Self(number as f64, CompactString::new(NAN)),
-				FpCategory::Infinite => return Self(number as f64, CompactString::new(INFINITY)),
-				_ => (),
-			}
-		}
-
-		let fract = &format_compact!("{:.3}", number.fract())[2..];
-
-		Self(number as f64, format_compact!("{}.{}", str_u64!(number as u64), fract))
+	fn from(f: f32) -> Self {
+		return_bad_float!(f, Self::nan, Self::inf);
+		Self::from(f as f64)
 	}
 }
 
 impl From<f64> for Float {
 	#[inline]
-	fn from(number: f64) -> Self {
-		#[cfg(not(feature = "ignore_nan_inf"))]
-		{
-			let fpcat = number.classify();
-			use std::num::FpCategory;
-			match fpcat {
-				FpCategory::Normal   => (),
-				FpCategory::Nan      => return Self(number, CompactString::new(NAN)),
-				FpCategory::Infinite => return Self(number, CompactString::new(INFINITY)),
-				_ => (),
-			}
-		}
+	fn from(f: f64) -> Self {
+		return_bad_float!(f, Self::nan, Self::inf);
 
-		let fract = &format_compact!("{:.3}", number.fract())[2..];
+		let fract = &format_compact!("{:.3}", f.fract())[2..];
 
-		Self(number, format_compact!("{}.{}", str_u64!(number as u64), fract))
+		Self(f, format_compact!("{}.{}", str_64!(f as u64), fract))
 	}
 }
 

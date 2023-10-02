@@ -13,3 +13,4 @@ mod udiv128;
 pub use itoa::{
 	Itoa,ItoaTmp,Integer
 };
+pub(crate) use itoa::Itoa64;

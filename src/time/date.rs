@@ -1,23 +1,22 @@
 //---------------------------------------------------------------------------------------------------- Use
-#[cfg(feature = "serde")]
-use serde::{Serialize,Deserialize};
-use crate::macros::*;
 use compact_str::format_compact;
 use regex::Regex;
 use once_cell::sync::Lazy;
+use crate::str::Str;
+use crate::itoa;
+use crate::macros::{
+	impl_traits,impl_common,
+	impl_const,
+};
 
 //---------------------------------------------------------------------------------------------------- Constants
 /// Returned when using [`Date::unknown`] or error situations.
 pub const UNKNOWN_DATE: &str = "????-??-??";
 
-/// UTF-8 byte encoding of [`UNKNOWN_DATE`], aka: `????-??-??`
-///
 /// ```rust
-/// # use readable::*;
-/// # use readable::time::*;
-/// assert!(UNKNOWN_DATE.as_bytes() == UNKNOWN_DATE_BUFFER);
+/// assert_eq!(readable::time::UNKNOWN_DATE.len(), 10);
 /// ```
-pub const UNKNOWN_DATE_BUFFER: [u8; 10] = [63, 63, 63, 63, 45, 63, 63, 45, 63, 63];
+const LEN: usize = 10;
 
 //---------------------------------------------------------------------------------------------------- Regexes
 // Length of the input string
@@ -318,33 +317,17 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// // We can still use 'a'
 /// assert_eq!(a, "2014-04-22");
 /// ```
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct Date((u16, u8, u8), Buffer);
+pub struct Date((u16, u8, u8), Str<LEN>);
 
+impl_traits!(Date, (u16, u8, u8));
+
+//---------------------------------------------------------------------------------------------------- Date impl
 impl Date {
 	impl_common!((u16, u8, u8));
 	impl_const!();
-	impl_buffer!(MAX_BUF_LEN, UNKNOWN_DATE_BUFFER, UNKNOWN_DATE.len());
-
-	// INVARIANT:
-	// The inputs _must_ be correct.
-	// Private functions for construction.
-	#[inline]
-	fn priv_y(y: u16) -> Self {
-		Self((y, 0, 0), Buffer::from_4_unchecked(itoa!(y)))
-	}
-	#[inline]
-	fn priv_ym(y: u16, m: u8) -> Self {
-		let s = format_compact!("{y}-{m:0>2}");
-		Self((y, m, 0), Buffer::from_unchecked(s.as_bytes()))
-	}
-	#[inline]
-	fn priv_ymd(y: u16, m: u8, d: u8) -> Self {
-		let s = format_compact!("{y}-{m:0>2}-{d:0>2}");
-		Self((y, m, d), Buffer::from_unchecked(s.as_bytes()))
-	}
 
 	// Common functions.
 	#[inline]
@@ -352,13 +335,13 @@ impl Date {
 	///
 	/// The [`String`] is set to [`UNKNOWN_DATE`].
 	pub const fn unknown() -> Self {
-		Self((0, 0, 0), Buffer::unknown())
+		Self((0, 0, 0), Str::from_static_str(UNKNOWN_DATE))
 	}
 
 	#[inline]
 	/// Same as [`Self::unknown`]
 	pub const fn zero() -> Self {
-		Self((0, 0, 0), Buffer::unknown())
+		Self((0, 0, 0), Str::from_static_str(UNKNOWN_DATE))
 	}
 
 	#[inline]
@@ -884,34 +867,43 @@ impl Date {
 	}
 }
 
-impl_traits!(Date, (u16, u8, u8));
+//---------------------------------------------------------------------------------------------------- Date impl (private)
+impl Date {
+	// INVARIANT:
+	// The inputs _must_ be correct.
+	// Private functions for construction.
+	#[inline]
+	fn priv_y(y: u16) -> Self {
+		Self((y, 0, 0), Self::from_4_unchecked(itoa!(y).as_bytes()))
+	}
+	#[inline]
+	fn priv_ym(y: u16, m: u8) -> Self {
+		let s = format_compact!("{y}-{m:0>2}");
+		Self((y, m, 0), Self::from_unchecked(s.as_bytes()))
+	}
+	#[inline]
+	fn priv_ymd(y: u16, m: u8, d: u8) -> Self {
+		let s = format_compact!("{y}-{m:0>2}-{d:0>2}");
+		Self((y, m, d), Self::from_unchecked(s.as_bytes()))
+	}
 
-//---------------------------------------------------------------------------------------------------- Date Buffer.
-/// ```rust
-/// assert_eq!("9999-12-31".len(), 10);
-/// ```
-const MAX_BUF_LEN: usize = 10;
-
-buffer!(MAX_BUF_LEN, UNKNOWN_DATE_BUFFER, UNKNOWN_DATE.len());
-
-impl Buffer {
 	#[inline]
 	// INVARIANT:
 	// Assumes input is `4` bytes.
-	fn from_4_unchecked(byte: &[u8]) -> Self {
+	fn from_4_unchecked(byte: &[u8]) -> Str<LEN> {
 		let mut buf = [0_u8; 10];
 		buf[..4].copy_from_slice(&byte[..4]);
 
-		Self {
-			buf,
-			len: 4,
-		}
+		// SAFETY: we're manually creating a `Str`.
+		// This is okay because we filled the bytes
+		// and know the length.
+		unsafe { Str::from_raw(4, buf) }
 	}
 
 	#[inline]
 	// INVARIANT:
 	// Assumes input is `5-10` bytes.
-	fn from_unchecked(byte: &[u8]) -> Self {
+	fn from_unchecked(byte: &[u8]) -> Str<LEN> {
 		let len = byte.len();
 
 		let mut buf = [0_u8; 10];
@@ -925,10 +917,10 @@ impl Buffer {
 			_  => unreachable!(),
 		};
 
-		Self {
-			buf,
-			len,
-		}
+		// SAFETY: we're manually creating a `Str`.
+		// This is okay because we filled the bytes
+		// and know the length.
+		unsafe { Str::from_raw(len as u8, buf) }
 	}
 }
 

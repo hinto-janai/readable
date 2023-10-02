@@ -10,7 +10,5 @@ pub use percent::*;
 mod unsigned;
 pub use unsigned::*;
 
-mod buf;
-
 mod constants;
 pub use constants::*;

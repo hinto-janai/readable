@@ -165,6 +165,7 @@ impl ItoaTmp {
 		Self { bytes: [MaybeUninit::<u8>::uninit(); I128_MAX_LEN] }
 	}
 
+	#[inline]
 	/// Format an [`Integer`] into a [`&str`] with an existing [`ItoaTmp`]
 	///
 	/// ```rust
@@ -189,6 +190,49 @@ impl ItoaTmp {
 				len,
 			);
 			std::str::from_utf8_unchecked(slice)
+		}
+	}
+}
+
+//---------------------------------------------------------------------------------------------------- Private Itoa
+// This is for usage in `Unsigned` and `Int`.
+#[derive(Copy, Clone, Debug)]
+pub(crate) struct Itoa64 {
+	bytes: [MaybeUninit<u8>; U64_MAX_LEN],
+}
+
+impl Itoa64 {
+	#[inline]
+	pub(crate) const fn new() -> Self {
+		Self { bytes: [MaybeUninit::<u8>::uninit(); U64_MAX_LEN] }
+	}
+
+	#[inline]
+	pub(crate) fn format_str<I: Integer>(&mut self, integer: I) -> &str {
+        let (len, offset) = integer.write(unsafe {
+            &mut *(&mut self.bytes as *mut [MaybeUninit<u8>; U64_MAX_LEN]
+                as *mut <I as private::Sealed>::Itoa)
+        });
+		unsafe {
+			let slice = slice::from_raw_parts(
+				self.bytes.as_ptr().offset(offset) as *const u8,
+				len,
+			);
+			std::str::from_utf8_unchecked(slice)
+		}
+	}
+
+	#[inline]
+	pub(crate) fn format<I: Integer>(&mut self, integer: I) -> &[u8] {
+        let (len, offset) = integer.write(unsafe {
+            &mut *(&mut self.bytes as *mut [MaybeUninit<u8>; U64_MAX_LEN]
+                as *mut <I as private::Sealed>::Itoa)
+        });
+		unsafe {
+			slice::from_raw_parts(
+				self.bytes.as_ptr().offset(offset) as *const u8,
+				len,
+			)
 		}
 	}
 }
