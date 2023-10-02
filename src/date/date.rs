@@ -14,7 +14,7 @@ use crate::macros::{
 pub const UNKNOWN_DATE: &str = "????-??-??";
 
 /// ```rust
-/// assert_eq!(readable::time::UNKNOWN_DATE.len(), 10);
+/// assert_eq!(readable::date::UNKNOWN_DATE.len(), 10);
 /// ```
 const LEN: usize = 10;
 

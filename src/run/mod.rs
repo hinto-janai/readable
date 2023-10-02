@@ -86,18 +86,24 @@
 //! # use readable::*;
 //! let runtime = Runtime::from(1.0) + Runtime::from(1.0);
 //! assert_eq!(runtime, Runtime::from(2.0));
-//! assert_eq!(runtime, "2:00");
+//! assert_eq!(runtime, "0:02");
 //! assert_eq!(runtime, 2.0);
 //!
 //! let pad = RuntimePad::from(1.5) + 1.5;
 //! assert_eq!(pad, RuntimePad::from(3.0));
-//! assert_eq!(pad, "00:00:03.000");
+//! assert_eq!(pad, "00:00:03");
 //! assert_eq!(pad, 3.0);
 //!
+//! // Floating point error!
 //! let milli = RuntimeMilli::from(2.0) + 1.555;
-//! assert_eq!(runtime, RuntimeMilli::from(3.555));
-//! assert_eq!(runtime, "00:00:03.555");
-//! assert_eq!(runtime, 3.555);
+//! assert_eq!(milli.inner(), 3.5549998);
+//!
+//! // Use 1 more decimal to make sure
+//! // weird rounding doesn't happen.
+//! let milli = RuntimeMilli::from(2.0) + 1.5551;
+//! assert_eq!(milli, RuntimeMilli::from(3.5551));
+//! assert_eq!(milli, "00:00:03.555");
+//! assert_eq!(milli, 3.5551);
 //! ```
 //!
 //! ## Copy

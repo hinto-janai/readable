@@ -43,8 +43,8 @@ assert_eq!(a, "1,000.12%");
 ```
 #### Runtime:
 ```rust
-let a = readable::Runtime::from(11111_u16);
-assert_eq!(a, 11111);
+let a = readable::Runtime::from(11111.0);
+assert_eq!(a, 11111.0);
 assert_eq!(a, "3:05:11");
 ```
 #### Time:

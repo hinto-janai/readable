@@ -543,6 +543,22 @@ macro_rules! impl_runtime {
 		impl_i!(i128);
 		impl_i!(isize);
 
+		//---------------------------------------------------------------------------------------------------- PartialEq
+		$(
+			impl PartialEq<$other> for $self {
+				#[inline]
+				fn eq(&self, other: &$other) -> bool {
+					self.inner() == other.inner()
+				}
+			}
+			impl PartialEq<&$other> for $self {
+				#[inline]
+				fn eq(&self, other: &&$other) -> bool {
+					self.inner() == other.inner()
+				}
+			}
+		)*
+
 		//---------------------------------------------------------------------------------------------------- From `RuntimeUnion`
 		$(
 			impl From<RuntimeUnion> for $self {
