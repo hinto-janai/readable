@@ -1,12 +1,12 @@
 //---------------------------------------------------------------------------------------------------- Use
 use crate::str::Str;
-use crate::time::{Runtime,RuntimePad,RuntimeUnion};
+use crate::run::{Runtime,RuntimePad,RuntimeUnion};
 use crate::macros::{
 	impl_common,impl_const,
 	impl_traits,return_bad_float,
 	impl_usize,impl_math,impl_impl_math,
 };
-use crate::time::{
+use crate::run::{
 	ZERO_RUNTIME_F32,
 	SECOND_RUNTIME_F32,
 	MINUTE_RUNTIME_F32,
@@ -37,13 +37,13 @@ pub const HOUR_RUNTIME_MILLI: &str = "01:00:00.000";
 pub const MAX_RUNTIME_MILLI: &str = "99:59:59.000";
 
 //---------------------------------------------------------------------------------------------------- RuntimeMilli
-/// [`RuntimePad`], but with milliseconds
+/// [`RuntimePad`] but with milliseconds
 ///
 /// This is the exact same type as [`RuntimePad`], except, the
 /// milliseconds are included, which makes this type `4` bytes bigger.
 ///
 /// ```rust
-/// # use readable::time::*;
+/// # use readable::*;
 /// let runtime_full = RuntimePad::minute();
 /// assert_eq!(runtime_full, "00:01:00"); // seconds is lowest unit
 ///
@@ -51,78 +51,17 @@ pub const MAX_RUNTIME_MILLI: &str = "99:59:59.000";
 /// assert_eq!(runtime_milli, "00:01:00.000"); // millisecond is lowest unit
 /// ```
 ///
-/// [`RuntimeMilli::from`] input can be:
-/// - [`u8`]
-/// - [`u16`]
-/// - [`f64`]
-/// - [`u64`]
-/// - [`u128`]
-/// - [`usize`]
-/// - [`f32`]
-/// - [`f64`]
-/// - [`std::time::Duration`]
-/// - [`std::time::Instant`]
-/// - Other [`Runtime`] types
-///
-/// Integer inputs are presumed to be in _seconds._
-///
-/// ## Errors
-/// The max input is `359999` seconds, or: `99:59:59`.
-///
-/// If the input is larger than [`MAX_RUNTIME_MILLI`], [`Self::unknown()`] is returned.
-///
-/// ## Copy
-/// [`Copy`] is available.
-///
-/// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
-/// but a 8 byte array buffer, literally: [`Str<8>`].
-///
-/// Since the max valid runtime is: `99:59:59` (8 characters, `359999` seconds), an 8 byte
-/// buffer is used and enables this type to have [`Copy`].
-///
-/// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
-/// ```rust
-/// # use readable::RuntimeMilli;
-/// let a = RuntimeMilli::from(100_000.0);
-///
-/// // Copy 'a', use 'b'.
-/// let b = a;
-/// assert_eq!(b, 100_000.0);
-///
-/// // We can still use 'a'
-/// assert_eq!(a, 100_000.0);
-/// ```
-///
 /// ## Size
-/// ```rust
-/// # use readable::time::*;
-/// assert_eq!(std::mem::size_of::<RuntimeMilli>(), 20);
-/// ```
-///
-/// ## Exceptions
-/// Inputting [`f64::NAN`], [`f64::INFINITY`], [`f64::NEG_INFINITY`] or the [`f32`] variants returns errors
-///
-/// ## Math
-/// These operators are overloaded. They will always output a new [`Self`]:
-/// - `Add +`
-/// - `Sub -`
-/// - `Div /`
-/// - `Mul *`
-/// - `Rem %`
-///
-/// They can either be:
-/// - Combined with another [`Self`]: `RuntimeMilli::from(1) + RuntimeMilli::from(1)`
-/// - Or with the inner number itself: `RuntimeMilli::from(1) + 1`
+/// [`Str<12>`] is used internally to represent the string.
 ///
 /// ```rust
 /// # use readable::*;
-/// let n = RuntimeMilli::from(f32::MAX) + f32::MAX;
-/// assert!(n == RuntimeMilli::unknown());
+/// assert_eq!(std::mem::size_of::<RuntimeMilli>(), 20);
 /// ```
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::RuntimeMilli;
+/// # use readable::*;
 /// // Always round down.
 /// assert_eq!(RuntimeMilli::from(11.111), "00:00:11.111");
 /// assert_eq!(RuntimeMilli::from(11.999), "00:00:11.999");
@@ -146,7 +85,7 @@ pub const MAX_RUNTIME_MILLI: &str = "99:59:59.000";
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub struct RuntimeMilli(pub(super) f32, pub(super) Str<MAX_LEN_RUNTIME_MILLI>);
 
-crate::time::runtime::impl_runtime! {
+crate::run::runtime::impl_runtime! {
 	self  = RuntimeMilli,
 	len   = MAX_LEN_RUNTIME_MILLI,
 	union = as_str_milli,
@@ -158,13 +97,102 @@ impl_math!(RuntimeMilli, f32);
 impl_traits!(RuntimeMilli, f32);
 
 //---------------------------------------------------------------------------------------------------- Impl
+macro_rules! impl_as_str_runtime_inner {
+	($self:expr) => {{
+		let u = $self.0 as u32;
+
+		// 00:0x:00
+		let (offset, end) = if u < 600 {
+			(4, 4)
+		// 00:x0:00
+		} else if u < 3600 {
+			(3, 5)
+		// 0x:00:00
+		} else if u < 36000 {
+			(1, 7)
+		// x0:00:00
+		} else {
+			debug_assert!(u >= 36000);
+			(0, 8)
+		};
+
+		// SAFETY:
+		// We are manually calculating where the start and
+		// end bounds of this `str` is. It is just numbers
+		// and colons so this is always UTF8.
+		// SAFETY, we trust the buffer.
+		unsafe {
+			let slice = std::slice::from_raw_parts(
+				$self.1.as_ptr().offset(offset),
+				end,
+			);
+			std::str::from_utf8_unchecked(slice)
+		}
+	}};
+}
+pub(super) use impl_as_str_runtime_inner;
+
+//---------------------------------------------------------------------------------------------------- Impl
 impl RuntimeMilli {
 	impl_common!(f32);
 	impl_const!();
 
 	#[inline]
+	/// Dynamically format [`Self`] as a [`Runtime`].
+	///
+	/// As [`RuntimeMilli`] is a superset of [`Runtime`], it can
+	/// cut off a few characters and format itself as [`Runtime`].
+	///
+	/// This branches a maximum of 4 times and does not allocate anything.
+	///
 	/// ```rust
-	/// # use readable::RuntimeMilli;
+	/// # use readable::*;
+	/// assert_eq!(RuntimeMilli::from(0.0).as_str_runtime(),     "0:00");
+	/// assert_eq!(RuntimeMilli::from(59.0).as_str_runtime(),    "0:59");
+	/// assert_eq!(RuntimeMilli::from(599.0).as_str_runtime(),   "9:59");
+	/// assert_eq!(RuntimeMilli::from(3599.0).as_str_runtime(),  "59:59");
+	/// assert_eq!(RuntimeMilli::from(35999.0).as_str_runtime(), "9:59:59");
+	/// assert_eq!(RuntimeMilli::from(36000.0).as_str_runtime(), "10:00:00");
+	/// ```
+	pub const fn as_str_runtime(&self) -> &str {
+		impl_as_str_runtime_inner!(self)
+	}
+
+	#[inline]
+	/// Dynamically format [`Self`] as a [`RuntimePad`].
+	///
+	/// As [`RuntimeMilli`] is a superset of [`RuntimePad`], it can
+	/// cut off 4 characters (`.xxx`) and format itself as [`RuntimePad`].
+	///
+	/// This does not allocate anything.
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(RuntimeMilli::from(0.0).as_str_pad(),     "00:00:00");
+	/// assert_eq!(RuntimeMilli::from(59.0).as_str_pad(),    "00:00:59");
+	/// assert_eq!(RuntimeMilli::from(599.0).as_str_pad(),   "00:09:59");
+	/// assert_eq!(RuntimeMilli::from(3599.0).as_str_pad(),  "00:59:59");
+	/// assert_eq!(RuntimeMilli::from(35999.0).as_str_pad(), "09:59:59");
+	/// assert_eq!(RuntimeMilli::from(36000.0).as_str_pad(), "10:00:00");
+	/// ```
+	pub const fn as_str_pad(&self) -> &str {
+		// 7 is the last index containing
+		// a number, 8 is the `.` then milliseconds.
+		const END: usize = 8;
+
+		// SAFETY, we trust the buffer.
+		unsafe {
+			let slice = std::slice::from_raw_parts(
+				self.1.as_ptr(),
+				END,
+			);
+			std::str::from_utf8_unchecked(slice)
+		}
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::*;
 	/// assert_eq!(RuntimeMilli::unknown(), 0.0);
 	/// assert_eq!(RuntimeMilli::unknown(), "??:??:??.???");
 	/// ```
@@ -174,7 +202,7 @@ impl RuntimeMilli {
 
 	#[inline]
 	/// ```rust
-	/// # use readable::RuntimeMilli;
+	/// # use readable::*;
 	/// assert_eq!(RuntimeMilli::zero(), 0.0);
 	/// assert_eq!(RuntimeMilli::zero(), "00:00:00.000");
 	/// ```
@@ -184,7 +212,7 @@ impl RuntimeMilli {
 
 	#[inline]
 	/// ```rust
-	/// # use readable::RuntimeMilli;
+	/// # use readable::*;
 	/// assert_eq!(RuntimeMilli::second(), 1.0);
 	/// assert_eq!(RuntimeMilli::second(), "00:00:01.000");
 	/// assert_eq!(RuntimeMilli::second(), RuntimeMilli::from(1.0));
@@ -195,7 +223,7 @@ impl RuntimeMilli {
 
 	#[inline]
 	/// ```rust
-	/// # use readable::RuntimeMilli;
+	/// # use readable::*;
 	/// assert_eq!(RuntimeMilli::minute(), 60.0);
 	/// assert_eq!(RuntimeMilli::minute(), "00:01:00.000");
 	/// assert_eq!(RuntimeMilli::minute(), RuntimeMilli::from(60.0));
@@ -206,7 +234,7 @@ impl RuntimeMilli {
 
 	#[inline]
 	/// ```rust
-	/// # use readable::RuntimeMilli;
+	/// # use readable::*;
 	/// assert_eq!(RuntimeMilli::hour(), 3600.0);
 	/// assert_eq!(RuntimeMilli::hour(), "01:00:00.000");
 	/// assert_eq!(RuntimeMilli::hour(), RuntimeMilli::from(3600.0));
@@ -217,7 +245,7 @@ impl RuntimeMilli {
 
 	#[inline]
 	/// ```rust
-	/// # use readable::RuntimeMilli;
+	/// # use readable::*;
 	/// assert_eq!(RuntimeMilli::max(), 359999.0);
 	/// assert_eq!(RuntimeMilli::max(), "99:59:59.000");
 	/// assert_eq!(RuntimeMilli::max(), RuntimeMilli::from(359999.0));

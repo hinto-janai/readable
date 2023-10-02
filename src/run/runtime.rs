@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------------------------------- Use
 use crate::str::Str;
-use crate::time::{RuntimePad,RuntimeMilli,RuntimeUnion};
+use crate::run::{RuntimePad,RuntimeMilli,RuntimeUnion};
 use crate::macros::{
 	impl_common,impl_const,
 	impl_traits,return_bad_float,
@@ -45,117 +45,24 @@ pub const HOUR_RUNTIME_F32: f32 = 3600.0;
 pub const MAX_RUNTIME_F32: f32 = 359999.0;
 
 //---------------------------------------------------------------------------------------------------- Runtime
-/// Human readable "audio/video runtime" in `H:M:S` format.
-///
-/// [`Runtime::from`] input can be:
-/// - [`u8`]
-/// - [`u16`]
-/// - [`u32`]
-/// - [`u64`]
-/// - [`u128`]
-/// - [`usize`]
-/// - [`f32`]
-/// - [`f64`]
-/// - [`std::time::Duration`]
-/// - [`std::time::Instant`]
-/// - Other [`Runtime`] types
-///
-/// Integer inputs are presumed to be in _seconds._
-///
-/// ## From other [`Runtime`] types
-/// All [`Runtime`] types support lossless conversion with each other using [`From`].
-///
-/// For example, the millisecond data will not be lost even if you
-/// go from [`RuntimeMilli`] -> [`Runtime`] -> [`RuntimeMilli`]
-///
-/// ```rust
-/// # use readable::*;
-/// // Millisecond data.
-/// let milli = RuntimeMilli::from(1.555);
-/// assert_eq!(milli, "00:00:01.555");
-///
-/// // Convert to `Runtime`.
-/// let runtime = Runtime::from(milli);
-/// assert_eq!(runtime, "0:01");
-///
-/// // Convert to `RuntimePad`.
-/// let full = RuntimePad::from(runtime);
-/// assert_eq!(full, "00:00:01");
-///
-/// // Convert back losslessly to [`RuntimeMilli`].
-/// let milli2 = RuntimeMilli::from(full);
-/// assert_eq!(milli2, "00:00:01.555");
-/// assert_eq!(milli, milli2);
-/// assert_eq!(milli2.inner(), 1.555);
-/// ```
-///
-/// This is because the inner [`f32`] stored is simply copied,
-/// only the formatted string is different.
-///
-/// Consider using the more efficient [`RuntimeUnion`] if you need to switch between formats often.
-///
-/// ## Errors
-/// The max input is `359999` seconds, or: anything over `99:59:59`.
-///
-/// If the input is larger than [`MAX_RUNTIME`], [`Self::unknown()`] is returned.
+/// Human readable "audio/video runtime" in `HH:MM:SS` format.
 ///
 /// ## Formatting rules
 /// 1. `seconds` always has a leading `0`
 /// 2. `minutes` only has a leading zero if `hours` isn't `0`
 /// 3. `hours` never has a leading `0`
 ///
-/// ## Copy
-/// [`Copy`] is available.
-///
-/// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
-/// but a 8 byte array buffer, literally: [`Str<8>`].
-///
-/// Since the max valid runtime is: `99:59:59` (8 characters, `360000` seconds), an 8 byte
-/// buffer is used and enables this type to have [`Copy`].
-///
-/// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
-/// ```rust
-/// # use readable::Runtime;
-/// let a = Runtime::from(100_000.0);
-///
-/// // Copy 'a', use 'b'.
-/// let b = a;
-/// assert_eq!(b, 100_000.0);
-///
-/// // We can still use 'a'
-/// assert_eq!(a, 100_000.0);
-/// ```
-///
 /// ## Size
-/// ```rust
-/// # use readable::time::*;
-/// assert_eq!(std::mem::size_of::<Runtime>(), 16);
-/// ```
-///
-/// ## Exceptions
-/// Inputting [`f64::NAN`], [`f64::INFINITY`], [`f64::NEG_INFINITY`] or the [`f32`] variants returns errors
-///
-/// ## Math
-/// These operators are overloaded. They will always output a new [`Self`]:
-/// - `Add +`
-/// - `Sub -`
-/// - `Div /`
-/// - `Mul *`
-/// - `Rem %`
-///
-/// They can either be:
-/// - Combined with another [`Self`]: `Runtime::from(1) + Runtime::from(1)`
-/// - Or with the inner number itself: `Runtime::from(1) + 1`
+/// [`Str<8>`] is used internally to represent the string.
 ///
 /// ```rust
 /// # use readable::*;
-/// let n = Runtime::from(u32::MAX) + f32::MAX;
-/// assert!(n == Runtime::unknown());
+/// assert_eq!(std::mem::size_of::<Runtime>(), 16);
 /// ```
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::Runtime;
+/// # use readable::*;
 /// // Always round down.
 /// assert_eq!(Runtime::from(11.1111), "0:11");
 /// assert_eq!(Runtime::from(11.9999), "0:11");
@@ -197,7 +104,7 @@ impl Runtime {
 
 	#[inline]
 	/// ```rust
-	/// # use readable::Runtime;
+	/// # use readable::*;
 	/// assert_eq!(Runtime::unknown(), 0.0);
 	/// assert_eq!(Runtime::unknown(), "?:??");
 	/// ```
@@ -207,7 +114,7 @@ impl Runtime {
 
 	#[inline]
 	/// ```rust
-	/// # use readable::Runtime;
+	/// # use readable::*;
 	/// assert_eq!(Runtime::zero(), 0.0);
 	/// assert_eq!(Runtime::zero(), "0:00");
 	/// ```
@@ -217,7 +124,7 @@ impl Runtime {
 
 	#[inline]
 	/// ```rust
-	/// # use readable::Runtime;
+	/// # use readable::*;
 	/// assert_eq!(Runtime::second(), 1.0);
 	/// assert_eq!(Runtime::second(), "0:01");
 	/// assert_eq!(Runtime::second(), Runtime::from(1.0));
@@ -228,7 +135,7 @@ impl Runtime {
 
 	#[inline]
 	/// ```rust
-	/// # use readable::Runtime;
+	/// # use readable::*;
 	/// assert_eq!(Runtime::minute(), 60.0);
 	/// assert_eq!(Runtime::minute(), "1:00");
 	/// assert_eq!(Runtime::minute(), Runtime::from(60.0));
@@ -239,7 +146,7 @@ impl Runtime {
 
 	#[inline]
 	/// ```rust
-	/// # use readable::Runtime;
+	/// # use readable::*;
 	/// assert_eq!(Runtime::hour(), 3600.0);
 	/// assert_eq!(Runtime::hour(), "1:00:00");
 	/// assert_eq!(Runtime::hour(), Runtime::from(3600.0));
@@ -250,7 +157,7 @@ impl Runtime {
 
 	#[inline]
 	/// ```rust
-	/// # use readable::Runtime;
+	/// # use readable::*;
 	/// assert_eq!(Runtime::max(), 359999.0);
 	/// assert_eq!(Runtime::max(), "99:59:59");
 	/// assert_eq!(Runtime::max(), Runtime::from(359999.0));
@@ -586,22 +493,55 @@ macro_rules! impl_runtime {
 		impl_f!(f32);
 		impl_f!(f64);
 
-		//---------------------------------------------------------------------------------------------------- Int
-		macro_rules! impl_int {
+		//---------------------------------------------------------------------------------------------------- uint
+		macro_rules! impl_u {
 			($from:ty) => {
 				impl From<$from> for $self {
 					fn from(runtime: $from) -> Self {
 						Self::priv_from(runtime as f32)
 					}
 				}
+				impl From<&$from> for $self {
+					fn from(runtime: &$from) -> Self {
+						Self::priv_from(*runtime as f32)
+					}
+				}
 			}
 		}
-		impl_int!(u8);
-		impl_int!(u16);
-		impl_int!(u32);
-		impl_int!(u64);
-		impl_int!(u128);
-		impl_int!(usize);
+		impl_u!(u8);
+		impl_u!(u16);
+		impl_u!(u32);
+		impl_u!(u64);
+		impl_u!(u128);
+		impl_u!(usize);
+
+		//---------------------------------------------------------------------------------------------------- Int
+		macro_rules! impl_i {
+			($from:ty) => {
+				impl From<$from> for $self {
+					fn from(runtime: $from) -> Self {
+						if runtime.is_negative() {
+							return Self::unknown();
+						}
+						Self::priv_from(runtime as f32)
+					}
+				}
+				impl From<&$from> for $self {
+					fn from(runtime: &$from) -> Self {
+						if runtime.is_negative() {
+							return Self::unknown();
+						}
+						Self::priv_from(*runtime as f32)
+					}
+				}
+			}
+		}
+		impl_i!(i8);
+		impl_i!(i16);
+		impl_i!(i32);
+		impl_i!(i64);
+		impl_i!(i128);
+		impl_i!(isize);
 
 		//---------------------------------------------------------------------------------------------------- From `RuntimeUnion`
 		$(

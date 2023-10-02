@@ -151,7 +151,7 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 ///```
 ///
 /// ## String parsing and format
-/// To parse an abitrary string into a [`Date`], use: [`Date::from_str`].
+/// To parse an arbitrary string into a [`Date`], use: [`Date::from_str`].
 ///
 /// Although [`Date`] will always internally be `YYYY-MM-DD`, the input string can be any of these formats:
 /// ```rust

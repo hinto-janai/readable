@@ -1,12 +1,12 @@
 //---------------------------------------------------------------------------------------------------- Use
 use crate::str::Str;
-use crate::time::{Runtime,RuntimeMilli,RuntimeUnion};
+use crate::run::{Runtime,RuntimeMilli,RuntimeUnion};
 use crate::macros::{
 	impl_common,impl_const,
 	impl_traits,return_bad_float,
 	impl_usize,impl_math,impl_impl_math,
 };
-use crate::time::{
+use crate::run::{
 	ZERO_RUNTIME_F32,
 	SECOND_RUNTIME_F32,
 	MINUTE_RUNTIME_F32,
@@ -16,34 +16,34 @@ use crate::time::{
 
 //---------------------------------------------------------------------------------------------------- Constants (Public)
 /// The max length of [`RuntimePad`]'s string.
-pub const MAX_LEN_RUNTIME_FULL: usize = 8;
+pub const MAX_LEN_RUNTIME_PAD: usize = 8;
 
 /// [`str`] returned when using [`RuntimePad::unknown`]
-pub const UNKNOWN_RUNTIME_FULL: &str = "??:??:??";
+pub const UNKNOWN_RUNTIME_PAD: &str = "??:??:??";
 
 /// [`str`] returned when using [`RuntimePad::zero`]
-pub const ZERO_RUNTIME_FULL: &str = "00:00:00";
+pub const ZERO_RUNTIME_PAD: &str = "00:00:00";
 
 /// [`str`] returned when using [`RuntimePad::second`]
-pub const SECOND_RUNTIME_FULL: &str = "00:00:01";
+pub const SECOND_RUNTIME_PAD: &str = "00:00:01";
 
 /// [`str`] returned when using [`RuntimePad::minute`]
-pub const MINUTE_RUNTIME_FULL: &str = "00:01:00";
+pub const MINUTE_RUNTIME_PAD: &str = "00:01:00";
 
 /// [`str`] returned when using [`RuntimePad::hour`]
-pub const HOUR_RUNTIME_FULL: &str = "01:00:00";
+pub const HOUR_RUNTIME_PAD: &str = "01:00:00";
 
 /// [`str`] for the max time [`RuntimePad`] can handle
-pub const MAX_RUNTIME_FULL: &str = "99:59:59";
+pub const MAX_RUNTIME_PAD: &str = "99:59:59";
 
 //---------------------------------------------------------------------------------------------------- RuntimePad
-/// [`Runtime`], but always full length and pre-padded with zeros
+/// [`Runtime`] but always full length and padded with zeros
 ///
 /// This is the exact same type as [`Runtime`], except, the
 /// numbers will _always_ be padded with `0`'s.
 ///
 /// ```rust
-/// # use readable::time::*;
+/// # use readable::*;
 /// let runtime = Runtime::minute();
 /// assert_eq!(runtime, "1:00"); // hour left out, minute not padded
 ///
@@ -57,73 +57,12 @@ pub const MAX_RUNTIME_FULL: &str = "99:59:59";
 /// assert_eq!(runtime_zero, "01:00:00");
 /// ```
 ///
-/// [`RuntimePad::from`] input can be:
-/// - [`u8`]
-/// - [`u16`]
-/// - [`u32`]
-/// - [`u64`]
-/// - [`u128`]
-/// - [`usize`]
-/// - [`f32`]
-/// - [`f64`]
-/// - [`std::time::Duration`]
-/// - [`std::time::Instant`]
-/// - Other [`Runtime`] types
-///
-/// Integer inputs are presumed to be in _seconds._
-///
-/// ## Errors
-/// The max input is `359999` seconds, or: `99:59:59`.
-///
-/// If the input is larger than [`MAX_RUNTIME_FULL`], [`Self::unknown()`] is returned.
-///
-/// ## Copy
-/// [`Copy`] is available.
-///
-/// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
-/// but a 8 byte array buffer, literally: [`Str<8>`].
-///
-/// Since the max valid runtime is: `99:59:59` (8 characters, `359999` seconds), an 8 byte
-/// buffer is used and enables this type to have [`Copy`].
-///
-/// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
-/// ```rust
-/// # use readable::RuntimePad;
-/// let a = RuntimePad::from(100_000.0);
-///
-/// // Copy 'a', use 'b'.
-/// let b = a;
-/// assert_eq!(b, 100_000.0);
-///
-/// // We can still use 'a'
-/// assert_eq!(a, 100_000.0);
-/// ```
-///
 /// ## Size
-/// ```rust
-/// # use readable::time::*;
-/// assert_eq!(std::mem::size_of::<RuntimePad>(), 16);
-/// ```
-///
-/// ## Exceptions
-/// Inputting [`f64::NAN`], [`f64::INFINITY`], [`f64::NEG_INFINITY`] or the [`f32`] variants returns errors
-///
-/// ## Math
-/// These operators are overloaded. They will always output a new [`Self`]:
-/// - `Add +`
-/// - `Sub -`
-/// - `Div /`
-/// - `Mul *`
-/// - `Rem %`
-///
-/// They can either be:
-/// - Combined with another [`Self`]: `RuntimePad::from(1) + RuntimePad::from(1)`
-/// - Or with the inner number itself: `RuntimePad::from(1) + 1`
+/// [`Str<8>`] is used internally to represent the string.
 ///
 /// ```rust
 /// # use readable::*;
-/// let n = RuntimePad::from(u32::MAX) + f32::MAX;
-/// assert_eq!(n, RuntimePad::unknown());
+/// assert_eq!(std::mem::size_of::<RuntimePad>(), 16);
 /// ```
 ///
 /// ## Examples
@@ -150,12 +89,12 @@ pub const MAX_RUNTIME_FULL: &str = "99:59:59";
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
-pub struct RuntimePad(f32, Str<MAX_LEN_RUNTIME_FULL>);
+pub struct RuntimePad(pub(super) f32, pub(super) Str<MAX_LEN_RUNTIME_PAD>);
 
-crate::time::runtime::impl_runtime! {
+crate::run::runtime::impl_runtime! {
 	self  = RuntimePad,
-	len   = MAX_LEN_RUNTIME_FULL,
-	union = as_str_full,
+	len   = MAX_LEN_RUNTIME_PAD,
+	union = as_str_pad,
 
 	other = Runtime,
 	other = RuntimeMilli,
@@ -170,13 +109,34 @@ impl RuntimePad {
 	impl_usize!();
 
 	#[inline]
+	/// Dynamically format [`Self`] as a [`Runtime`].
+	///
+	/// As [`RuntimePad`] is a superset of [`Runtime`], it can
+	/// cut off a few characters and format itself as [`Runtime`].
+	///
+	/// This branches a maximum of 4 times and does not allocate anything.
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(RuntimePad::from(0.0).as_str_runtime(),     "0:00");
+	/// assert_eq!(RuntimePad::from(59.0).as_str_runtime(),    "0:59");
+	/// assert_eq!(RuntimePad::from(599.0).as_str_runtime(),   "9:59");
+	/// assert_eq!(RuntimePad::from(3599.0).as_str_runtime(),  "59:59");
+	/// assert_eq!(RuntimePad::from(35999.0).as_str_runtime(), "9:59:59");
+	/// assert_eq!(RuntimePad::from(36000.0).as_str_runtime(), "10:00:00");
+	/// ```
+	pub const fn as_str_runtime(&self) -> &str {
+		crate::run::runtime_milli::impl_as_str_runtime_inner!(self)
+	}
+
+	#[inline]
 	/// ```rust
 	/// # use readable::RuntimePad;
 	/// assert!(RuntimePad::unknown() == 0.0);
 	/// assert!(RuntimePad::unknown() == "??:??:??");
 	/// ```
 	pub const fn unknown() -> Self {
-		Self(ZERO_RUNTIME_F32, Str::from_static_str(UNKNOWN_RUNTIME_FULL))
+		Self(ZERO_RUNTIME_F32, Str::from_static_str(UNKNOWN_RUNTIME_PAD))
 	}
 
 	#[inline]
@@ -186,7 +146,7 @@ impl RuntimePad {
 	/// assert_eq!(RuntimePad::zero(), "00:00:00");
 	/// ```
 	pub const fn zero() -> Self {
-		Self(ZERO_RUNTIME_F32, Str::from_static_str(ZERO_RUNTIME_FULL))
+		Self(ZERO_RUNTIME_F32, Str::from_static_str(ZERO_RUNTIME_PAD))
 	}
 
 	#[inline]
@@ -197,7 +157,7 @@ impl RuntimePad {
 	/// assert_eq!(RuntimePad::second(), RuntimePad::from(1.0));
 	/// ```
 	pub const fn second() -> Self {
-		Self(SECOND_RUNTIME_F32, Str::from_static_str(SECOND_RUNTIME_FULL))
+		Self(SECOND_RUNTIME_F32, Str::from_static_str(SECOND_RUNTIME_PAD))
 	}
 
 	#[inline]
@@ -208,7 +168,7 @@ impl RuntimePad {
 	/// assert_eq!(RuntimePad::minute(), RuntimePad::from(60.0));
 	/// ```
 	pub const fn minute() -> Self {
-		Self(MINUTE_RUNTIME_F32, Str::from_static_str(MINUTE_RUNTIME_FULL))
+		Self(MINUTE_RUNTIME_F32, Str::from_static_str(MINUTE_RUNTIME_PAD))
 	}
 
 	#[inline]
@@ -219,7 +179,7 @@ impl RuntimePad {
 	/// assert_eq!(RuntimePad::hour(), RuntimePad::from(3600.0));
 	/// ```
 	pub const fn hour() -> Self {
-		Self(HOUR_RUNTIME_F32, Str::from_static_str(HOUR_RUNTIME_FULL))
+		Self(HOUR_RUNTIME_F32, Str::from_static_str(HOUR_RUNTIME_PAD))
 	}
 
 	#[inline]
@@ -230,7 +190,7 @@ impl RuntimePad {
 	/// assert_eq!(RuntimePad::max(), RuntimePad::from(359999.0));
 	/// ```
 	pub const fn max() -> Self {
-		Self(MAX_RUNTIME_F32, Str::from_static_str(MAX_RUNTIME_FULL))
+		Self(MAX_RUNTIME_F32, Str::from_static_str(MAX_RUNTIME_PAD))
 	}
 }
 
@@ -242,7 +202,7 @@ impl RuntimePad {
 	// INVARIANT:
 	// `handle_float!()` should be
 	// called before this function.
-	fn priv_from(runtime: f32) -> Self {
+	pub(super) fn priv_from(runtime: f32) -> Self {
 		let Some((h, m, s)) = Runtime::priv_from_inner(runtime) else {
 			return Self::unknown();
 		};
@@ -254,15 +214,15 @@ impl RuntimePad {
 		let (hours, minutes, seconds) = (h as u32, m as u32, s as u32);
 
 		// Format.
-		let mut buf = [0; MAX_LEN_RUNTIME_FULL];
+		let mut buf = [0; MAX_LEN_RUNTIME_PAD];
 		Self::format(&mut buf, hours, minutes, seconds);
 
-		Self(runtime, unsafe { Str::from_raw(MAX_LEN_RUNTIME_FULL as u8, buf) })
+		Self(runtime, unsafe { Str::from_raw(MAX_LEN_RUNTIME_PAD as u8, buf) })
 	}
 
 	#[inline]
 	// 0 Padding for `hh:mm:ss` according to `RuntimePad` rules.
-	fn format(buf: &mut [u8; MAX_LEN_RUNTIME_FULL], hour: u32, min: u32, sec: u32) {
+	fn format(buf: &mut [u8; MAX_LEN_RUNTIME_PAD], hour: u32, min: u32, sec: u32) {
 		debug_assert!(hour < 100);
 		debug_assert!(min < 60);
 		debug_assert!(sec < 60);
@@ -317,7 +277,7 @@ mod tests {
 			std::str::from_utf8(&b).unwrap()
 		}
 
-		let mut buf = [0; MAX_LEN_RUNTIME_FULL];
+		let mut buf = [0; MAX_LEN_RUNTIME_PAD];
 		let buf = &mut buf;
 
 		// 0:0:0

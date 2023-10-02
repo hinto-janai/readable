@@ -15,7 +15,7 @@
 ///
 /// ## Size
 /// The internal length is stored as a [`u8`], and as such will
-/// take mimimal space, allowing for longer strings to be stored.
+/// take minimal space, allowing for longer strings to be stored.
 ///
 /// Due to `#[repr(C)]`, `N + 1` is how many bytes your [`Str`] will take up.
 ///
@@ -404,8 +404,20 @@ impl<const N: usize> Str<N> {
 	/// let s = Str::<10>::from_static_str("hello");
 	/// assert_eq!(s.as_bytes().len(), 5);
 	/// ```
-	pub fn as_bytes(&self) -> &[u8] {
-		&self.buf[..self.len()]
+	pub const fn as_bytes(&self) -> &[u8] {
+		// SAFETY, we trust `.len()`.
+		unsafe {
+			std::slice::from_raw_parts(
+				self.as_ptr(),
+				self.len(),
+			)
+		}
+	}
+
+	#[inline]
+	/// Returns a pointer to the first byte in the string array.
+	pub const fn as_ptr(&self) -> *const u8 {
+		self.buf.as_ptr()
 	}
 
 	#[inline]
@@ -552,7 +564,7 @@ impl<const N: usize> Str<N> {
 	/// let s = Str::<5>::from_static_str("hello");
 	/// assert_eq!(s.as_str(), "hello");
 	/// ```
-	pub fn as_str(&self) -> &str {
+	pub const fn as_str(&self) -> &str {
 		// SAFETY: `.as_valid_slice()` must be correctly implemented.
 		// The internal state must be correct.
 		unsafe { std::str::from_utf8_unchecked(self.as_bytes()) }

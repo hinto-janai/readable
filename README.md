@@ -133,7 +133,7 @@ use readable::num::{ // Number formatting
 };
 ```
 
-All major types are exported to the root, so they can be imported without specifiying the full path:
+All major types are exported to the root, so they can be imported without specifying the full path:
 ```rust,ignore
 use readable::HeadTail; // shorter, preferred.
 
