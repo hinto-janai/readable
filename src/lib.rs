@@ -60,6 +60,28 @@ pub(crate) use toa::Itoa64;
 
 #[cfg(feature = "time")]
 /// Human-readable time & date formatting
+///
+/// ## Runtime
+/// This module includes various [`Runtime`] types meant for audio/video style formatting (`HH:MM:SS`).
+///
+/// The basic type is [`Runtime`] which formats strings to what you would expect from most audio/video players, e.g:
+/// ```rust
+/// # use readable::*;
+/// assert_eq!(Runtime::from(0),    "0:00");
+/// assert_eq!(Runtime::from(60),   "1:00");
+/// assert_eq!(Runtime::from(119),  "1:59");
+/// assert_eq!(Runtime::from(3599), "59:59");
+/// assert_eq!(Runtime::from(3600), "1:00:00");
+/// assert_eq!(Runtime::max(),      "99:59:59");
+/// ```
+///
+/// All [`Runtime`] times can losslessly be converted into each-other using [`From`].
+///
+/// Here's a diagram of:
+/// - What the type's formatting look like
+/// - What their sub/super-set relationship is
+///
+/// <img src="https://github.com/hinto-janai/readable/assets/101352116/424b91fd-7df1-493c-bf85-fcb264470c75" width="50%"/>
 pub mod time;
 pub use time::{
 	Date,Runtime,Time,RuntimePad,RuntimeMilli,RuntimeUnion,
