@@ -81,7 +81,7 @@ pub const MAX_RUNTIME_U32: u32 = 359999;
 /// [`Copy`] is available.
 ///
 /// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
-/// but a 8 byte array buffer, literally: `[u8; 8]`.
+/// but a 8 byte array buffer, literally: [`Str<8>`].
 ///
 /// Since the max valid runtime is: `99:59:59` (8 characters, `359999` seconds), an 8 byte
 /// buffer is used and enables this type to have [`Copy`].
@@ -100,9 +100,7 @@ pub const MAX_RUNTIME_U32: u32 = 359999;
 /// ```
 ///
 /// ## Exceptions
-/// - Inputting [`f64::NAN`], [`f64::INFINITY`], [`f64::NEG_INFINITY`] or the [`f32`] variants returns errors
-///
-/// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
+/// Inputting [`f64::NAN`], [`f64::INFINITY`], [`f64::NEG_INFINITY`] or the [`f32`] variants returns errors
 ///
 /// ## Math
 /// These operators are overloaded. They will always output a new [`Self`]:
@@ -342,6 +340,11 @@ impl Runtime {
 	//
 	// INVARIANT: Assumes `hour` is 1 or greater.
 	fn format_hms(buf: &mut [u8; LEN], hour: u32, min: u32, sec: u32) -> usize {
+		debug_assert!(hour >= 1);
+		debug_assert!(hour < 100);
+		debug_assert!(min < 60);
+		debug_assert!(sec < 60);
+
 		const Z: u8 = b'0';
 		const C: u8 = b':';
 

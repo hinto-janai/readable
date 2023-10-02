@@ -182,12 +182,17 @@ impl Unsigned {
 
 //---------------------------------------------------------------------------------------------------- Private functions.
 impl Unsigned {
+	#[inline(always)]
+	fn from_priv(u: u64) -> Self {
+		Self(u, Self::from_priv_inner(u))
+	}
+
 	// Main frontend function for construction.
 	//
 	// Branches out depending on the length of the number.
 	#[inline]
 	#[allow(clippy::match_overlapping_arm)]
-	pub(super) fn from_priv(u: u64) -> Self {
+	pub(super) fn from_priv_inner(u: u64) -> Str<MAX_LEN_NUM> {
 		// Format the `u64` into a `str`.
 		let mut itoa = crate::Itoa64::new();
 		let itoa = itoa.format(u);
@@ -223,7 +228,7 @@ impl Unsigned {
 		// SAFETY: we're manually creating a `Str`.
 		// This is okay because we filled the bytes
 		// and know the length.
-		Self(u, unsafe { Str::from_raw(len, s) })
+		unsafe { Str::from_raw(len, s) }
 	}
 
 	#[inline]

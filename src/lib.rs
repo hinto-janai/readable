@@ -62,7 +62,7 @@ pub(crate) use toa::Itoa64;
 /// Human-readable time & date formatting
 pub mod time;
 pub use time::{
-	Date,Runtime,Time,
+	Date,Runtime,Time,RuntimeFull,
 };
 
 #[cfg(feature = "toa")]

@@ -157,12 +157,17 @@ impl Int {
 
 //---------------------------------------------------------------------------------------------------- Private functions.
 impl Int {
+	#[inline(always)]
+	fn from_priv(i :i64) -> Self {
+		Self(i, Self::from_priv_inner(i))
+	}
+
 	// Main frontend function for construction.
 	//
 	// Branches out depending on the length of the number.
 	#[inline]
 	#[allow(clippy::match_overlapping_arm)]
-	fn from_priv(i: i64) -> Self {
+	pub(super) fn from_priv_inner(i: i64) -> Str<MAX_LEN_NUM> {
 		// Format the `u64` into a `str`.
 		let mut itoa = crate::Itoa64::new();
 		let itoa = itoa.format(i);
@@ -202,7 +207,7 @@ impl Int {
 			// SAFETY: we're manually creating a `Str`.
 			// This is okay because we filled the bytes
 			// and know the length.
-			Self(i, unsafe { Str::from_raw(len, s) })
+			unsafe { Str::from_raw(len, s) }
 
 		} else {
 			let len = match itoa_len {
@@ -231,7 +236,7 @@ impl Int {
 			// SAFETY: we're manually creating a `Str`.
 			// This is okay because we filled the bytes
 			// and know the length.
-			Self(i, unsafe { Str::from_raw(len, s) })
+			unsafe { Str::from_raw(len, s) }
 		}
 	}
 

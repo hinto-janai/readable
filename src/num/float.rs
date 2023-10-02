@@ -8,7 +8,7 @@ use crate::num::{
 	},
 };
 use crate::macros::{
-	return_bad_float,str_64,
+	return_bad_float,str_u64,str_i64,
 	impl_common,impl_not_const,
 	impl_usize,impl_isize,
 	impl_math,impl_traits,
@@ -118,7 +118,7 @@ macro_rules! impl_new {
 				return_bad_float!(f, Self::nan, Self::inf);
 
 				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
-				Self(f, format_compact!("{}.{}", str_64!(f as u64), fract))
+				Self(f, format_compact!("{}.{}", str_u64!(f as u64), fract))
 			}
 		}
 	}
@@ -189,7 +189,7 @@ impl Float {
 	/// | 100.1  | `100`
 	pub fn from_0(f: f64) -> Self {
 		return_bad_float!(f, Self::nan, Self::inf);
-		Self(f, CompactString::from(str_64!(f as u64)))
+		Self(f, CompactString::from(str_u64!(f as u64)))
 	}
 
 	seq_macro::seq!(N in 1..=14 {
@@ -205,7 +205,7 @@ macro_rules! impl_u {
 			impl From<$number> for Float {
 				#[inline]
 				fn from(number: $number) -> Self {
-					Self(number as f64, format_compact!("{}.000", str_64!(number as u64)))
+					Self(number as f64, format_compact!("{}.000", str_u64!(number as u64)))
 				}
 			}
 		)*
@@ -220,7 +220,7 @@ macro_rules! impl_i {
 			impl From<$number> for Float {
 				#[inline]
 				fn from(number: $number) -> Self {
-					Self(number as f64, format_compact!("{}.000", str_64!(number as i64)))
+					Self(number as f64, format_compact!("{}.000", str_i64!(number as i64)))
 				}
 			}
 		)*
@@ -244,7 +244,7 @@ impl From<f64> for Float {
 
 		let fract = &format_compact!("{:.3}", f.fract())[2..];
 
-		Self(f, format_compact!("{}.{}", str_64!(f as u64), fract))
+		Self(f, format_compact!("{}.{}", str_u64!(f as u64), fract))
 	}
 }
 

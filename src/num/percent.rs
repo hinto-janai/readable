@@ -5,7 +5,7 @@ use crate::num::constants::{
 	ZERO_PERCENT,
 };
 use crate::macros::{
-	return_bad_float,str_64,
+	return_bad_float,str_u64,str_i64,
 	impl_common,impl_not_const,
 	impl_usize,impl_isize,
 	impl_math,impl_traits,
@@ -126,7 +126,7 @@ macro_rules! impl_new {
 				return_bad_float!(f, Self::nan, Self::inf);
 
 				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
-				Self(f, format_compact!("{}.{}%", str_64!(f as u64), fract))
+				Self(f, format_compact!("{}.{}%", str_u64!(f as u64), fract))
 			}
 		}
 	}
@@ -205,7 +205,7 @@ impl Percent {
 	/// | 100.1  | `100%`
 	pub fn new_0(f: f64) -> Self {
 		return_bad_float!(f, Self::nan, Self::inf);
-		Self(f, format_compact!("{}%", str_64!(f as u64)))
+		Self(f, format_compact!("{}%", str_u64!(f as u64)))
 	}
 
 	impl_new!(1);
@@ -223,7 +223,7 @@ macro_rules! impl_u {
 				fn from(number: $number) -> Self {
 					let f = number as f64;
 
-					Self(f, format_compact!("{}.00%", str_64!(number as u64)))
+					Self(f, format_compact!("{}.00%", str_u64!(number as u64)))
 				}
 			}
 		)*
@@ -240,7 +240,7 @@ macro_rules! impl_i {
 				fn from(number: $number) -> Self {
 					let f = number as f64;
 
-					Self(f, format_compact!("{}.00%", str_64!(number as i64)))
+					Self(f, format_compact!("{}.00%", str_i64!(number as i64)))
 				}
 			}
 		)*
@@ -263,7 +263,7 @@ impl From<f64> for Percent {
 
 		let fract = &format_compact!("{:.2}", f.fract())[2..];
 
-		Self(f, format_compact!("{}.{}%", str_64!(f as u64), fract))
+		Self(f, format_compact!("{}.{}%", str_u64!(f as u64), fract))
 	}
 }
 
