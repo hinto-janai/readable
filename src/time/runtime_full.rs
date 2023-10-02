@@ -1,71 +1,74 @@
 //---------------------------------------------------------------------------------------------------- Use
 use crate::str::Str;
+use crate::time::{Runtime,RuntimeMilli,RuntimeUnion};
 use crate::macros::{
 	impl_common,impl_const,
 	impl_traits,return_bad_float,
 	impl_usize,impl_math,impl_impl_math,
 };
 use crate::time::{
-	ZERO_RUNTIME_U32,
-	SECOND_RUNTIME_U32,
-	MINUTE_RUNTIME_U32,
-	HOUR_RUNTIME_U32,
-	MAX_RUNTIME_U32,
+	ZERO_RUNTIME_F32,
+	SECOND_RUNTIME_F32,
+	MINUTE_RUNTIME_F32,
+	HOUR_RUNTIME_F32,
+	MAX_RUNTIME_F32,
 };
 
-//---------------------------------------------------------------------------------------------------- Constants (Private)
-const LEN: usize = 8;
-
 //---------------------------------------------------------------------------------------------------- Constants (Public)
-/// [`str`] returned when using [`RuntimeFull::unknown`]
+/// The max length of [`RuntimePad`]'s string.
+pub const MAX_LEN_RUNTIME_FULL: usize = 8;
+
+/// [`str`] returned when using [`RuntimePad::unknown`]
 pub const UNKNOWN_RUNTIME_FULL: &str = "??:??:??";
 
-/// [`str`] returned when using [`RuntimeFull::zero`]
+/// [`str`] returned when using [`RuntimePad::zero`]
 pub const ZERO_RUNTIME_FULL: &str = "00:00:00";
 
-/// [`str`] returned when using [`RuntimeFull::second`]
+/// [`str`] returned when using [`RuntimePad::second`]
 pub const SECOND_RUNTIME_FULL: &str = "00:00:01";
 
-/// [`str`] returned when using [`RuntimeFull::minute`]
+/// [`str`] returned when using [`RuntimePad::minute`]
 pub const MINUTE_RUNTIME_FULL: &str = "00:01:00";
 
-/// [`str`] returned when using [`RuntimeFull::hour`]
+/// [`str`] returned when using [`RuntimePad::hour`]
 pub const HOUR_RUNTIME_FULL: &str = "01:00:00";
 
-/// [`str`] for the max time [`RuntimeFull`] can handle
+/// [`str`] for the max time [`RuntimePad`] can handle
 pub const MAX_RUNTIME_FULL: &str = "99:59:59";
 
-//---------------------------------------------------------------------------------------------------- RuntimeFull
+//---------------------------------------------------------------------------------------------------- RuntimePad
 /// [`Runtime`], but always full length and pre-padded with zeros
 ///
 /// This is the exact same type as [`Runtime`], except, the
-/// numbers will _always_ be padding with `0`'s.
+/// numbers will _always_ be padded with `0`'s.
 ///
 /// ```rust
 /// # use readable::time::*;
 /// let runtime = Runtime::minute();
 /// assert_eq!(runtime, "1:00"); // hour left out, minute not padded
 ///
-/// let runtime_zero = RuntimeFull::minute();
+/// let runtime_zero = RuntimePad::minute();
 /// assert_eq!(runtime_zero, "00:01:00"); // always includes everything
 ///
 /// let runtime = Runtime::hour();
 /// assert_eq!(runtime, "1:00:00");
 ///
-/// let runtime_zero = RuntimeFull::hour();
+/// let runtime_zero = RuntimePad::hour();
 /// assert_eq!(runtime_zero, "01:00:00");
 /// ```
 ///
-/// [`RuntimeFull::from`] input can be:
+/// [`RuntimePad::from`] input can be:
 /// - [`u8`]
 /// - [`u16`]
 /// - [`u32`]
 /// - [`u64`]
+/// - [`u128`]
 /// - [`usize`]
 /// - [`f32`]
 /// - [`f64`]
-/// - [`std::time::Duration`].
-/// - [`std::time::Instant`].
+/// - [`std::time::Duration`]
+/// - [`std::time::Instant`]
+/// - Other [`Runtime`] types
 ///
 /// Integer inputs are presumed to be in _seconds._
 ///
@@ -73,14 +76,6 @@ pub const MAX_RUNTIME_FULL: &str = "99:59:59";
 /// The max input is `359999` seconds, or: `99:59:59`.
 ///
 /// If the input is larger than [`MAX_RUNTIME_FULL`], [`Self::unknown()`] is returned.
-///
-/// ## Inlining
-/// If the feature flag `inline_runtime` is enabled, ALL possible outputs of
-/// [`RuntimeFull`] are inlined as static bytes and any [`RuntimeFull::from`] call will return
-/// said static bytes.
-///
-/// **Warning:** This feature is disabled by default. While it increases speed,
-/// it also _heavily_ increases build time and binary size.
 ///
 /// ## Copy
 /// [`Copy`] is available.
@@ -93,15 +88,21 @@ pub const MAX_RUNTIME_FULL: &str = "99:59:59";
 ///
 /// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
 /// ```rust
-/// # use readable::RuntimeFull;
-/// let a = RuntimeFull::from(100_000_u64);
+/// # use readable::RuntimePad;
+/// let a = RuntimePad::from(100_000.0);
 ///
 /// // Copy 'a', use 'b'.
 /// let b = a;
-/// assert!(b == 100_000_u32);
+/// assert_eq!(b, 100_000.0);
 ///
 /// // We can still use 'a'
-/// assert!(a == 100_000_u32);
+/// assert_eq!(a, 100_000.0);
+/// ```
+///
+/// ## Size
+/// ```rust
+/// # use readable::time::*;
+/// assert_eq!(std::mem::size_of::<RuntimePad>(), 16);
 /// ```
 ///
 /// ## Exceptions
@@ -116,228 +117,152 @@ pub const MAX_RUNTIME_FULL: &str = "99:59:59";
 /// - `Rem %`
 ///
 /// They can either be:
-/// - Combined with another [`Self`]: `RuntimeFull::from(1) + RuntimeFull::from(1)`
-/// - Or with the inner number itself: `RuntimeFull::from(1) + 1`
+/// - Combined with another [`Self`]: `RuntimePad::from(1) + RuntimePad::from(1)`
+/// - Or with the inner number itself: `RuntimePad::from(1) + 1`
 ///
 /// ```rust
 /// # use readable::*;
-/// let n = RuntimeFull::from(u32::MAX) + u32::MAX;
-/// assert!(n == RuntimeFull::unknown());
+/// let n = RuntimePad::from(u32::MAX) + f32::MAX;
+/// assert_eq!(n, RuntimePad::unknown());
 /// ```
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::RuntimeFull;
+/// # use readable::RuntimePad;
 /// // Always round down.
-/// assert_eq!(RuntimeFull::from(11.1111), "00:00:11");
-/// assert_eq!(RuntimeFull::from(11.9999), "00:00:11");
+/// assert_eq!(RuntimePad::from(11.1111), "00:00:11");
+/// assert_eq!(RuntimePad::from(11.9999), "00:00:11");
 ///
-/// assert_eq!(RuntimeFull::from(111.111), "00:01:51");
-/// assert_eq!(RuntimeFull::from(111.999), "00:01:51");
+/// assert_eq!(RuntimePad::from(111.111), "00:01:51");
+/// assert_eq!(RuntimePad::from(111.999), "00:01:51");
 ///
-/// assert_eq!(RuntimeFull::from(11111.1), "03:05:11");
-/// assert_eq!(RuntimeFull::from(11111.9), "03:05:11");
+/// assert_eq!(RuntimePad::from(11111.1), "03:05:11");
+/// assert_eq!(RuntimePad::from(11111.9), "03:05:11");
 ///
-/// assert_eq!(RuntimeFull::from(0.0), "00:00:00");
-/// assert_eq!(RuntimeFull::from(1.0), "00:00:01");
-/// assert_eq!(RuntimeFull::from(1.9), "00:00:01");
-/// assert_eq!(RuntimeFull::from(2.0), "00:00:02");
+/// assert_eq!(RuntimePad::from(0.0), "00:00:00");
+/// assert_eq!(RuntimePad::from(1.0), "00:00:01");
+/// assert_eq!(RuntimePad::from(1.9), "00:00:01");
+/// assert_eq!(RuntimePad::from(2.0), "00:00:02");
 ///
-/// assert_eq!(RuntimeFull::from(f32::NAN),      "??:??:??");
-/// assert_eq!(RuntimeFull::from(f64::INFINITY), "??:??:??");
+/// assert_eq!(RuntimePad::from(f32::NAN),      "??:??:??");
+/// assert_eq!(RuntimePad::from(f64::INFINITY), "??:??:??");
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct RuntimeFull(u32, Str<8>);
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
+pub struct RuntimePad(f32, Str<MAX_LEN_RUNTIME_FULL>);
 
-impl_math!(RuntimeFull, u32);
-impl_traits!(RuntimeFull, u32);
+crate::time::runtime::impl_runtime! {
+	self  = RuntimePad,
+	len   = MAX_LEN_RUNTIME_FULL,
+	union = as_str_full,
 
-impl RuntimeFull {
-	impl_common!(u32);
+	other = Runtime,
+	other = RuntimeMilli,
+}
+impl_math!(RuntimePad, f32);
+impl_traits!(RuntimePad, f32);
+
+//---------------------------------------------------------------------------------------------------- Impl
+impl RuntimePad {
+	impl_common!(f32);
 	impl_const!();
 	impl_usize!();
 
 	#[inline]
 	/// ```rust
-	/// # use readable::RuntimeFull;
-	/// assert!(RuntimeFull::unknown() == 0);
-	/// assert!(RuntimeFull::unknown() == "??:??:??");
+	/// # use readable::RuntimePad;
+	/// assert!(RuntimePad::unknown() == 0.0);
+	/// assert!(RuntimePad::unknown() == "??:??:??");
 	/// ```
 	pub const fn unknown() -> Self {
-		Self(ZERO_RUNTIME_U32, Str::from_static_str(UNKNOWN_RUNTIME_FULL))
+		Self(ZERO_RUNTIME_F32, Str::from_static_str(UNKNOWN_RUNTIME_FULL))
 	}
 
 	#[inline]
 	/// ```rust
-	/// # use readable::RuntimeFull;
-	/// assert!(RuntimeFull::zero() == 0);
-	/// assert!(RuntimeFull::zero() == "00:00:00");
+	/// # use readable::RuntimePad;
+	/// assert_eq!(RuntimePad::zero(), 0.0);
+	/// assert_eq!(RuntimePad::zero(), "00:00:00");
 	/// ```
 	pub const fn zero() -> Self {
-		Self(ZERO_RUNTIME_U32, Str::from_static_str(ZERO_RUNTIME_FULL))
+		Self(ZERO_RUNTIME_F32, Str::from_static_str(ZERO_RUNTIME_FULL))
 	}
 
 	#[inline]
 	/// ```rust
-	/// # use readable::RuntimeFull;
-	/// assert!(RuntimeFull::second() == 1);
-	/// assert!(RuntimeFull::second() == "00:00:01");
-	/// assert!(RuntimeFull::second() == RuntimeFull::from(1.0));
+	/// # use readable::RuntimePad;
+	/// assert_eq!(RuntimePad::second(), 1.0);
+	/// assert_eq!(RuntimePad::second(), "00:00:01");
+	/// assert_eq!(RuntimePad::second(), RuntimePad::from(1.0));
 	/// ```
 	pub const fn second() -> Self {
-		Self(SECOND_RUNTIME_U32, Str::from_static_str(SECOND_RUNTIME_FULL))
+		Self(SECOND_RUNTIME_F32, Str::from_static_str(SECOND_RUNTIME_FULL))
 	}
 
 	#[inline]
 	/// ```rust
-	/// # use readable::RuntimeFull;
-	/// assert!(RuntimeFull::minute() == 60);
-	/// assert!(RuntimeFull::minute() == "00:01:00");
-	/// assert!(RuntimeFull::minute() == RuntimeFull::from(60.0));
+	/// # use readable::RuntimePad;
+	/// assert_eq!(RuntimePad::minute(), 60.0);
+	/// assert_eq!(RuntimePad::minute(), "00:01:00");
+	/// assert_eq!(RuntimePad::minute(), RuntimePad::from(60.0));
 	/// ```
 	pub const fn minute() -> Self {
-		Self(MINUTE_RUNTIME_U32, Str::from_static_str(MINUTE_RUNTIME_FULL))
+		Self(MINUTE_RUNTIME_F32, Str::from_static_str(MINUTE_RUNTIME_FULL))
 	}
 
 	#[inline]
 	/// ```rust
-	/// # use readable::RuntimeFull;
-	/// assert!(RuntimeFull::hour() == 3600);
-	/// assert!(RuntimeFull::hour() == "01:00:00");
-	/// assert!(RuntimeFull::hour() == RuntimeFull::from(3600.0));
+	/// # use readable::RuntimePad;
+	/// assert_eq!(RuntimePad::hour(), 3600.0);
+	/// assert_eq!(RuntimePad::hour(), "01:00:00");
+	/// assert_eq!(RuntimePad::hour(), RuntimePad::from(3600.0));
 	/// ```
 	pub const fn hour() -> Self {
-		Self(HOUR_RUNTIME_U32, Str::from_static_str(HOUR_RUNTIME_FULL))
+		Self(HOUR_RUNTIME_F32, Str::from_static_str(HOUR_RUNTIME_FULL))
 	}
 
 	#[inline]
 	/// ```rust
-	/// # use readable::RuntimeFull;
-	/// assert!(RuntimeFull::max() == 359999);
-	/// assert!(RuntimeFull::max() == "99:59:59");
-	/// assert!(RuntimeFull::max() == RuntimeFull::from(359999.0));
+	/// # use readable::RuntimePad;
+	/// assert_eq!(RuntimePad::max(), 359999.0);
+	/// assert_eq!(RuntimePad::max(), "99:59:59");
+	/// assert_eq!(RuntimePad::max(), RuntimePad::from(359999.0));
 	/// ```
 	pub const fn max() -> Self {
-		Self(MAX_RUNTIME_U32, Str::from_static_str(MAX_RUNTIME_FULL))
+		Self(MAX_RUNTIME_F32, Str::from_static_str(MAX_RUNTIME_FULL))
 	}
+}
 
+//---------------------------------------------------------------------------------------------------- Private impl
+impl RuntimePad {
 	#[allow(unreachable_code)]
 	// Private function used in float `From`.
 	//
 	// INVARIANT:
 	// `handle_float!()` should be
 	// called before this function.
-	fn priv_from(runtime: f64) -> Self {
-		#[cfg(feature = "inline_runtime_full")]
-		{
-			let runtime = runtime as u32;
-			return Self(runtime, Buffer::from_unchecked(readable_inlined_runtime::inlined(runtime)));
-		}
+	fn priv_from(runtime: f32) -> Self {
+		let Some((h, m, s)) = Runtime::priv_from_inner(runtime) else {
+			return Self::unknown();
+		};
 
-		// Zero length.
-		if runtime <= 0.0 {
+		if (h, m, s) == (0.0, 0.0, 0.0) {
 			return Self::zero();
 		}
 
-		// Return unknown if over max.
-		if runtime > MAX_RUNTIME_U32 as f64 {
-			return Self::unknown();
-		}
-
-		// Cast to `u32` (rounds down implicitly).
-	    let seconds = (runtime % 60.0) as u32;
-	    let minutes = ((runtime / 60.0) % 60.0) as u32;
-	    let hours   = ((runtime / 60.0) / 60.0) as u32;
+		let (hours, minutes, seconds) = (h as u32, m as u32, s as u32);
 
 		// Format.
-		let mut buf = [0; LEN];
+		let mut buf = [0; MAX_LEN_RUNTIME_FULL];
 		Self::format(&mut buf, hours, minutes, seconds);
 
-		Self(runtime as u32, unsafe { Str::from_raw(LEN as u8, buf) })
+		Self(runtime, unsafe { Str::from_raw(MAX_LEN_RUNTIME_FULL as u8, buf) })
 	}
-}
 
-//---------------------------------------------------------------------------------------------------- Duration/Instant
-impl From<std::time::Duration> for RuntimeFull {
 	#[inline]
-	fn from(runtime: std::time::Duration) -> Self {
-		let f = runtime.as_secs_f64();
-		Self::priv_from(f)
-	}
-}
-
-impl From<&std::time::Duration> for RuntimeFull {
-	#[inline]
-	fn from(runtime: &std::time::Duration) -> Self {
-		let f = runtime.as_secs_f64();
-		Self::priv_from(f)
-	}
-}
-
-impl From<std::time::Instant> for RuntimeFull {
-	#[inline]
-	fn from(runtime: std::time::Instant) -> Self {
-		let f = runtime.elapsed().as_secs_f64();
-		Self::priv_from(f)
-	}
-}
-
-impl From<&std::time::Instant> for RuntimeFull {
-	#[inline]
-	fn from(runtime: &std::time::Instant) -> Self {
-		let f = runtime.elapsed().as_secs_f64();
-		Self::priv_from(f)
-	}
-}
-
-//---------------------------------------------------------------------------------------------------- Floats
-macro_rules! impl_f {
-	($($from:ty),*) => {
-		$(
-			impl From<$from> for RuntimeFull {
-				fn from(f: $from) -> Self {
-					return_bad_float!(f, Self::unknown, Self::unknown);
-
-					// Handle NaN/Inf.
-					Self::priv_from(f as f64)
-				}
-			}
-			impl From<&$from> for RuntimeFull {
-				fn from(f: &$from) -> Self {
-					return_bad_float!(f, Self::unknown, Self::unknown);
-
-					// Handle NaN/Inf.
-					Self::priv_from(*f as f64)
-				}
-			}
-		)*
-	}
-}
-impl_f!(f32, f64);
-
-//---------------------------------------------------------------------------------------------------- Int
-macro_rules! impl_int {
-	($from:ty) => {
-		impl From<$from> for RuntimeFull {
-			fn from(runtime: $from) -> Self {
-				Self::priv_from(runtime as f64)
-			}
-		}
-	}
-}
-impl_int!(u8);
-impl_int!(u16);
-impl_int!(u32);
-impl_int!(u64);
-impl_int!(usize);
-
-//---------------------------------------------------------------------------------------------------- Private impl
-impl RuntimeFull {
-	#[inline]
-	// 0 Padding for `hh:mm:ss` according to `RuntimeFull` rules.
-	fn format(buf: &mut [u8; LEN], hour: u32, min: u32, sec: u32) {
+	// 0 Padding for `hh:mm:ss` according to `RuntimePad` rules.
+	fn format(buf: &mut [u8; MAX_LEN_RUNTIME_FULL], hour: u32, min: u32, sec: u32) {
 		debug_assert!(hour < 100);
 		debug_assert!(min < 60);
 		debug_assert!(sec < 60);
@@ -392,99 +317,99 @@ mod tests {
 			std::str::from_utf8(&b).unwrap()
 		}
 
-		let mut buf = [0; LEN];
+		let mut buf = [0; MAX_LEN_RUNTIME_FULL];
 		let buf = &mut buf;
 
 		// 0:0:0
-		RuntimeFull::format(buf, 1, 1, 1);
+		RuntimePad::format(buf, 1, 1, 1);
 		assert_eq!(s(buf), "01:01:01");
 
 		// 0:00:0
-		RuntimeFull::format(buf, 1, 10, 1);
+		RuntimePad::format(buf, 1, 10, 1);
 		assert_eq!(s(buf), "01:10:01");
 
 		// 0:0:00
-		RuntimeFull::format(buf, 1, 1, 10);
+		RuntimePad::format(buf, 1, 1, 10);
 		assert_eq!(s(buf), "01:01:10");
 
 		// 0:00:00
-		RuntimeFull::format(buf, 1, 10, 10);
+		RuntimePad::format(buf, 1, 10, 10);
 		assert_eq!(s(buf), "01:10:10");
 
 		// 00:0:0
-		RuntimeFull::format(buf, 10, 1, 1);
+		RuntimePad::format(buf, 10, 1, 1);
 		assert_eq!(s(buf), "10:01:01");
 
 		// 00:00:0
-		RuntimeFull::format(buf, 10, 10, 1);
+		RuntimePad::format(buf, 10, 10, 1);
 		assert_eq!(s(buf), "10:10:01");
 
 		// 00:0:00
-		RuntimeFull::format(buf, 10, 1, 10);
+		RuntimePad::format(buf, 10, 1, 10);
 		assert_eq!(s(buf), "10:01:10");
 
 		// 00:00:00
-		RuntimeFull::format(buf, 10, 10, 10);
+		RuntimePad::format(buf, 10, 10, 10);
 		assert_eq!(s(buf), "10:10:10");
 
 		// 0:0
-		RuntimeFull::format(buf, 0, 1, 1);
+		RuntimePad::format(buf, 0, 1, 1);
 		assert_eq!(s(buf), "00:01:01");
 
 		// 00:0
-		RuntimeFull::format(buf, 0, 10, 1);
+		RuntimePad::format(buf, 0, 10, 1);
 		assert_eq!(s(buf), "00:10:01");
 
 		// 0:00
-		RuntimeFull::format(buf, 0, 1, 10);
+		RuntimePad::format(buf, 0, 1, 10);
 		assert_eq!(s(buf), "00:01:10");
 
 		// 00:00
-		RuntimeFull::format(buf, 0, 10, 10);
+		RuntimePad::format(buf, 0, 10, 10);
 		assert_eq!(s(buf), "00:10:10");
 	}
 
 	#[test]
 	fn all_uint() {
-		for i in 0..MAX_RUNTIME_U32 {
-			let rt = RuntimeFull::from(i);
+		for i in 0..MAX_RUNTIME_F32 as u32 {
+			let rt = RuntimePad::from(i);
 			println!("rt:{} - i: {}", rt, i);
-			assert_eq!(rt, i);
-			assert_eq!(rt, i);
+			assert_eq!(rt.inner() as u32, i);
+			assert_eq!(rt.inner() as u32, i);
 			println!("{}", rt);
 		}
 	}
 
 	#[test]
 	fn all_floats() {
-		let mut f = 1.0;
-		while (f as u32) < MAX_RUNTIME_U32 {
-			let rt = RuntimeFull::from(f);
-			println!("rt: {} - f: {}", rt, f);
-			assert_eq!(rt, f as u32);
+		let mut f = 0.0;
+		while f <= MAX_RUNTIME_F32 {
+			let rt = RuntimePad::from(f);
+			println!("rt: {} - f: {}", rt.inner(), f);
+			assert_eq!(rt, f);
 			f += 0.1;
 		}
 	}
 
 	#[test]
 	fn overflow_float() {
-		assert_eq!(RuntimeFull::from(MAX_RUNTIME_U32 as f64 + 1.0), 0);
-		assert_eq!(RuntimeFull::from(MAX_RUNTIME_U32 as f64 + 1.0), RuntimeFull::unknown());
+		assert_eq!(RuntimePad::from(MAX_RUNTIME_F32 + 1.0), 0.0);
+		assert_eq!(RuntimePad::from(MAX_RUNTIME_F32 + 1.0), RuntimePad::unknown());
 	}
 
 	#[test]
 	fn overflow_uint() {
-		assert_eq!(RuntimeFull::from(MAX_RUNTIME_U32 + 1), 0);
-		assert_eq!(RuntimeFull::from(MAX_RUNTIME_U32 + 1), RuntimeFull::unknown());
+		assert_eq!(RuntimePad::from(MAX_RUNTIME_F32 + 1.0), 0.0);
+		assert_eq!(RuntimePad::from(MAX_RUNTIME_F32 + 1.0), RuntimePad::unknown());
 	}
 
 	#[test]
 	fn special() {
-		assert_eq!(RuntimeFull::from(f32::NAN),          RuntimeFull::unknown());
-		assert_eq!(RuntimeFull::from(f32::INFINITY),     RuntimeFull::unknown());
-		assert_eq!(RuntimeFull::from(f32::NEG_INFINITY), RuntimeFull::unknown());
-		assert_eq!(RuntimeFull::from(f64::NAN),          RuntimeFull::unknown());
-		assert_eq!(RuntimeFull::from(f64::INFINITY),     RuntimeFull::unknown());
-		assert_eq!(RuntimeFull::from(f64::NEG_INFINITY), RuntimeFull::unknown());
+		assert_eq!(RuntimePad::from(f32::NAN),          RuntimePad::unknown());
+		assert_eq!(RuntimePad::from(f32::INFINITY),     RuntimePad::unknown());
+		assert_eq!(RuntimePad::from(f32::NEG_INFINITY), RuntimePad::unknown());
+		assert_eq!(RuntimePad::from(f64::NAN),          RuntimePad::unknown());
+		assert_eq!(RuntimePad::from(f64::INFINITY),     RuntimePad::unknown());
+		assert_eq!(RuntimePad::from(f64::NEG_INFINITY), RuntimePad::unknown());
 	}
 }

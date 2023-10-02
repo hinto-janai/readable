@@ -795,6 +795,15 @@ impl<const N: usize> Str<N> {
 			buf,
 		}
 	}
+	/// INVARIANT: input str must match length.
+	pub unsafe fn from_raw_str(len: u8, buf_same_len: &str) -> Self {
+		let mut buf = [0; N];
+		buf.copy_from_slice(&buf_same_len.as_bytes());
+		Self {
+			len,
+			buf,
+		}
+	}
 }
 
 //---------------------------------------------------------------------------------------------------- Traits
