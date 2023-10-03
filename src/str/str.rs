@@ -51,7 +51,7 @@
 /// // Create a `Str` with a maximum capacity of `24` bytes.
 /// const N: usize  = 24;
 /// let mut string = Str::<N>::new();
-/// assert!(string.empty());
+/// assert!(string.is_empty());
 ///
 /// // Copy the bytes from an actual `str`
 /// let other_str = "this str is 24 bytes :-)";
@@ -63,7 +63,7 @@
 ///
 /// // Clear the string.
 /// string.clear();
-/// assert!(string.empty());
+/// assert!(string.is_empty());
 /// assert_eq!(string.len(), 0);
 ///
 /// // `push_str()` should be the exact same.
@@ -71,7 +71,7 @@
 /// assert_eq!(string, other_str);
 ///
 /// // This string is full.
-/// assert!(string.full());
+/// assert!(string.is_full());
 /// assert_eq!(string.len(), N);
 ///
 /// // Pushing new strings will error.
@@ -116,7 +116,7 @@ impl<const N: usize> Str<N> {
 	/// ```rust
 	/// # use readable::Str;
 	/// let string = Str::<4>::new();
-	/// assert!(string.empty());
+	/// assert!(string.is_empty());
 	/// assert_eq!(string.len(), 0);
 	/// assert!(string.as_str().is_empty());
 	/// assert_eq!(string.as_str().len(), 0);
@@ -485,7 +485,7 @@ impl<const N: usize> Str<N> {
 	/// // Clear the string.
 	/// s.clear();
 	/// assert_eq!(s, "");
-	/// assert!(s.empty());
+	/// assert!(s.is_empty());
 	/// ```
 	///
 	/// ## Safety
@@ -512,7 +512,7 @@ impl<const N: usize> Str<N> {
 	/// // Zero the string.
 	/// s.zero();
 	/// assert_eq!(s, "");
-	/// assert!(s.empty());
+	/// assert!(s.is_empty());
 	/// ```
 	pub fn zero(&mut self) {
 		// should be a fast 0 memset.
@@ -530,12 +530,12 @@ impl<const N: usize> Str<N> {
 	/// # use readable::Str;
 	/// let mut s = Str::<10>::new();
 	/// assert_eq!(s, "");
-	/// assert!(s.empty());
+	/// assert!(s.is_empty());
 	///
 	/// s.push_str("a").unwrap();
-	/// assert!(!s.empty());
+	/// assert!(!s.is_empty());
 	/// ```
-	pub const fn empty(&self) -> bool {
+	pub const fn is_empty(&self) -> bool {
 		self.len == 0
 	}
 
@@ -546,13 +546,13 @@ impl<const N: usize> Str<N> {
 	/// # use readable::Str;
 	/// let mut s = Str::<3>::new();
 	/// assert_eq!(s.len(), 0);
-	/// assert!(!s.full());
+	/// assert!(!s.is_full());
 	///
 	/// s.push_str("123").unwrap();
 	/// assert_eq!(s.len(), 3);
-	/// assert!(s.full());
+	/// assert!(s.is_full());
 	/// ```
-	pub const fn full(&self) -> bool {
+	pub const fn is_full(&self) -> bool {
 		self.len == Self::CAPACITY
 	}
 
@@ -700,7 +700,7 @@ impl<const N: usize> Str<N> {
 	/// assert_eq!(err, Err(1));
 	///
 	/// // The string is still empty.
-	/// assert!(string.empty());
+	/// assert!(string.is_empty());
 	///
 	/// // This 2 length string will fit.
 	/// string.push_str("ab").unwrap();

@@ -69,7 +69,7 @@ pub use run::{
 /// Human-readable time formatting
 pub mod time;
 pub use time::{
-	Time,
+	Time,TimeFull,
 };
 
 /// Human-readable date formatting

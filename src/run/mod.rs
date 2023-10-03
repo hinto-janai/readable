@@ -60,8 +60,6 @@
 //! This is because the inner [`f32`] stored is simply copied,
 //! only the formatted string is different.
 //!
-//! Consider using the more efficient [`RuntimeUnion`] if you need to switch between formats often.
-//!
 //! ## Errors
 //! The max input is `359999` seconds, or: anything over `99:59:59`.
 //!

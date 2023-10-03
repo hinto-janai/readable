@@ -10,7 +10,7 @@ This library:
 - Parses raw string data into human-readable versions
 - Provides various string types and utilities
 
-All of the strings are implemented as fixed length, stack allocated arrays that are [`Copy`](https://doc.rust-lang.org/stable/std/marker/trait..html)-able.
+Most of the strings are implemented as fixed length, stack allocated arrays that are [`Copy`](https://doc.rust-lang.org/stable/std/marker/trait..html)-able.
 
 In general, `readable` types are often used where you need to quickly format some data into a more human-friendly string, display it, then throw it away (although most `readable` types are perfectly fine to permanently store).
 
@@ -49,8 +49,8 @@ assert_eq!(a, "3:05:11");
 ```
 #### Time:
 ```rust
-let a = readable::Time::from(86399_u64);
-assert_eq!(a, 86399_u64);
+let a = readable::TimeFull::from(86399_u32);
+assert_eq!(a, 86399_u32);
 assert_eq!(a, "23 hours, 59 minutes, 59 seconds");
 ```
 #### Date:
@@ -66,7 +66,7 @@ All number types implement `PartialEq` against `str` and their internal numbers.
 This is comparing `b`'s inner `String`:
 ```rust
 let a = std::time::Duration::from_secs(86399);
-let b = readable::Time::from(a);
+let b = readable::TimeFull::from(a);
 assert_eq!(b, "23 hours, 59 minutes, 59 seconds");
 ```
 This is comparing `a`'s inner `i64`:
@@ -117,12 +117,6 @@ assert_eq!(u10 % u10, 0);
 |------------------|---------|
 | `serde`          | Enables [`serde`](https://docs.rs/serde) on all types
 | `bincode`        | Enables [`bincode 2.0.0-rc.3`](https://docs.rs/bincode/2.0.0-rc.3/bincode/index.html)'s `Encode/Decode` on all types
-| `inline_date`    | Inlines any `Date` parsing that is in `YYYY-MM-HH` format and is between year `1900-2100`
-| `inline_time`    | Inlines any `Time` parsing that is under `1 hour, 1 minute` (`0..=3660`)
-| `inline_runtime` | Inlines ALL `Runtime` parsing (`0:00..99:59:59`/`0..=359999`)
-| `full`           | Enables everything above
-
-**Warning:** The `inline_*` features are disabled by default. While they increase performance (in most cases, you should test!), they also _heavily_ increase build time and binary size.
 
 ## Re-Exports
 Types are separated per module depending on what type of data they take as input, and what type of data they output.
