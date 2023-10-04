@@ -71,7 +71,7 @@ use crate::macros::{
 /// assert_eq!(byte, "2 B");
 /// ```
 ///
-/// /// ## Size
+/// ## Size
 /// [`Str<10>`] is used internally to represent the string.
 ///
 /// ```rust
@@ -82,7 +82,7 @@ use crate::macros::{
 /// ## Copy
 /// [`Copy`] is available.
 ///
-/// The actual strings used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html)'s,
+/// The actual strings used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
 /// but a byte array buffer, literally: [`Str<10>`].
 ///
 /// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
@@ -297,7 +297,7 @@ impl Byte {
 			b[len] = SPACE;
 			b[len + 1] = B;
 
-			Self(bytes, unsafe { Str::from_raw(len as u8 + 2, b) })
+			Self(bytes, unsafe { Str::from_raw(b, len as u8 + 2) })
 
 		// Else calculate.
 		} else {
@@ -359,7 +359,7 @@ impl Byte {
 			b[idx + 4] = UNITS[exp - 1];
 			b[idx + 5] = B;
 
-			Self(bytes, unsafe { Str::from_raw(idx as u8 + 6, b )})
+			Self(bytes, unsafe { Str::from_raw(b, idx as u8 + 6)})
 		}
 	}
 }

@@ -110,6 +110,7 @@ impl<const N: usize> Str<N> {
 		}
 	};
 
+	#[inline]
 	/// Returns an empty [`Str`].
 	///
 	/// ```rust
@@ -569,7 +570,6 @@ impl<const N: usize> Str<N> {
 		unsafe { std::str::from_utf8_unchecked(self.as_bytes()) }
 	}
 
-	#[inline]
 	/// Consumes `self` into a [`String`]
 	///
 	/// ``` rust
@@ -584,6 +584,7 @@ impl<const N: usize> Str<N> {
 		unsafe { String::from_utf8_unchecked(self.into_vec()) }
 	}
 
+	#[inline]
 	/// Overwrites `self` with the [`str`] `s`.
 	///
 	/// The input `s` must be the exact same length
@@ -613,20 +614,22 @@ impl<const N: usize> Str<N> {
 		let s_len   = s.len();
 
 		if s_len > N {
-			Err(s_len - N)
+			return Err(s_len - N);
 		} else if s_len != N {
-			Err(0)
-		} else {
-			// SAFETY: We are directly mutating the bytes and length.
-			// We know the correct values.
-			unsafe {
-				self.as_bytes_all_mut().copy_from_slice(&s_bytes[..s_len]);
-				self.set_len(s_len);
-			}
-			Ok(s_len)
+			return Err(0);
 		}
+
+		// SAFETY: We are directly mutating the bytes and length.
+		// We know the correct values.
+		unsafe {
+			self.as_bytes_all_mut().copy_from_slice(&s_bytes[..s_len]);
+			self.set_len(s_len);
+		}
+
+		Ok(s_len)
 	}
 
+	#[inline]
 	/// Performs the same operation as [`Self::copy_str()`] except
 	/// this function does not check if the input [`str`] `s` is too long.
 	///
@@ -679,9 +682,11 @@ impl<const N: usize> Str<N> {
 			self.as_bytes_all_mut().copy_from_slice(&s_bytes[..s_len]);
 			self.set_len(s_len);
 		}
+
 		s_len
 	}
 
+	#[inline]
 	/// Appends `self` with the [`str`] `s`.
 	///
 	/// If the push was successful (or `s` was empty),
@@ -726,20 +731,20 @@ impl<const N: usize> Str<N> {
 		let remaining = self.remaining();
 
 		if s_len > remaining {
-			Err(s_len - remaining)
-		} else {
-			let self_len = self.len();
-			let new_len  = s_len + self.len();
-
-
-			// SAFETY: We are directly mutating the bytes and length.
-			// We know the correct values.
-			unsafe {
-				self.as_bytes_all_mut()[self_len..new_len].copy_from_slice(s_bytes);
-				self.set_len(new_len);
-			}
-			Ok(new_len)
+			return Err(s_len - remaining);
 		}
+
+		let self_len = self.len();
+		let new_len  = s_len + self.len();
+
+		// SAFETY: We are directly mutating the bytes and length.
+		// We know the correct values.
+		unsafe {
+			self.as_bytes_all_mut()[self_len..new_len].copy_from_slice(s_bytes);
+			self.set_len(new_len);
+		}
+
+		Ok(new_len)
 	}
 
 	/// Appends `self` with the [`str`] `s`.
@@ -786,33 +791,108 @@ impl<const N: usize> Str<N> {
 
 		if s_len > remaining {
 			panic!("no more space - remaining: {remaining}, input length: {s_len}");
-		} else {
-			let self_len = self.len();
-			let new_len  = s_len + self.len();
-
-			// SAFETY: We are directly mutating the bytes and length.
-			// We know the correct values.
-			unsafe {
-				self.as_bytes_all_mut()[self_len..new_len].copy_from_slice(s_bytes);
-				self.set_len(new_len);
-			}
-			new_len
 		}
+
+		let self_len = self.len();
+		let new_len  = s_len + self.len();
+
+		// SAFETY: We are directly mutating the bytes and length.
+		// We know the correct values.
+		unsafe {
+			self.as_bytes_all_mut()[self_len..new_len].copy_from_slice(s_bytes);
+			self.set_len(new_len);
+		}
+		new_len
 	}
 
+	#[inline]
+	/// Decomposes a [`Str`] into its raw components
 	///
-	pub const unsafe fn from_raw(len: u8, buf: [u8; N]) -> Self {
-		Self {
-			len,
-			buf,
-		}
+	/// Returns the byte array buffer and the valid UTF-8 length of the [`Str`].
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let s = Str::<5>::from_static_str("hi");
+	/// let (buf, len) = s.into_raw();
+	///
+	/// assert_eq!(buf, [b'h', b'i', 0, 0, 0]);
+	/// assert_eq!(len, 2);
+	/// ```
+	pub const fn into_raw(self) -> ([u8; N], u8) {
+		(self.buf, self.len)
 	}
-	/// INVARIANT: input str must match length.
-	pub unsafe fn from_raw_str(len: u8, buf_same_len: &str) -> Self {
+
+	#[inline]
+	/// Creates a new [`Str`] from a byte array buffer and a length
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let buf = [b'h', b'i', 0, 0, 0];
+	/// let len = 2;
+	///
+	/// // SAFETY: The length covers valid
+	/// // UTF-8 bytes in the provided buffer.
+	/// let s = unsafe { Str::<5>::from_raw(buf, len) };
+	/// assert_eq!(s, "hi");
+	/// ```
+	///
+	/// ## Safety
+	/// The caller needs to make sure the bytes covered
+	/// by the `len` are actual valid UTF-8 bytes.
+	pub const unsafe fn from_raw(buf: [u8; N], len: u8) -> Self {
+		Self { buf, len }
+	}
+
+	#[inline]
+	/// Create a [`Str`] directly from a [`str`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let s = Str::<5>::from_str("12345");
+	/// assert_eq!(s, "12345");
+	/// ```
+	///
+	/// ## Panics
+	/// The input input [`str`] `string`'s length must
+	/// be exactly equal to `Self::CAPACITY` or this
+	/// function will panic.
+	///
+	/// ```rust,should_panic
+	/// # use readable::*;
+	/// // 1 too many characters, will panic.
+	/// let s = Str::<4>::from_str("12345");
+	/// ```
+	pub fn from_str(string: &str) -> Self {
+		Self::from_bytes(string.as_bytes())
+	}
+
+	#[inline]
+	/// Create a [`Str`] directly from bytes
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let s = Str::<5>::from_bytes(b"12345");
+	/// assert_eq!(s, "12345");
+	/// ```
+	///
+	/// ## Safety
+	/// The bytes must be valid UTF-8.
+	///
+	/// ## Panics
+	/// The input input bytes `bytes`'s length must
+	/// be exactly equal to `Self::CAPACITY` or this
+	/// function will panic.
+	///
+	/// ```rust,should_panic
+	/// # use readable::*;
+	/// // 1 too many characters, will panic.
+	/// let s = Str::<4>::from_bytes(b"12345");
+	/// ```
+	pub fn from_bytes(bytes: &[u8]) -> Self {
 		let mut buf = [0; N];
-		buf.copy_from_slice(&buf_same_len.as_bytes());
+		buf.copy_from_slice(&bytes);
 		Self {
-			len,
+			len: N as u8,
 			buf,
 		}
 	}

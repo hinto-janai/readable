@@ -217,7 +217,7 @@ impl RuntimePad {
 		let mut buf = [0; MAX_LEN_RUNTIME_PAD];
 		Self::format(&mut buf, hours, minutes, seconds);
 
-		Self(runtime, unsafe { Str::from_raw(MAX_LEN_RUNTIME_PAD as u8, buf) })
+		Self(runtime, unsafe { Str::from_raw(buf, MAX_LEN_RUNTIME_PAD as u8) })
 	}
 
 	#[inline]

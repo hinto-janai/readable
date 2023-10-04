@@ -901,7 +901,7 @@ impl Date {
 		// SAFETY: we're manually creating a `Str`.
 		// This is okay because we filled the bytes
 		// and know the length.
-		let string = unsafe { Str::from_raw(4, buf) };
+		let string = unsafe { Str::from_raw(buf, 4) };
 
 		Self((y, 0, 0), string)
 	}
@@ -918,7 +918,7 @@ impl Date {
 		// SAFETY: we're manually creating a `Str`.
 		// This is okay because we filled the bytes
 		// and know the length.
-		let string = unsafe { Str::from_raw(7, buf) };
+		let string = unsafe { Str::from_raw(buf, 7) };
 
 		Self((y, m, 0), string)
 	}
@@ -937,7 +937,7 @@ impl Date {
 		// SAFETY: we're manually creating a `Str`.
 		// This is okay because we filled the bytes
 		// and know the length.
-		let string = unsafe { Str::from_raw(MAX_LEN_DATE as u8, buf) };
+		let string = unsafe { Str::from_raw(buf, MAX_LEN_DATE as u8) };
 
 		Self((y, m, d), string)
 	}

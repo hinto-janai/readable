@@ -215,7 +215,7 @@ impl Int {
 			// SAFETY: we're manually creating a `Str`.
 			// This is okay because we filled the bytes
 			// and know the length.
-			unsafe { Str::from_raw(len, s) }
+			unsafe { Str::from_raw(s, len) }
 
 		} else {
 			let len = match itoa_len {
@@ -244,7 +244,7 @@ impl Int {
 			// SAFETY: we're manually creating a `Str`.
 			// This is okay because we filled the bytes
 			// and know the length.
-			unsafe { Str::from_raw(len, s) }
+			unsafe { Str::from_raw(s, len) }
 		}
 	}
 

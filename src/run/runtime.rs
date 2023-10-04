@@ -195,7 +195,7 @@ impl Runtime {
 			Self::format_ms(&mut buf, minutes, seconds)
 		};
 
-		Self(runtime, unsafe { Str::from_raw(len as u8, buf) })
+		Self(runtime, unsafe { Str::from_raw(buf, len as u8) })
 	}
 
 	#[inline]
@@ -568,7 +568,7 @@ macro_rules! impl_runtime {
 						runtime.inner(),
 						// SAFETY: Input string must be the same length.
 						// We know `as_str_full()` always returns the correct str.
-						unsafe { Str::from_raw_str($max_len as u8, runtime.$str_function()) },
+						Str::from_str(runtime.$str_function()),
 					)
 				}
 			}
@@ -579,7 +579,7 @@ macro_rules! impl_runtime {
 						runtime.inner(),
 						// SAFETY: Input string must be the same length.
 						// We know `as_str_full()` always returns the correct str.
-						unsafe { Str::from_raw_str($max_len as u8, runtime.$str_function()) },
+						Str::from_str(runtime.$str_function()),
 					)
 				}
 			}

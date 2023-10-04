@@ -285,7 +285,7 @@ impl RuntimeMilli {
 			(1000.0 * s.fract()).round() as u16,
 		);
 
-		Self(runtime, unsafe { Str::from_raw(MAX_LEN_RUNTIME_MILLI as u8, buf) })
+		Self(runtime, unsafe { Str::from_raw(buf, MAX_LEN_RUNTIME_MILLI as u8) })
 	}
 
 	#[inline]
