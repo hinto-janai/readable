@@ -2,10 +2,7 @@
 use crate::str::Str;
 use crate::num::{
 	Int,
-	constants::{
-		MAX_LEN_NUM,ZERO_NUM,
-		UNKNOWN_NUM,COMMA,MAX_UNSIGNED,
-	},
+	constants::COMMA,
 };
 use crate::macros::{
 	impl_common,impl_const,
@@ -26,11 +23,14 @@ use std::num::{
 /// For [`u8`], [`u16`], [`u32`], [`u64`], [`usize`] or any `NonZeroU*` variant:
 /// - Use [`Unsigned::from`]
 ///
-/// [`f32`] or [`f64`] inputs must use [`Unsigned::try_from`] and:
+/// Floating point and signed interger ([`f32`], [`i32`]) inputs must use [`Unsigned::try_from`] and:
 /// - (Negative) infinity floats ([`f32::INFINITY`], [`f32::NEG_INFINITY`])
 /// - NaN floats ([`f32::NAN`])
 /// - Signed floats (`-1.0`)
+/// - Signed integers (`-1`)
+///
 /// will all lead to `Err(Unsigned::unknown)` being returned.
+///
 /// ```rust
 /// # use readable::*;
 /// // Signed floats will fail.
@@ -53,14 +53,6 @@ use std::num::{
 /// assert!(Unsigned::try_from(f32::INFINITY).is_err());
 /// assert!(Unsigned::try_from(f32::NEG_INFINITY).is_err());
 /// ```
-///
-/// For [`i8`] and other signed integers, [`Unsigned::try_from`] must be used.
-/// ```rust
-/// # use readable::*;
-/// // You can use `Unsigned::try_from` for a fallible `Result`
-/// assert_eq!(Unsigned::try_from(i8::MAX).unwrap(), "127");
-/// ```
-/// [`Unsigned::unknown`] will be returned if `try_from` errors.
 ///
 /// ## Size
 /// [`Str<26>`] is used internally to represent the string.
@@ -88,11 +80,6 @@ use std::num::{
 /// // We can still use 'a'
 /// assert!(a == 100_000_u64);
 /// ```
-///
-/// ## Float Errors
-/// - Inputting [`f64::NAN`] returns [`Unsigned::unknown`]
-/// - Inputting [`f64::INFINITY`] returns [`Unsigned::unknown`]
-/// - Inputting [`f64::NEG_INFINITY`] returns [`Unsigned::unknown`]
 ///
 /// ## Math
 /// These operators are overloaded. They will always output a new [`Self`]:
@@ -140,10 +127,46 @@ use std::num::{
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct Unsigned(u64, Str<MAX_LEN_NUM>);
+pub struct Unsigned(u64, Str<LEN>);
+
+const LEN: usize = 26;
 
 impl_math!(Unsigned, u64);
 impl_traits!(Unsigned, u64);
+
+//---------------------------------------------------------------------------------------------------- Unsigned Constants
+impl Unsigned {
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(Unsigned::ZERO, 0);
+	/// assert_eq!(Unsigned::ZERO, "0");
+	/// ```
+	pub const ZERO: Self = Self(0, Str::from_static_str("0"));
+
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Unsigned::MAX, u64::MAX);
+	/// assert_eq!(Unsigned::MAX, "18,446,744,073,709,551,615");
+	/// ```
+	pub const MAX: Self = Self(u64::MAX, Str::from_static_str("18,446,744,073,709,551,615"));
+
+	/// Returned when using [`Unsigned::unknown()`] and error situations.
+	///
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Unsigned::try_from(f64::NAN), Err(Unsigned::UNKNOWN));
+	/// assert_eq!(Unsigned::UNKNOWN, 0);
+	/// assert_eq!(Unsigned::UNKNOWN, "???");
+	/// ```
+	pub const UNKNOWN: Self = Self(0, Str::from_static_str("???"));
+
+	/// The maximum string length of an [`Unsigned`].
+	///
+	/// ```rust
+	/// assert_eq!(readable::Unsigned::max().len(), 26);
+	/// ```
+	pub const MAX_LEN: usize = LEN;
+}
 
 //---------------------------------------------------------------------------------------------------- Unsigned Impl
 impl Unsigned {
@@ -163,28 +186,28 @@ impl Unsigned {
 	#[inline]
 	/// ```rust
 	/// # use readable::num::*;
-	/// assert_eq!(Unsigned::zero(), 0);
+	/// assert_eq!(Unsigned::zero(), Unsigned::ZERO);
 	/// ```
 	pub const fn zero() -> Self {
-		Self(0, Str::from_static_str(ZERO_NUM))
+		Self::ZERO
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::num::*;
-	/// assert_eq!(Unsigned::max(), u64::MAX);
+	/// assert_eq!(Unsigned::max(), Unsigned::MAX);
 	/// ```
 	pub const fn max() -> Self {
-		Self(u64::MAX, Str::from_static_str(MAX_UNSIGNED))
+		Self::MAX
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::num::*;
-	/// assert_eq!(Unsigned::unknown(), UNKNOWN_NUM);
+	/// assert_eq!(Unsigned::unknown(), Unsigned::UNKNOWN);
 	/// ```
 	pub const fn unknown() -> Self {
-		Self(0, Str::from_static_str(UNKNOWN_NUM))
+		Self::UNKNOWN
 	}
 }
 
@@ -200,13 +223,13 @@ impl Unsigned {
 	// Branches out depending on the length of the number.
 	#[inline]
 	#[allow(clippy::match_overlapping_arm)]
-	pub(super) fn from_priv_inner(u: u64) -> Str<MAX_LEN_NUM> {
+	pub(super) fn from_priv_inner(u: u64) -> Str<LEN> {
 		// Format the `u64` into a `str`.
 		let mut itoa = crate::Itoa64::new();
 		let itoa = itoa.format(u);
 
 		// Create our destination string byte array.
-		let mut s = [0; MAX_LEN_NUM];
+		let mut s = [0; Self::MAX_LEN];
 
 		// Match, write properly comma string
 		// bytes and return the total length.
@@ -241,25 +264,25 @@ impl Unsigned {
 
 	#[inline]
 	// 9
-	pub(super) fn from_1(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_1(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0] = itoa[0];
 	}
 
 	#[inline]
 	// 99
-	pub(super) fn from_2(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_2(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2]);
 	}
 
 	#[inline]
 	// 999
-	pub(super) fn from_3(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_3(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..3].copy_from_slice(&itoa[0..3]);
 	}
 
 	#[inline]
 	// 9,999
-	pub(super) fn from_4(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_4(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0] = itoa[0];
 		s[1] = COMMA;
 		s[2..5].copy_from_slice(&itoa[1..4]);
@@ -267,7 +290,7 @@ impl Unsigned {
 
 	#[inline]
 	// 99,999
-	pub(super) fn from_5(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_5(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2]);
 		s[2] = COMMA;
 		s[3..6].copy_from_slice(&itoa[2..5]);
@@ -275,7 +298,7 @@ impl Unsigned {
 
 	#[inline]
 	// 999,999
-	pub(super) fn from_6(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_6(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..3].copy_from_slice(&itoa[0..3]);
 		s[3] = COMMA;
 		s[4..7].copy_from_slice(&itoa[3..6]);
@@ -283,7 +306,7 @@ impl Unsigned {
 
 	#[inline]
 	// 9,999,999
-	pub(super) fn from_7(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_7(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0] = itoa[0];
 		s[1] = COMMA;
 		s[2..5].copy_from_slice(&itoa[1..4]);
@@ -293,7 +316,7 @@ impl Unsigned {
 
 	#[inline]
 	// 99,999,999
-	pub(super) fn from_8(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_8(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2]);
 		s[2] = COMMA;
 		s[3..6].copy_from_slice(&itoa[2..5]);
@@ -303,7 +326,7 @@ impl Unsigned {
 
 	#[inline]
 	// 999,999,999
-	pub(super) fn from_9(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_9(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..3].copy_from_slice(&itoa[0..3]);
 		s[3] = COMMA;
 		s[4..7].copy_from_slice(&itoa[3..6]);
@@ -313,7 +336,7 @@ impl Unsigned {
 
 	#[inline]
 	// 9,999,999,999
-	pub(super) fn from_10(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_10(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0] = itoa[0];
 		s[1] = COMMA;
 		s[2..5].copy_from_slice(&itoa[1..4]);
@@ -325,7 +348,7 @@ impl Unsigned {
 
 	#[inline]
 	// 99,999,999,999
-	pub(super) fn from_11(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_11(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2]);
 		s[2] = COMMA;
 		s[3..6].copy_from_slice(&itoa[2..5]);
@@ -337,7 +360,7 @@ impl Unsigned {
 
 	#[inline]
 	// 999,999,999,999
-	pub(super) fn from_12(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_12(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..3].copy_from_slice(&itoa[0..3]);
 		s[3] = COMMA;
 		s[4..7].copy_from_slice(&itoa[3..6]);
@@ -349,7 +372,7 @@ impl Unsigned {
 
 	#[inline]
 	// 9,999,999,999,999
-	pub(super) fn from_13(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_13(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0] = itoa[0];
 		s[1] = COMMA;
 		s[2..5].copy_from_slice(&itoa[1..4]);
@@ -363,7 +386,7 @@ impl Unsigned {
 
 	#[inline]
 	// 99,999,999,999,999
-	pub(super) fn from_14(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_14(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2]);
 		s[2] = COMMA;
 		s[3..6].copy_from_slice(&itoa[2..5]);
@@ -377,7 +400,7 @@ impl Unsigned {
 
 	#[inline]
 	// 999,999,999,999,999
-	pub(super) fn from_15(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_15(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..3].copy_from_slice(&itoa[0..3]);
 		s[3] = COMMA;
 		s[4..7].copy_from_slice(&itoa[3..6]);
@@ -391,7 +414,7 @@ impl Unsigned {
 
 	#[inline]
 	// 9,999,999,999,999,999
-	pub(super) fn from_16(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_16(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0] = itoa[0];
 		s[1] = COMMA;
 		s[2..5].copy_from_slice(&itoa[1..4]);
@@ -407,7 +430,7 @@ impl Unsigned {
 
 	#[inline]
 	// 99,999,999,999,999,999
-	pub(super) fn from_17(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_17(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2]);
 		s[2] = COMMA;
 		s[3..6].copy_from_slice(&itoa[2..5]);
@@ -423,7 +446,7 @@ impl Unsigned {
 
 	#[inline]
 	// 999,999,999,999,999,999
-	pub(super) fn from_18(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_18(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..3].copy_from_slice(&itoa[0..3]);
 		s[3] = COMMA;
 		s[4..7].copy_from_slice(&itoa[3..6]);
@@ -439,7 +462,7 @@ impl Unsigned {
 
 	#[inline]
 	// 9,999,999,999,999,999,999
-	pub(super) fn from_19(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_19(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0] = itoa[0];
 		s[1] = COMMA;
 		s[2..5].copy_from_slice(&itoa[1..4]);
@@ -457,7 +480,7 @@ impl Unsigned {
 
 	#[inline]
 	// 99,999,999,999,999,999,999
-	pub(super) fn from_20(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	pub(super) fn from_20(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2]);
 		s[2] = COMMA;
 		s[3..6].copy_from_slice(&itoa[2..5]);

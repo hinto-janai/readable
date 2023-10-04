@@ -2,11 +2,7 @@
 use crate::str::Str;
 use crate::num::{
 	Unsigned,
-	constants::{
-		MAX_LEN_NUM,ZERO_NUM,
-		UNKNOWN_NUM,COMMA,
-		MAX_INT,MIN_INT,
-	},
+	constants::COMMA,
 };
 use crate::macros::{
 	impl_common,impl_const,
@@ -67,11 +63,6 @@ use std::num::{
 /// assert!(a == 100_000);
 /// ```
 ///
-/// ## Float Errors
-/// - Inputting [`f64::NAN`] returns [`Int::unknown`]
-/// - Inputting [`f64::INFINITY`] returns [`Int::unknown`]
-/// - Inputting [`f64::NEG_INFINITY`] returns [`Int::unknown`]
-///
 /// ## Math
 /// These operators are overloaded. They will always output a new [`Self`]:
 /// - `Add +`
@@ -112,10 +103,53 @@ use std::num::{
 /// assert!(Int::try_from(100_000.123).unwrap() == "100,000");
 /// assert!(Int::try_from(100_000.123).unwrap() == "100,000");
 /// ```
-pub struct Int(i64, Str<MAX_LEN_NUM>);
+pub struct Int(i64, Str<LEN>);
+
+const LEN: usize = 26;
 
 impl_math!(Int, i64);
 impl_traits!(Int, i64);
+
+//---------------------------------------------------------------------------------------------------- Int Constants
+impl Int {
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(Int::ZERO, 0);
+	/// assert_eq!(Int::ZERO, "0");
+	/// ```
+	pub const ZERO: Self = Self(0, Str::from_static_str("0"));
+
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Int::from(i64::MIN), i64::MIN);
+	/// assert_eq!(Int::from(i64::MIN), "-9,223,372,036,854,775,808");
+	/// ```
+	pub const MIN: Self = Self(i64::MIN, Str::from_static_str("-9,223,372,036,854,775,808"));
+
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Int::from(i64::MAX), Int::MAX);
+	/// assert_eq!(Int::from(i64::MAX), "9,223,372,036,854,775,807");
+	/// ```
+	pub const MAX: Self = Self(i64::MAX, Str::from_static_str("9,223,372,036,854,775,807"));
+
+	/// Returned when using [`Int::unknown()`] and error situations.
+	///
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Int::try_from(f64::NAN), Err(Int::UNKNOWN));
+	/// assert_eq!(Int::UNKNOWN, 0);
+	/// assert_eq!(Int::UNKNOWN, "???");
+	/// ```
+	pub const UNKNOWN: Self = Self(0, Str::from_static_str("???"));
+
+	/// The maximum string length of an [`Int`].
+	///
+	/// ```rust
+	/// assert_eq!(readable::Int::min().len(), 26);
+	/// ```
+	pub const MAX_LEN: usize = LEN;
+}
 
 //---------------------------------------------------------------------------------------------------- Int Impl
 impl Int {
@@ -131,35 +165,35 @@ impl Int {
 	/// assert_eq!(Int::zero() + Int::zero(), 0);
 	/// ```
 	pub const fn zero() -> Self {
-		Self(0, Str::from_static_str(ZERO_NUM))
+		Self::ZERO
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::num::*;
-	/// assert_eq!(Int::max(), i64::MAX);
-	/// ```
-	pub const fn max() -> Self {
-		Self(i64::MAX, Str::from_static_str(MAX_INT))
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::num::*;
-	/// assert_eq!(Int::min(), i64::MIN);
+	/// assert_eq!(Int::min(), Int::MIN);
 	/// ```
 	pub const fn min() -> Self {
-		Self(i64::MIN, Str::from_static_str(MIN_INT))
+		Self::MIN
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Int::max(), Int::MAX);
+	/// ```
+	pub const fn max() -> Self {
+		Self::MAX
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
 	/// # use readable::num::*;
-	/// assert_eq!(Int::unknown(), UNKNOWN_NUM);
+	/// assert_eq!(Int::unknown(), Int::UNKNOWN);
 	/// ```
 	pub const fn unknown() -> Self {
-		Self(0, Str::from_static_str(UNKNOWN_NUM))
+		Self::UNKNOWN
 	}
 }
 
@@ -175,13 +209,13 @@ impl Int {
 	// Branches out depending on the length of the number.
 	#[inline]
 	#[allow(clippy::match_overlapping_arm)]
-	pub(super) fn from_priv_inner(i: i64) -> Str<MAX_LEN_NUM> {
+	pub(super) fn from_priv_inner(i: i64) -> Str<LEN> {
 		// Format the `u64` into a `str`.
 		let mut itoa = crate::Itoa64::new();
 		let itoa = itoa.format(i);
 
 		// Create our destination string byte array.
-		let mut s = [0; MAX_LEN_NUM];
+		let mut s = [0; Self::MAX_LEN];
 
 		let itoa_len = itoa.len();
 
@@ -250,25 +284,25 @@ impl Int {
 
 	#[inline]
 	// -9
-	fn from_neg_2(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_2(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2])
 	}
 
 	#[inline]
 	// -99
-	fn from_neg_3(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_3(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..3].copy_from_slice(&itoa[0..3]);
 	}
 
 	#[inline]
 	// -999
-	fn from_neg_4(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_4(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..4].copy_from_slice(&itoa[0..4]);
 	}
 
 	#[inline]
 	// -9,999
-	fn from_neg_5(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_5(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2]);
 		s[2] = COMMA;
 		s[3..6].copy_from_slice(&itoa[2..5]);
@@ -276,7 +310,7 @@ impl Int {
 
 	#[inline]
 	// -99,999
-	fn from_neg_6(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_6(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..3].copy_from_slice(&itoa[0..3]);
 		s[3] = COMMA;
 		s[4..7].copy_from_slice(&itoa[3..6]);
@@ -284,7 +318,7 @@ impl Int {
 
 	#[inline]
 	// -999,999
-	fn from_neg_7(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_7(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..4].copy_from_slice(&itoa[0..4]);
 		s[4] = COMMA;
 		s[5..8].copy_from_slice(&itoa[4..7]);
@@ -292,7 +326,7 @@ impl Int {
 
 	#[inline]
 	// -9,999,999
-	fn from_neg_8(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_8(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2]);
 		s[2] = COMMA;
 		s[3..6].copy_from_slice(&itoa[2..5]);
@@ -302,7 +336,7 @@ impl Int {
 
 	#[inline]
 	// -99,999,999
-	fn from_neg_9(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_9(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..3].copy_from_slice(&itoa[0..3]);
 		s[3] = COMMA;
 		s[4..7].copy_from_slice(&itoa[3..6]);
@@ -312,7 +346,7 @@ impl Int {
 
 	#[inline]
 	// -999,999,999
-	fn from_neg_10(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_10(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..4].copy_from_slice(&itoa[0..4]);
 		s[4] = COMMA;
 		s[5..8].copy_from_slice(&itoa[4..7]);
@@ -322,7 +356,7 @@ impl Int {
 
 	#[inline]
 	// -9,999,999,999
-	fn from_neg_11(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_11(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2]);
 		s[2] = COMMA;
 		s[3..6].copy_from_slice(&itoa[2..5]);
@@ -334,7 +368,7 @@ impl Int {
 
 	#[inline]
 	// -99,999,999,999
-	fn from_neg_12(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_12(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..3].copy_from_slice(&itoa[0..3]);
 		s[3] = COMMA;
 		s[4..7].copy_from_slice(&itoa[3..6]);
@@ -346,7 +380,7 @@ impl Int {
 
 	#[inline]
 	// -999,999,999,999
-	fn from_neg_13(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_13(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..4].copy_from_slice(&itoa[0..4]);
 		s[4] = COMMA;
 		s[5..8].copy_from_slice(&itoa[4..7]);
@@ -358,7 +392,7 @@ impl Int {
 
 	#[inline]
 	// -9,999,999,999,999
-	fn from_neg_14(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_14(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2]);
 		s[2] = COMMA;
 		s[3..6].copy_from_slice(&itoa[2..5]);
@@ -372,7 +406,7 @@ impl Int {
 
 	#[inline]
 	// -99,999,999,999,999
-	fn from_neg_15(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_15(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..3].copy_from_slice(&itoa[0..3]);
 		s[3] = COMMA;
 		s[4..7].copy_from_slice(&itoa[3..6]);
@@ -386,7 +420,7 @@ impl Int {
 
 	#[inline]
 	// -999,999,999,999,999
-	fn from_neg_16(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_16(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..4].copy_from_slice(&itoa[0..4]);
 		s[4] = COMMA;
 		s[5..8].copy_from_slice(&itoa[4..7]);
@@ -400,7 +434,7 @@ impl Int {
 
 	#[inline]
 	// -9,999,999,999,999,999
-	fn from_neg_17(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_17(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2]);
 		s[2] = COMMA;
 		s[3..6].copy_from_slice(&itoa[2..5]);
@@ -416,7 +450,7 @@ impl Int {
 
 	#[inline]
 	// -99,999,999,999,999,999
-	fn from_neg_18(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_18(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..3].copy_from_slice(&itoa[0..3]);
 		s[3] = COMMA;
 		s[4..7].copy_from_slice(&itoa[3..6]);
@@ -432,7 +466,7 @@ impl Int {
 
 	#[inline]
 	// -999,999,999,999,999,999
-	fn from_neg_19(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_19(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..4].copy_from_slice(&itoa[0..4]);
 		s[4] = COMMA;
 		s[5..8].copy_from_slice(&itoa[4..7]);
@@ -448,7 +482,7 @@ impl Int {
 
 	#[inline]
 	// -9,999,999,999,999,999,999
-	fn from_neg_20(s: &mut [u8; MAX_LEN_NUM], itoa: &[u8]) {
+	fn from_neg_20(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
 		s[0..2].copy_from_slice(&itoa[0..2]);
 		s[2] = COMMA;
 		s[3..6].copy_from_slice(&itoa[2..5]);

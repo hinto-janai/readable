@@ -3,8 +3,7 @@ use compact_str::{format_compact,CompactString};
 use crate::num::{
 	Unsigned,Int,
 	constants::{
-		NAN,UNKNOWN_FLOAT,
-		INFINITY,ZERO_FLOAT,
+		NAN,INFINITY,
 	},
 };
 use crate::macros::{
@@ -116,6 +115,37 @@ pub struct Float(f64, #[cfg_attr(feature = "bincode", bincode(with_serde))] Comp
 impl_math!(Float, f64);
 impl_traits!(Float, f64);
 
+//---------------------------------------------------------------------------------------------------- Float Constants
+impl Float {
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Float::ZERO, 0.0);
+	/// assert_eq!(Float::ZERO, "0.000");
+	/// ```
+	pub const ZERO: Self = Self(0.0, CompactString::new_inline("0.000"));
+
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Float::NAN, "NaN");
+	/// assert!(Float::NAN.is_nan());
+	/// ```
+	pub const NAN: Self = Self(f64::NAN, CompactString::new_inline(NAN));
+
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Float::INFINITY, "inf");
+	/// assert!(Float::INFINITY.is_infinite());
+	/// ```
+	pub const INFINITY: Self = Self(f64::INFINITY, CompactString::new_inline(INFINITY));
+
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Float::UNKNOWN, 0.0);
+	/// assert_eq!(Float::UNKNOWN, "?.???");
+	/// ```
+	pub const UNKNOWN: Self = Self(0.0, CompactString::new_inline("?.???"));
+}
+
 //---------------------------------------------------------------------------------------------------- Float Impl
 // Implements `from_X` functions.
 macro_rules! impl_new {
@@ -123,7 +153,7 @@ macro_rules! impl_new {
 		paste::item! {
 			#[doc = "Same as [`Float::from`] but with `" $num "` floating point."]
 			pub fn [<from_ $num>](f: f64) -> Self {
-				return_bad_float!(f, Self::nan, Self::inf);
+				return_bad_float!(f, Self::nan, Self::infinity);
 
 				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
 				Self(f, format_compact!("{}.{}", str_u64!(f as u64), fract))
@@ -139,35 +169,21 @@ impl Float {
 	impl_isize!();
 
 	#[inline]
-	/// Returns a [`Float`] with the [`f64`] value of `0.0`.
-	///
-	/// The [`String`] is set to [`ZERO_FLOAT`].
+	/// Returns [`Self::ZERO`]
 	pub const fn zero() -> Self {
-		Self(0.0, CompactString::new_inline(ZERO_FLOAT))
+		Self::ZERO
 	}
 
 	#[inline]
-	/// Returns a [`Float`] with the [`f64`] value of [`f64::NAN`].
-	///
-	/// The [`String`] is set to [`UNKNOWN_FLOAT`].
-	pub const fn unknown() -> Self {
-		Self(f64::NAN, CompactString::new_inline(UNKNOWN_FLOAT))
-	}
-
-	#[inline]
-	/// Returns a [`Float`] with the [`f64`] value of [`f64::NAN`].
-	///
-	/// The [`String`] is set to [`NAN`].
+	/// Returns [`Self::NAN`]
 	pub const fn nan() -> Self {
-		Self(f64::NAN, CompactString::new_inline(NAN))
+		Self::NAN
 	}
 
 	#[inline]
-	/// Returns a [`Float`] with the [`f64`] value of [`f64::INFINITY`].
-	///
-	/// The [`String`] is set to [`INFINITY`].
-	pub const fn inf() -> Self {
-		Self(f64::INFINITY, CompactString::new_inline(INFINITY))
+	/// Returns [`Self::INFINITY`]
+	pub const fn infinity() -> Self {
+		Self::INFINITY
 	}
 
 	#[inline]
@@ -178,7 +194,7 @@ impl Float {
 
 	#[inline]
 	/// Calls [`f64::is_infinite`].
-	pub fn is_inf(&self) -> bool {
+	pub fn is_infinite(&self) -> bool {
 		self.0.is_infinite()
 	}
 
@@ -196,7 +212,7 @@ impl Float {
 	/// | 50.123 | `50`
 	/// | 100.1  | `100`
 	pub fn from_0(f: f64) -> Self {
-		return_bad_float!(f, Self::nan, Self::inf);
+		return_bad_float!(f, Self::nan, Self::infinity);
 		Self(f, CompactString::from(str_u64!(f as u64)))
 	}
 
@@ -240,7 +256,7 @@ impl_i!(i8,i16,i32,i64,isize);
 impl From<f32> for Float {
 	#[inline]
 	fn from(f: f32) -> Self {
-		return_bad_float!(f, Self::nan, Self::inf);
+		return_bad_float!(f, Self::nan, Self::infinity);
 		Self::from(f as f64)
 	}
 }
@@ -248,7 +264,7 @@ impl From<f32> for Float {
 impl From<f64> for Float {
 	#[inline]
 	fn from(f: f64) -> Self {
-		return_bad_float!(f, Self::nan, Self::inf);
+		return_bad_float!(f, Self::nan, Self::infinity);
 
 		let fract = &format_compact!("{:.3}", f.fract())[2..];
 
@@ -265,9 +281,8 @@ mod tests {
 	fn special() {
 		assert_eq!(Float::from(0.0), "0.000");
 		assert_eq!(Float::zero(),    "0.000");
-		assert_eq!(Float::unknown(), UNKNOWN_FLOAT);
 		assert_eq!(Float::nan(),     NAN);
-		assert_eq!(Float::inf(),     INFINITY);
+		assert_eq!(Float::infinity(),     INFINITY);
 
 		assert_eq!(Float::from(f64::NAN),          NAN);
 		assert_eq!(Float::from(f64::INFINITY),     INFINITY);

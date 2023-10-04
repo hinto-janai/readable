@@ -1,8 +1,7 @@
 //---------------------------------------------------------------------------------------------------- Use
 use compact_str::{format_compact,CompactString};
 use crate::num::constants::{
-	UNKNOWN_PERCENT,NAN,INFINITY,
-	ZERO_PERCENT,
+	NAN,INFINITY,
 };
 use crate::macros::{
 	return_bad_float,str_u64,str_i64,
@@ -26,6 +25,7 @@ use crate::macros::{
 ///
 /// This can be changed by using different functions when initially
 /// creating the [`Percent`], or converting an existing [`Percent`], for example:
+///
 /// ```rust
 /// # use readable::Percent;
 /// let f0 = Percent::new_0(3.0);
@@ -48,7 +48,7 @@ use crate::macros::{
 /// ```
 ///
 /// ## Cloning
-/// [`Clone`] may be expensive:
+/// [`Clone`] may be a heap allocation clone:
 /// ```rust
 /// # use readable::Percent;
 /// // Probably cheap (stack allocated string).
@@ -68,8 +68,6 @@ use crate::macros::{
 /// ## Float Errors
 /// - Inputting [`f64::NAN`], [`f64::INFINITY`], [`f64::NEG_INFINITY`] or the [`f32`] variants returns errors
 ///
-/// To disable checks for these, (you are _sure_ you don't have NaN's), enable the `ignore_nan_inf` feature flag.
-///
 /// ## Math
 /// These operators are overloaded. They will always output a new [`Self`]:
 /// - `Add +`
@@ -87,11 +85,11 @@ use crate::macros::{
 ///
 /// ```rust
 /// # use readable::*;
-/// assert!(Percent::from(10.0) + 10.0 == Percent::from(20.0));
-/// assert!(Percent::from(10.0) - 10.0 == Percent::from(0.0));
-/// assert!(Percent::from(10.0) / 10.0 == Percent::from(1.0));
-/// assert!(Percent::from(10.0) * 10.0 == Percent::from(100.0));
-/// assert!(Percent::from(10.0) % 10.0 == Percent::from(0.0));
+/// assert_eq!(Percent::from(10.0) + 10.0, Percent::from(20.0));
+/// assert_eq!(Percent::from(10.0) - 10.0, Percent::from(0.0));
+/// assert_eq!(Percent::from(10.0) / 10.0, Percent::from(1.0));
+/// assert_eq!(Percent::from(10.0) * 10.0, Percent::from(100.0));
+/// assert_eq!(Percent::from(10.0) % 10.0, Percent::from(0.0));
 /// ```
 /// Overflow example (floats don't panic in this case):
 /// ```rust
@@ -103,35 +101,70 @@ use crate::macros::{
 /// ## Examples
 /// ```rust
 /// # use readable::Percent;
-/// assert!(Percent::zero()    == "0.00%");
-/// assert!(Percent::unknown() == "?.??%");
+/// assert_eq!(Percent::zero(),    "0.00%");
+/// assert_eq!(Percent::unknown(), "?.??%");
 ///
-/// assert!(Percent::from(0.001)   == "0.00%");
-/// assert!(Percent::from(0.1)     == "0.10%");
-/// assert!(Percent::from(1.0)     == "1.00%");
-/// assert!(Percent::from(100.0)   == "100.00%");
-/// assert!(Percent::from(1_000.0) == "1,000.00%");
+/// assert_eq!(Percent::from(0.001),   "0.00%");
+/// assert_eq!(Percent::from(0.1),     "0.10%");
+/// assert_eq!(Percent::from(1.0),     "1.00%");
+/// assert_eq!(Percent::from(100.0),   "100.00%");
+/// assert_eq!(Percent::from(1_000.0), "1,000.00%");
 ///
-/// assert!(Percent::from(1_u32)      == "1.00%");
-/// assert!(Percent::from(1_000_u32)  == "1,000.00%");
-/// assert!(Percent::from(10_000_u32) == "10,000.00%");
+/// assert_eq!(Percent::from(1_u32),      "1.00%");
+/// assert_eq!(Percent::from(1_000_u32),  "1,000.00%");
+/// assert_eq!(Percent::from(10_000_u32), "10,000.00%");
 ///
-/// assert!(Percent::from(-1_i32)      == "-1.00%");
-/// assert!(Percent::from(-1_000_i32)  == "-1,000.00%");
-/// assert!(Percent::from(-10_000_i32) == "-10,000.00%");
+/// assert_eq!(Percent::from(-1_i32),      "-1.00%");
+/// assert_eq!(Percent::from(-1_000_i32),  "-1,000.00%");
+/// assert_eq!(Percent::from(-10_000_i32), "-10,000.00%");
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct Percent(f64, #[cfg_attr(feature = "bincode", bincode(with_serde))] CompactString);
 
+impl_math!(Percent, f64);
+impl_traits!(Percent, f64);
+
+//---------------------------------------------------------------------------------------------------- Percent Constants
+impl Percent {
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Percent::ZERO, 0.0);
+	/// assert_eq!(Percent::ZERO, "0.00%");
+	/// ```
+	pub const ZERO: Self = Self(0.0, CompactString::new_inline("0.00%"));
+
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Percent::NAN, "NaN");
+	/// assert!(Percent::NAN.is_nan());
+	/// ```
+	pub const NAN: Self = Self(f64::NAN, CompactString::new_inline(NAN));
+
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Percent::INFINITY, "inf");
+	/// assert!(Percent::INFINITY.is_infinite());
+	/// ```
+	pub const INFINITY: Self = Self(f64::INFINITY, CompactString::new_inline(INFINITY));
+
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Percent::UNKNOWN, 0.0);
+	/// assert_eq!(Percent::UNKNOWN, "?.??%");
+	/// ```
+	pub const UNKNOWN: Self = Self(0.0, CompactString::new_inline("?.??%"));
+}
+
+//---------------------------------------------------------------------------------------------------- Macros
 // Implements `new_X` functions.
 macro_rules! impl_new {
 	( $num:tt ) => {
 		paste::item! {
 			#[doc = "Same as [`Percent::from`] but with `" $num "` floating point."]
 			pub fn [<new_ $num>](f: f64) -> Self {
-				return_bad_float!(f, Self::nan, Self::inf);
+				return_bad_float!(f, Self::nan, Self::infinity);
 
 				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
 				Self(f, format_compact!("{}.{}%", str_u64!(f as u64), fract))
@@ -153,50 +186,47 @@ macro_rules! impl_const {
 	}
 }
 
-impl_math!(Percent, f64);
-impl_traits!(Percent, f64);
-
+//---------------------------------------------------------------------------------------------------- Percent Impl
 impl Percent {
 	impl_common!(f64);
 	impl_not_const!();
 	impl_usize!();
 	impl_isize!();
 
-	#[inline]
-	/// Returns a [`Self`] with the [`f64`] value of [`f64::NAN`].
-	///
-	/// The [`String`] is set to `?.??%`.
-	pub fn unknown() -> Self {
-		Self(f64::NAN, CompactString::new_inline(UNKNOWN_PERCENT))
+	/// Returns [`Self::UNKNOWN`]
+	pub const fn unknown() -> Self {
+		Self::UNKNOWN
 	}
 
 	#[inline]
-	/// Returns a [`Self`] with the [`f64`] value of [`f64::NAN`].
-	///
-	/// The [`String`] is set to `NaN`.
-	pub fn nan() -> Self {
-		Self(f64::NAN, CompactString::new_inline(NAN))
+	/// Returns [`Self::NAN`]
+	pub const fn nan() -> Self {
+		Self::NAN
 	}
 
 	#[inline]
-	/// Returns a [`Self`] with the [`f64`] value of [`f64::INFINITY`].
-	///
-	/// The [`String`] is set to `∞`.
-	pub fn inf() -> Self {
-		Self(f64::INFINITY, CompactString::new_inline(INFINITY))
+	/// Returns [`Self::INFINITY``]
+	pub const fn infinity() -> Self {
+		Self::INFINITY
 	}
 
 	#[inline]
-	/// Returns a [`Percent`] with the [`f64`] value of `0.0`.
-	///
-	/// The [`String`] is set to `0.00%`.
+	/// Returns [`Self::ZERO`]
 	pub const fn zero() -> Self {
-		Self(0.0, CompactString::new_inline(ZERO_PERCENT))
+		Self::ZERO
 	}
 
-	seq_macro::seq!(N in 1..=100 {
-		impl_const!(N);
-	});
+	#[inline]
+	/// Calls [`f64::is_nan`].
+	pub fn is_nan(&self) -> bool {
+		self.0.is_nan()
+	}
+
+	#[inline]
+	/// Calls [`f64::is_infinite`].
+	pub fn is_infinite(&self) -> bool {
+		self.0.is_infinite()
+	}
 
 	#[inline]
 	/// Same as [`Self::from`] but with no floating point on the inner [`String`].
@@ -212,7 +242,7 @@ impl Percent {
 	/// | 50.123 | `50%`
 	/// | 100.1  | `100%`
 	pub fn new_0(f: f64) -> Self {
-		return_bad_float!(f, Self::nan, Self::inf);
+		return_bad_float!(f, Self::nan, Self::infinity);
 		Self(f, format_compact!("{}%", str_u64!(f as u64)))
 	}
 
@@ -259,7 +289,7 @@ impl_i!(i8,i16,i32);
 impl From<f32> for Percent {
 	#[inline]
 	fn from(f: f32) -> Self {
-		return_bad_float!(f, Self::nan, Self::inf);
+		return_bad_float!(f, Self::nan, Self::infinity);
 		Self::from(f as f64)
 	}
 }
@@ -267,7 +297,7 @@ impl From<f32> for Percent {
 impl From<f64> for Percent {
 	#[inline]
 	fn from(f: f64) -> Self {
-		return_bad_float!(f, Self::nan, Self::inf);
+		return_bad_float!(f, Self::nan, Self::infinity);
 
 		let fract = &format_compact!("{:.2}", f.fract())[2..];
 
@@ -285,7 +315,7 @@ mod tests {
 		assert_eq!(Percent::zero(),    "0.00%");
 		assert_eq!(Percent::unknown(), "?.??%");
 		assert_eq!(Percent::nan(),     NAN);
-		assert_eq!(Percent::inf(),     INFINITY);
+		assert_eq!(Percent::infinity(),     INFINITY);
 
 		assert_eq!(Percent::from(0.0), "0.00%");
 		assert_eq!(Percent::from(f64::NAN), NAN);

@@ -9,18 +9,6 @@ use crate::macros::{
 	impl_const,
 };
 
-//---------------------------------------------------------------------------------------------------- Constants
-/// Returned when using [`Date::unknown`] or error situations.
-pub const UNKNOWN_DATE: &str = "????-??-??";
-
-/// The separator character for [`Date`].
-pub const DASH: u8 = b'-';
-
-/// ```rust
-/// assert_eq!(readable::date::UNKNOWN_DATE.len(), 10);
-/// ```
-pub const MAX_LEN_DATE: usize = 10;
-
 //---------------------------------------------------------------------------------------------------- Regexes
 // Length of the input string
 // determines which regex we use.
@@ -309,9 +297,26 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 #[cfg_attr(feature = "serde",derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode",derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct Date((u16, u8, u8), Str<MAX_LEN_DATE>);
+pub struct Date((u16, u8, u8), Str<LEN>);
+
+const LEN: usize = 10;
 
 impl_traits!(Date, (u16, u8, u8));
+
+//---------------------------------------------------------------------------------------------------- Date Constants
+impl Date {
+	/// The separator character for [`Date`].
+	pub const DASH: u8 = b'-';
+
+	/// Returned when using [`Date::unknown`] or error situations.
+	pub const UNKNOWN: &str = "????-??-??";
+
+	/// The maximum string length of a [`Date`].
+	/// ```rust
+	/// assert_eq!(readable::Date::UNKNOWN.len(), 10);
+	/// ```
+	pub const MAX_LEN: usize = LEN;
+}
 
 //---------------------------------------------------------------------------------------------------- Date impl
 impl Date {
@@ -322,15 +327,15 @@ impl Date {
 	#[inline]
 	/// Returns a [`Self`] with the date values set to `(0, 0, 0)`
 	///
-	/// The [`String`] is set to [`UNKNOWN_DATE`].
+	/// The [`String`] is set to [`Self::UNKNOWN`].
 	pub const fn unknown() -> Self {
-		Self((0, 0, 0), Str::from_static_str(UNKNOWN_DATE))
+		Self((0, 0, 0), Str::from_static_str(Self::UNKNOWN))
 	}
 
 	#[inline]
 	/// Same as [`Self::unknown`]
 	pub const fn zero() -> Self {
-		Self((0, 0, 0), Str::from_static_str(UNKNOWN_DATE))
+		Self((0, 0, 0), Str::from_static_str(Self::UNKNOWN))
 	}
 
 	#[inline]
@@ -414,7 +419,7 @@ impl Date {
 	/// - The year must be in-between `1000-9999`
 	///
 	/// If an [`Err`] is returned, it will contain a [`Date`]
-	/// set with [`UNKNOWN_DATE`] which looks like: `????-??-??`.
+	/// set with [`Self::UNKNOWN`] which looks like: `????-??-??`.
 	pub fn from_y(year: u16) -> Result<Self, Self> {
 		if ok_year(year) {
 			Ok(Self::priv_y_num(year))
@@ -431,7 +436,7 @@ impl Date {
 	/// - The month must be in-between `1-12`
 	///
 	/// If an [`Err`] is returned, it will contain a [`Date`]
-	/// set with [`UNKNOWN_DATE`] which looks like: `????-??-??`.
+	/// set with [`Self::UNKNOWN`] which looks like: `????-??-??`.
 	pub fn from_ym(year: u16, month: u8) -> Result<Self, Self> {
 		if ok_year(year) && ok_month(month) {
 			Ok(Self::priv_ym_num(year, month))
@@ -449,7 +454,7 @@ impl Date {
 	/// - The day must be in-between `1-31`
 	///
 	/// If an [`Err`] is returned, it will contain a [`Date`]
-	/// set with [`UNKNOWN_DATE`] which looks like: `????-??-??`.
+	/// set with [`Self::UNKNOWN`] which looks like: `????-??-??`.
 	pub fn from_ymd(year: u16, month: u8, day: u8) -> Result<Self, Self> {
 		if ok(year, month, day) {
 			Ok(Self::priv_ymd_num(year, month, day))
@@ -464,7 +469,7 @@ impl Date {
 	/// ## Errors
 	/// - The year must be in-between `1000-9999`
 	///
-	/// [`UNKNOWN_DATE`] will be returned silently if an error occurs.
+	/// [`Self::UNKNOWN`] will be returned silently if an error occurs.
 	pub fn from_y_silent(year: u16) -> Self {
 		if ok_year(year) {
 			Self::priv_y_num(year)
@@ -480,7 +485,7 @@ impl Date {
 	/// - The year must be in-between `1000-9999`
 	/// - The month must be in-between `1-12`
 	///
-	/// [`UNKNOWN_DATE`] will be returned silently if an error occurs.
+	/// [`Self::UNKNOWN`] will be returned silently if an error occurs.
 	pub fn from_ym_silent(year: u16, month: u8) -> Self {
 		if ok_year(year) && ok_month(month) {
 			Self::priv_ym_num(year, month)
@@ -497,7 +502,7 @@ impl Date {
 	/// - The month must be in-between `1-12`
 	/// - The day must be in-between `1-31` or [`Err`] is returned.
 	///
-	/// [`UNKNOWN_DATE`] will be returned silently if an error occurs.
+	/// [`Self::UNKNOWN`] will be returned silently if an error occurs.
 	pub fn from_ymd_silent(year: u16, month: u8, day: u8) -> Self {
 		if ok(year, month, day) {
 			Self::priv_ymd_num(year, month, day)
@@ -533,7 +538,7 @@ impl Date {
 	/// ```
 	///
 	/// If an [`Err`] is returned, it will contain a [`Date`]
-	/// set with [`UNKNOWN_DATE`] which looks like: `????-??-??`.
+	/// set with [`Self::UNKNOWN`] which looks like: `????-??-??`.
 	///
 	/// ## Examples:
 	/// ```rust
@@ -547,7 +552,7 @@ impl Date {
 	}
 
 	#[inline]
-	/// Same as [`Date::from_str`] but silently returns an [`UNKNOWN_DATE`]
+	/// Same as [`Date::from_str`] but silently returns an [`Self::UNKNOWN`]
 	/// on error that isn't wrapped in a [`Result::Err`].
 	pub fn from_str_silent(string: &str) -> Self {
 		match Self::priv_from_str(string) {
@@ -896,7 +901,7 @@ impl Date {
 
 	#[inline]
 	fn priv_y_num(y: u16) -> Self {
-		let mut buf = [0_u8; MAX_LEN_DATE];
+		let mut buf = [0_u8; Self::MAX_LEN];
 		Self::format_year(&mut buf, itoa!(y));
 		// SAFETY: we're manually creating a `Str`.
 		// This is okay because we filled the bytes
@@ -908,11 +913,11 @@ impl Date {
 
 	#[inline]
 	fn priv_ym_num(y: u16, m: u8) -> Self {
-		let mut buf = [0_u8; MAX_LEN_DATE];
+		let mut buf = [0_u8; Self::MAX_LEN];
 		let b = &mut buf;
 
 		Self::format_year(b, itoa!(y));
-		b[4] = DASH;
+		b[4] = Self::DASH;
 		Self::format_month(b, Self::match_month(m));
 
 		// SAFETY: we're manually creating a `Str`.
@@ -925,32 +930,32 @@ impl Date {
 
 	#[inline]
 	fn priv_ymd_num(y: u16, m: u8, d: u8) -> Self {
-		let mut buf = [0_u8; MAX_LEN_DATE];
+		let mut buf = [0_u8; Self::MAX_LEN];
 		let b = &mut buf;
 
 		Self::format_year(b, itoa!(y));
-		b[4] = DASH;
+		b[4] = Self::DASH;
 		Self::format_month(b, Self::match_month(m));
-		b[7] = DASH;
+		b[7] = Self::DASH;
 		Self::format_day(b, Self::match_day(d));
 
 		// SAFETY: we're manually creating a `Str`.
 		// This is okay because we filled the bytes
 		// and know the length.
-		let string = unsafe { Str::from_raw(buf, MAX_LEN_DATE as u8) };
+		let string = unsafe { Str::from_raw(buf, Self::MAX_LEN as u8) };
 
 		Self((y, m, d), string)
 	}
 
 	#[inline]
 	// Format `YYYY`.
-	fn format_year(buf: &mut [u8; MAX_LEN_DATE], year: &str) {
+	fn format_year(buf: &mut [u8; Self::MAX_LEN], year: &str) {
 		buf[..4].copy_from_slice(year.as_bytes());
 	}
 
 	#[inline]
 	// Pad month if needed.
-	fn format_month(buf: &mut [u8; MAX_LEN_DATE], month: &str) {
+	fn format_month(buf: &mut [u8; Self::MAX_LEN], month: &str) {
 		let m = month.as_bytes();
 
 		debug_assert!(m.len() >= 1);
@@ -967,7 +972,7 @@ impl Date {
 
 	#[inline]
 	// Pad day if needed.
-	fn format_day(buf: &mut [u8; MAX_LEN_DATE], day: &str) {
+	fn format_day(buf: &mut [u8; Self::MAX_LEN], day: &str) {
 		let d = day.as_bytes();
 
 		debug_assert!(d.len() >= 1);
