@@ -6,35 +6,6 @@ use crate::macros::{
 	impl_traits,return_bad_float,
 	impl_usize,impl_math,impl_impl_math,
 };
-use crate::run::{
-	ZERO_RUNTIME_F32,
-	SECOND_RUNTIME_F32,
-	MINUTE_RUNTIME_F32,
-	HOUR_RUNTIME_F32,
-	MAX_RUNTIME_F32,
-};
-
-//---------------------------------------------------------------------------------------------------- Constants (Public)
-/// The max length of [`RuntimeMilli`]'s string.
-pub const MAX_LEN_RUNTIME_MILLI: usize = 12;
-
-/// [`str`] returned when using [`RuntimeMilli::unknown`]
-pub const UNKNOWN_RUNTIME_MILLI: &str = "??:??:??.???";
-
-/// [`str`] returned when using [`RuntimeMilli::zero`]
-pub const ZERO_RUNTIME_MILLI: &str = "00:00:00.000";
-
-/// [`str`] returned when using [`RuntimeMilli::second`]
-pub const SECOND_RUNTIME_MILLI: &str = "00:00:01.000";
-
-/// [`str`] returned when using [`RuntimeMilli::minute`]
-pub const MINUTE_RUNTIME_MILLI: &str = "00:01:00.000";
-
-/// [`str`] returned when using [`RuntimeMilli::hour`]
-pub const HOUR_RUNTIME_MILLI: &str = "01:00:00.000";
-
-/// [`str`] for the max time [`RuntimeMilli`] can handle
-pub const MAX_RUNTIME_MILLI: &str = "99:59:59.000";
 
 //---------------------------------------------------------------------------------------------------- RuntimeMilli
 /// [`RuntimePad`] but with milliseconds
@@ -83,11 +54,11 @@ pub const MAX_RUNTIME_MILLI: &str = "99:59:59.000";
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
-pub struct RuntimeMilli(pub(super) f32, pub(super) Str<MAX_LEN_RUNTIME_MILLI>);
+pub struct RuntimeMilli(pub(super) f32, pub(super) Str<{ RuntimeMilli::MAX_LEN }>);
 
 crate::run::runtime::impl_runtime! {
 	self  = RuntimeMilli,
-	len   = MAX_LEN_RUNTIME_MILLI,
+	len   = RuntimeMilli::MAX_LEN,
 	union = as_str_milli,
 
 	other = Runtime,
@@ -95,6 +66,93 @@ crate::run::runtime::impl_runtime! {
 }
 impl_math!(RuntimeMilli, f32);
 impl_traits!(RuntimeMilli, f32);
+
+//---------------------------------------------------------------------------------------------------- RuntimeMilli Constants
+impl RuntimeMilli {
+	/// The max length of [`RuntimeMilli`]'s string.
+	pub const MAX_LEN: usize = 12;
+
+	/// [`f32`] returned when calling [`RuntimeMilli::zero`]
+	pub const ZERO_F32: f32 = 0.0;
+
+	/// [`f32`] returned when calling [`RuntimeMilli::second`]
+	pub const SECOND_F32: f32 = 1.0;
+
+	/// [`f32`] returned when calling [`RuntimeMilli::minute`]
+	pub const MINUTE_F32: f32 = 60.0;
+
+	/// [`f32`] returned when calling [`RuntimeMilli::hour`]
+	pub const HOUR_F32: f32 = 3600.0;
+
+	/// [`f32`] returned when calling [`RuntimeMilli::day`]
+	pub const DAY_F32: f32 = 86400.0;
+
+	/// Input greater to [`RuntimeMilli`] will make it return [`Self::MAX`]
+	pub const MAX_F32: f32 = 359999.0;
+
+	/// Returned when using [`RuntimeMilli::unknown`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(RuntimeMilli::UNKNOWN, 0.0);
+	/// assert_eq!(RuntimeMilli::UNKNOWN, "??:??:??.???");
+	/// ```
+	pub const UNKNOWN: Self = Self(Self::ZERO_F32, Str::from_static_str("??:??:??.???"));
+
+	/// Returned when using [`RuntimeMilli::zero`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(RuntimeMilli::ZERO, 0.0);
+	/// assert_eq!(RuntimeMilli::ZERO, "00:00:00.000");
+	/// ```
+	pub const ZERO: Self = Self(Self::ZERO_F32, Str::from_static_str("00:00:00.000"));
+
+	/// Returned when using [`RuntimeMilli::second`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(RuntimeMilli::SECOND, 1.0);
+	/// assert_eq!(RuntimeMilli::SECOND, "00:00:01.000");
+	/// ```
+	pub const SECOND: Self = Self(Self::SECOND_F32, Str::from_static_str("00:00:01.000"));
+
+	/// Returned when using [`RuntimeMilli::minute`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(RuntimeMilli::MINUTE, 60.0);
+	/// assert_eq!(RuntimeMilli::MINUTE, "00:01:00.000");
+	/// ```
+	pub const MINUTE: Self = Self(Self::MINUTE_F32, Str::from_static_str("00:01:00.000"));
+
+	/// Returned when using [`RuntimeMilli::hour`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(RuntimeMilli::HOUR, 3600.0);
+	/// assert_eq!(RuntimeMilli::HOUR, "01:00:00.000");
+	/// ```
+	pub const HOUR: Self = Self(Self::HOUR_F32, Str::from_static_str("01:00:00.000"));
+
+	/// Returned when using [`RuntimeMilli::day`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(RuntimeMilli::DAY, 86400.0);
+	/// assert_eq!(RuntimeMilli::DAY, "24:00:00.000");
+	/// ```
+	pub const DAY: Self = Self(Self::DAY_F32, Str::from_static_str("24:00:00.000"));
+
+	/// Returned when using [`RuntimeMilli::max`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(RuntimeMilli::MAX, 359999.0);
+	/// assert_eq!(RuntimeMilli::MAX, "99:59:59.000");
+	/// ```
+	pub const MAX: Self = Self(Self::MAX_F32, Str::from_static_str("99:59:59.000"));
+}
 
 //---------------------------------------------------------------------------------------------------- Impl
 macro_rules! impl_as_str_runtime_inner {
@@ -193,65 +251,64 @@ impl RuntimeMilli {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeMilli::unknown(), 0.0);
-	/// assert_eq!(RuntimeMilli::unknown(), "??:??:??.???");
+	/// assert_eq!(RuntimeMilli::unknown(), RuntimeMilli::UNKNOWN);
 	/// ```
 	pub const fn unknown() -> Self {
-		Self(ZERO_RUNTIME_F32, Str::from_static_str(UNKNOWN_RUNTIME_MILLI))
+		Self::UNKNOWN
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeMilli::zero(), 0.0);
-	/// assert_eq!(RuntimeMilli::zero(), "00:00:00.000");
+	/// assert_eq!(RuntimeMilli::zero(), RuntimeMilli::ZERO);
 	/// ```
 	pub const fn zero() -> Self {
-		Self(ZERO_RUNTIME_F32, Str::from_static_str(ZERO_RUNTIME_MILLI))
+		Self::ZERO
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeMilli::second(), 1.0);
-	/// assert_eq!(RuntimeMilli::second(), "00:00:01.000");
-	/// assert_eq!(RuntimeMilli::second(), RuntimeMilli::from(1.0));
+	/// assert_eq!(RuntimeMilli::second(), RuntimeMilli::SECOND);
 	/// ```
 	pub const fn second() -> Self {
-		Self(SECOND_RUNTIME_F32, Str::from_static_str(SECOND_RUNTIME_MILLI))
+		Self::SECOND
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeMilli::minute(), 60.0);
-	/// assert_eq!(RuntimeMilli::minute(), "00:01:00.000");
-	/// assert_eq!(RuntimeMilli::minute(), RuntimeMilli::from(60.0));
+	/// assert_eq!(RuntimeMilli::minute(), RuntimeMilli::MINUTE);
 	/// ```
 	pub const fn minute() -> Self {
-		Self(MINUTE_RUNTIME_F32, Str::from_static_str(MINUTE_RUNTIME_MILLI))
+		Self::MINUTE
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeMilli::hour(), 3600.0);
-	/// assert_eq!(RuntimeMilli::hour(), "01:00:00.000");
-	/// assert_eq!(RuntimeMilli::hour(), RuntimeMilli::from(3600.0));
+	/// assert_eq!(RuntimeMilli::hour(), RuntimeMilli::HOUR);
 	/// ```
 	pub const fn hour() -> Self {
-		Self(HOUR_RUNTIME_F32, Str::from_static_str(HOUR_RUNTIME_MILLI))
+		Self::HOUR
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeMilli::max(), 359999.0);
-	/// assert_eq!(RuntimeMilli::max(), "99:59:59.000");
-	/// assert_eq!(RuntimeMilli::max(), RuntimeMilli::from(359999.0));
+	/// assert_eq!(RuntimeMilli::day(), RuntimeMilli::DAY);
+	/// ```
+	pub const fn day() -> Self {
+		Self::DAY
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(RuntimeMilli::max(), RuntimeMilli::MAX);
 	/// ```
 	pub const fn max() -> Self {
-		Self(MAX_RUNTIME_F32, Str::from_static_str(MAX_RUNTIME_MILLI))
+		Self::MAX
 	}
 }
 
@@ -276,7 +333,7 @@ impl RuntimeMilli {
 		// println!("h: {}, m: {}, s: {}, mm: {}", h as u8, m as u8, s as u8, (1_000.0 * s.fract()).round() as u16);
 
 		// Format.
-		let mut buf = [0; MAX_LEN_RUNTIME_MILLI];
+		let mut buf = [0; Self::MAX_LEN];
 		Self::format(
 			&mut buf,
 			h as u8,
@@ -285,18 +342,18 @@ impl RuntimeMilli {
 			(1000.0 * s.fract()).round() as u16,
 		);
 
-		Self(runtime, unsafe { Str::from_raw(buf, MAX_LEN_RUNTIME_MILLI as u8) })
+		Self(runtime, unsafe { Str::from_raw(buf, Self::MAX_LEN as u8) })
 	}
 
 	#[inline]
 	pub(super) fn priv_from_inner(runtime: f32) -> Option<(f32, f32, f32)> {
-		// Zero MAX_LEN_RUNTIME_MILLIgth.
+		// Zero Self::MAXgth_LEN.
 		if runtime <= 0.0 {
 			return Some((0.0, 0.0, 0.0));
 		}
 
 		// Return unknown if over max.
-		if runtime > MAX_RUNTIME_F32 {
+		if runtime > Self::MAX_F32 {
 			return None;
 		}
 
@@ -330,7 +387,7 @@ impl RuntimeMilli {
 
 	#[inline]
 	// 0 Padding for `hh:mm:ss` according to `RuntimeMilli` rules.
-	fn format(buf: &mut [u8; MAX_LEN_RUNTIME_MILLI], hour: u8, min: u8, sec: u8, milli: u16) {
+	fn format(buf: &mut [u8; Self::MAX_LEN], hour: u8, min: u8, sec: u8, milli: u16) {
 		debug_assert!(hour < 100);
 		debug_assert!(min < 60);
 		debug_assert!(sec < 60);
@@ -406,7 +463,7 @@ mod tests {
 			std::str::from_utf8(&b).unwrap()
 		}
 
-		let mut buf = [0; MAX_LEN_RUNTIME_MILLI];
+		let mut buf = [0; RuntimeMilli::MAX_LEN];
 		let buf = &mut buf;
 
 		// 0:0:0
@@ -460,7 +517,7 @@ mod tests {
 
 	#[test]
 	fn all_uint() {
-		for i in 0..MAX_RUNTIME_F32 as u32 {
+		for i in 0..RuntimeMilli::MAX_F32 as u32 {
 			let rt = RuntimeMilli::from(i);
 			println!("rt:{} - i: {}", rt, i);
 			assert_eq!(rt.inner() as u32, i);
@@ -472,7 +529,7 @@ mod tests {
 	#[test]
 	fn all_floats() {
 		let mut f = 1.0;
-		while f < MAX_RUNTIME_F32 {
+		while f < RuntimeMilli::MAX_F32 {
 			let rt = RuntimeMilli::from(f);
 			println!("rt: {} - f: {}", rt, f);
 			assert_eq!(rt, f);
@@ -482,14 +539,14 @@ mod tests {
 
 	#[test]
 	fn overflow_float() {
-		assert_eq!(RuntimeMilli::from(MAX_RUNTIME_F32 + 1.0), 0.0);
-		assert_eq!(RuntimeMilli::from(MAX_RUNTIME_F32 + 1.0), RuntimeMilli::unknown());
+		assert_eq!(RuntimeMilli::from(RuntimeMilli::MAX_F32 + 1.0), 0.0);
+		assert_eq!(RuntimeMilli::from(RuntimeMilli::MAX_F32 + 1.0), RuntimeMilli::unknown());
 	}
 
 	#[test]
 	fn overflow_uint() {
-		assert_eq!(RuntimeMilli::from(MAX_RUNTIME_F32 + 1.0), 0.0);
-		assert_eq!(RuntimeMilli::from(MAX_RUNTIME_F32 + 1.0), RuntimeMilli::unknown());
+		assert_eq!(RuntimeMilli::from(RuntimeMilli::MAX_F32 + 1.0), 0.0);
+		assert_eq!(RuntimeMilli::from(RuntimeMilli::MAX_F32 + 1.0), RuntimeMilli::unknown());
 	}
 
 	#[test]

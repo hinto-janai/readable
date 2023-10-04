@@ -7,43 +7,6 @@ use crate::macros::{
 	impl_usize,impl_math,impl_impl_math,
 };
 
-//---------------------------------------------------------------------------------------------------- Constants (Public)
-/// The max length of [`Runtime`]'s and [`RuntimePad`]'s string.
-pub const MAX_LEN_RUNTIME: usize = 8;
-
-/// [`str`] returned when using [`Runtime::unknown`]
-pub const UNKNOWN_RUNTIME: &str = "?:??";
-
-/// [`str`] returned when using [`Runtime::zero`]
-pub const ZERO_RUNTIME: &str = "0:00";
-
-/// [`str`] returned when using [`Runtime::second`]
-pub const SECOND_RUNTIME: &str = "0:01";
-
-/// [`str`] returned when using [`Runtime::minute`]
-pub const MINUTE_RUNTIME: &str = "1:00";
-
-/// [`str`] returned when using [`Runtime::hour`]
-pub const HOUR_RUNTIME: &str = "1:00:00";
-
-/// [`str`] for the max time [`Runtime`] can handle
-pub const MAX_RUNTIME: &str = "99:59:59";
-
-/// [`f32`] returned when calling [`Runtime::zero`]
-pub const ZERO_RUNTIME_F32: f32 = 0.0;
-
-/// [`f32`] returned when calling [`Runtime::second`]
-pub const SECOND_RUNTIME_F32: f32 = 1.0;
-
-/// [`f32`] returned when calling [`Runtime::minute`]
-pub const MINUTE_RUNTIME_F32: f32 = 60.0;
-
-/// [`f32`] returned when calling [`Runtime::hour`]
-pub const HOUR_RUNTIME_F32: f32 = 3600.0;
-
-/// Input greater to [`Runtime`] will make it return [`MAX_RUNTIME`]
-pub const MAX_RUNTIME_F32: f32 = 359999.0;
-
 //---------------------------------------------------------------------------------------------------- Runtime
 /// Human readable "audio/video runtime" in `HH:MM:SS` format.
 ///
@@ -84,11 +47,11 @@ pub const MAX_RUNTIME_F32: f32 = 359999.0;
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
-pub struct Runtime(pub(super) f32, pub(super) Str<MAX_LEN_RUNTIME>);
+pub struct Runtime(pub(super) f32, pub(super) Str<{ Runtime::MAX_LEN }>);
 
 impl_runtime! { // This macro is defined below.
 	self  = Runtime,
-	len   = MAX_LEN_RUNTIME,
+	len   = Runtime::MAX_LEN,
 	union = as_str,
 
 	other = RuntimePad,
@@ -97,6 +60,94 @@ impl_runtime! { // This macro is defined below.
 impl_math!(Runtime, f32);
 impl_traits!(Runtime, f32);
 
+//---------------------------------------------------------------------------------------------------- Runtime Constants
+impl Runtime {
+	/// The max length of [`Runtime`]'s string.
+	pub const MAX_LEN: usize = 8;
+
+	/// [`f32`] returned when calling [`Runtime::zero`]
+	pub const ZERO_F32: f32 = 0.0;
+
+	/// [`f32`] returned when calling [`Runtime::second`]
+	pub const SECOND_F32: f32 = 1.0;
+
+	/// [`f32`] returned when calling [`Runtime::minute`]
+	pub const MINUTE_F32: f32 = 60.0;
+
+	/// [`f32`] returned when calling [`Runtime::hour`]
+	pub const HOUR_F32: f32 = 3600.0;
+
+	/// [`f32`] returned when calling [`Runtime::day`]
+	pub const DAY_F32: f32 = 86400.0;
+
+	/// Input greater to [`Runtime`] will make it return [`Self::MAX`]
+	pub const MAX_F32: f32 = 359999.0;
+
+	/// Returned when using [`Runtime::unknown`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(Runtime::UNKNOWN, 0.0);
+	/// assert_eq!(Runtime::UNKNOWN, "?:??");
+	/// ```
+	pub const UNKNOWN: Self = Self(Self::ZERO_F32, Str::from_static_str("?:??"));
+
+	/// Returned when using [`Runtime::zero`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(Runtime::ZERO, 0.0);
+	/// assert_eq!(Runtime::ZERO, "0:00");
+	/// ```
+	pub const ZERO: Self = Self(Self::ZERO_F32, Str::from_static_str("0:00"));
+
+	/// Returned when using [`Runtime::second`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(Runtime::SECOND, 1.0);
+	/// assert_eq!(Runtime::SECOND, "0:01");
+	/// ```
+	pub const SECOND: Self = Self(Self::SECOND_F32, Str::from_static_str("0:01"));
+
+	/// Returned when using [`Runtime::minute`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(Runtime::MINUTE, 60.0);
+	/// assert_eq!(Runtime::MINUTE, "1:00");
+	/// ```
+	pub const MINUTE: Self = Self(Self::MINUTE_F32, Str::from_static_str("1:00"));
+
+	/// Returned when using [`Runtime::hour`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(Runtime::HOUR, 3600.0);
+	/// assert_eq!(Runtime::HOUR, "1:00:00");
+	/// ```
+	pub const HOUR: Self = Self(Self::HOUR_F32, Str::from_static_str("1:00:00"));
+
+	/// Returned when using [`Runtime::day`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(Runtime::DAY, 86400.0);
+	/// assert_eq!(Runtime::DAY, "24:00:00");
+	/// ```
+	pub const DAY: Self = Self(Self::DAY_F32, Str::from_static_str("24:00:00"));
+
+	/// Returned when using [`Runtime::max`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(Runtime::MAX, 359999.0);
+	/// assert_eq!(Runtime::MAX, "99:59:59");
+	/// ```
+	pub const MAX: Self = Self(Self::MAX_F32, Str::from_static_str("99:59:59"));
+}
+
+//---------------------------------------------------------------------------------------------------- Runtime Impl
 impl Runtime {
 	impl_common!(f32);
 	impl_const!();
@@ -105,65 +156,64 @@ impl Runtime {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Runtime::unknown(), 0.0);
-	/// assert_eq!(Runtime::unknown(), "?:??");
+	/// assert_eq!(Runtime::unknown(), Runtime::UNKNOWN);
 	/// ```
 	pub const fn unknown() -> Self {
-		Self(ZERO_RUNTIME_F32, Str::from_static_str(UNKNOWN_RUNTIME))
+		Self::UNKNOWN
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Runtime::zero(), 0.0);
-	/// assert_eq!(Runtime::zero(), "0:00");
+	/// assert_eq!(Runtime::zero(), Runtime::ZERO);
 	/// ```
 	pub const fn zero() -> Self {
-		Self(ZERO_RUNTIME_F32, Str::from_static_str(ZERO_RUNTIME))
+		Self::ZERO
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Runtime::second(), 1.0);
-	/// assert_eq!(Runtime::second(), "0:01");
-	/// assert_eq!(Runtime::second(), Runtime::from(1.0));
+	/// assert_eq!(Runtime::second(), Runtime::SECOND);
 	/// ```
 	pub const fn second() -> Self {
-		Self(SECOND_RUNTIME_F32, Str::from_static_str(SECOND_RUNTIME))
+		Self::SECOND
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Runtime::minute(), 60.0);
-	/// assert_eq!(Runtime::minute(), "1:00");
-	/// assert_eq!(Runtime::minute(), Runtime::from(60.0));
+	/// assert_eq!(Runtime::minute(), Runtime::MINUTE);
 	/// ```
 	pub const fn minute() -> Self {
-		Self(MINUTE_RUNTIME_F32, Str::from_static_str(MINUTE_RUNTIME))
+		Self::MINUTE
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Runtime::hour(), 3600.0);
-	/// assert_eq!(Runtime::hour(), "1:00:00");
-	/// assert_eq!(Runtime::hour(), Runtime::from(3600.0));
+	/// assert_eq!(Runtime::hour(), Runtime::HOUR);
 	/// ```
 	pub const fn hour() -> Self {
-		Self(HOUR_RUNTIME_F32, Str::from_static_str(HOUR_RUNTIME))
+		Self::HOUR
 	}
 
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Runtime::max(), 359999.0);
-	/// assert_eq!(Runtime::max(), "99:59:59");
-	/// assert_eq!(Runtime::max(), Runtime::from(359999.0));
+	/// assert_eq!(Runtime::day(), Runtime::DAY);
+	/// ```
+	pub const fn day() -> Self {
+		Self::DAY
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(Runtime::max(), Runtime::MAX);
 	/// ```
 	pub const fn max() -> Self {
-		Self(MAX_RUNTIME_F32, Str::from_static_str(MAX_RUNTIME))
+		Self::MAX
 	}
 }
 
@@ -186,7 +236,7 @@ impl Runtime {
 		}
 
 		let (hours, minutes, seconds) = (h as u8, m as u8, s as u8);
-		let mut buf = [0; MAX_LEN_RUNTIME];
+		let mut buf = [0; Self::MAX_LEN];
 
 		// Format.
 		let len = if hours > 0 {
@@ -206,7 +256,7 @@ impl Runtime {
 		}
 
 		// Return unknown if over max.
-		if runtime > MAX_RUNTIME_F32 {
+		if runtime > Self::MAX_F32 {
 			return None;
 		}
 
@@ -236,7 +286,7 @@ impl Runtime {
 	// 0 Padding for `hh:mm:ss` according to `Runtime` rules.
 	//
 	// INVARIANT: Assumes `hour` is 1 or greater.
-	fn format_hms(buf: &mut [u8; MAX_LEN_RUNTIME], hour: u8, min: u8, sec: u8) -> usize {
+	fn format_hms(buf: &mut [u8; Self::MAX_LEN], hour: u8, min: u8, sec: u8) -> usize {
 		debug_assert!(hour >= 1);
 		debug_assert!(hour < 100);
 		debug_assert!(min < 60);
@@ -353,7 +403,7 @@ impl Runtime {
 
 	#[inline]
 	// 0 Padding for `mm:ss` according to `Runtime` rules.
-	fn format_ms(buf: &mut [u8; MAX_LEN_RUNTIME], min: u8, sec: u8) -> usize {
+	fn format_ms(buf: &mut [u8; Self::MAX_LEN], min: u8, sec: u8) -> usize {
 		const Z: u8 = b'0';
 		const C: u8 = b':';
 
@@ -599,7 +649,7 @@ mod tests {
 			std::str::from_utf8(&b[..l]).unwrap()
 		}
 
-		let mut buf = [0; MAX_LEN_RUNTIME];
+		let mut buf = [0; Runtime::MAX_LEN];
 		let buf = &mut buf;
 
 		// 0:0:0
@@ -641,7 +691,7 @@ mod tests {
 			std::str::from_utf8(&b[..l]).unwrap()
 		}
 
-		let mut buf = [0; MAX_LEN_RUNTIME];
+		let mut buf = [0; Runtime::MAX_LEN];
 		let buf = &mut buf;
 
 		// 0:0
@@ -663,7 +713,7 @@ mod tests {
 
 	#[test]
 	fn all_uint() {
-		for i in 0..MAX_RUNTIME_F32 as u32 {
+		for i in 0..Runtime::MAX_F32 as u32 {
 			let rt = Runtime::from(i);
 			println!("rt:{} - i: {}", rt, i);
 			assert_eq!(rt.inner() as u32, i);
@@ -675,7 +725,7 @@ mod tests {
 	#[test]
 	fn all_floats() {
 		let mut f = 1.0;
-		while f < MAX_RUNTIME_F32 {
+		while f < Runtime::MAX_F32 {
 			let rt = Runtime::from(f);
 			println!("rt: {} - f: {}", rt, f);
 			assert_eq!(rt, f);
@@ -685,14 +735,14 @@ mod tests {
 
 	#[test]
 	fn overflow_float() {
-		assert_eq!(Runtime::from(MAX_RUNTIME_F32 + 1.0), 0.0);
-		assert_eq!(Runtime::from(MAX_RUNTIME_F32 + 1.0), Runtime::unknown());
+		assert_eq!(Runtime::from(Runtime::MAX_F32 + 1.0), 0.0);
+		assert_eq!(Runtime::from(Runtime::MAX_F32 + 1.0), Runtime::unknown());
 	}
 
 	#[test]
 	fn overflow_uint() {
-		assert_eq!(Runtime::from(MAX_RUNTIME_F32 + 1.0), 0.0);
-		assert_eq!(Runtime::from(MAX_RUNTIME_F32 + 1.0), Runtime::unknown());
+		assert_eq!(Runtime::from(Runtime::MAX_F32 + 1.0), 0.0);
+		assert_eq!(Runtime::from(Runtime::MAX_F32 + 1.0), Runtime::unknown());
 	}
 
 	#[test]
