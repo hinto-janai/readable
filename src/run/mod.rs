@@ -65,7 +65,7 @@
 //!
 //! A [`Runtime::unknown()`] (or the runtime variant's version of it) will be returned if the input is:
 //! - A negative integer
-//! - Larger than [`MAX_RUNTIME_F32`]
+//! - Larger than [`Runtime::MAX`]
 //! - [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`] (or the [`f64`] versions)
 //!
 //! ## Math

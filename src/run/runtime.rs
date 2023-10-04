@@ -215,6 +215,19 @@ impl Runtime {
 	pub const fn max() -> Self {
 		Self::MAX
 	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::*;
+	/// assert!(Runtime::UNKNOWN.is_unknown());
+	/// assert!(!Runtime::ZERO.is_unknown());
+	/// ```
+	pub const fn is_unknown(&self) -> bool {
+		match self.1.as_bytes() {
+			b"?:??" => true,
+			_ => false,
+		}
+	}
 }
 
 //---------------------------------------------------------------------------------------------------- Private impl

@@ -195,6 +195,19 @@ impl Int {
 	pub const fn unknown() -> Self {
 		Self::UNKNOWN
 	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::*;
+	/// assert!(Int::UNKNOWN.is_unknown());
+	/// assert!(!Int::ZERO.is_unknown());
+	/// ```
+	pub const fn is_unknown(&self) -> bool {
+		match *self {
+			Self::UNKNOWN => true,
+			_ => false,
+		}
+	}
 }
 
 //---------------------------------------------------------------------------------------------------- Private functions.

@@ -297,25 +297,30 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 #[cfg_attr(feature = "serde",derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode",derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct Date((u16, u8, u8), Str<LEN>);
-
-const LEN: usize = 10;
+pub struct Date((u16, u8, u8), Str<{ Date::MAX_LEN }>);
 
 impl_traits!(Date, (u16, u8, u8));
 
 //---------------------------------------------------------------------------------------------------- Date Constants
 impl Date {
+	/// The maximum string length of a [`Date`].
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(readable::Date::from_str("2018-04-25").unwrap().len(), Date::MAX_LEN);
+	/// ```
+	pub const MAX_LEN: usize = 10;
+
 	/// The separator character for [`Date`].
 	pub const DASH: u8 = b'-';
 
 	/// Returned when using [`Date::unknown`] or error situations.
-	pub const UNKNOWN: &str = "????-??-??";
-
-	/// The maximum string length of a [`Date`].
+	///
 	/// ```rust
-	/// assert_eq!(readable::Date::UNKNOWN.len(), 10);
+	/// # use readable::*;
+	/// assert_eq!(Date::UNKNOWN, (0, 0, 0));
+	/// assert_eq!(Date::UNKNOWN, "????-??-??");
 	/// ```
-	pub const MAX_LEN: usize = LEN;
+	pub const UNKNOWN: Self = Date((0, 0, 0), Str::from_static_str("????-??-??"));
 }
 
 //---------------------------------------------------------------------------------------------------- Date impl
@@ -329,13 +334,18 @@ impl Date {
 	///
 	/// The [`String`] is set to [`Self::UNKNOWN`].
 	pub const fn unknown() -> Self {
-		Self((0, 0, 0), Str::from_static_str(Self::UNKNOWN))
+		Self::UNKNOWN
 	}
 
 	#[inline]
 	/// Same as [`Self::unknown`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(Date::zero(), Date::unknown());
+	/// ```
 	pub const fn zero() -> Self {
-		Self((0, 0, 0), Str::from_static_str(Self::UNKNOWN))
+		Self::unknown()
 	}
 
 	#[inline]

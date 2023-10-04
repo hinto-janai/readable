@@ -372,6 +372,24 @@ impl RuntimeUnion {
 	pub const fn max() -> Self {
 		Self::MAX
 	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::*;
+	/// assert!(RuntimeUnion::UNKNOWN.is_unknown());
+	/// assert!(!RuntimeUnion::ZERO.is_unknown());
+	/// ```
+	pub const fn is_unknown(&self) -> bool {
+		let bytes = (
+			self.runtime.as_bytes(),
+			self.runtime_pad.as_bytes(),
+			self.runtime_milli.as_bytes(),
+		);
+		match bytes {
+			(b"?:??", b"??:??:??", b"??:??:??.???") => true,
+			_ => false,
+		}
+	}
 }
 
 //---------------------------------------------------------------------------------------------------- Private impl

@@ -1,7 +1,5 @@
 //---------------------------------------------------------------------------------------------------- Use
-use crate::time::{
-	Time,UNKNOWN_TIME,
-};
+use crate::time::Time;
 use crate::str::Str;
 use crate::macros::{
 	return_bad_float,impl_common,
@@ -9,41 +7,6 @@ use crate::macros::{
 	impl_usize,impl_traits,
 };
 use crate::itoa;
-
-//---------------------------------------------------------------------------------------------------- Constants
-/// ```rust
-/// # use readable::time::*;
-/// let date = "--- years, -- months, -- days, -- hours, -- minutes, -- seconds";
-/// assert_eq!(date.len(), MAX_LEN_TIME_FULL);
-/// ```
-pub const MAX_LEN_TIME_FULL: usize = 63;
-
-/// [`u32`] & [`str`] returned when using [`TimeFull::unknown`]
-pub const UNKNOWN_TIME_FULL: (u32, &str) = (0, "???");
-
-/// [`u32`] & [`str`] returned when using [`TimeFull::zero`]
-pub const ZERO_TIME_FULL: (u32, &str) = (0, "0 seconds");
-
-/// [`u32`] & [`str`] returned when using [`TimeFull::second`]
-pub const SECOND_TIME_FULL: (u32, &str) = (1, "1 second");
-
-/// [`u32`] & [`str`] returned when using [`TimeFull::minute`]
-pub const MINUTE_TIME_FULL: (u32, &str) = (60, "1 minute");
-
-/// [`u32`] & [`str`] returned when using [`TimeFull::hour`]
-pub const HOUR_TIME_FULL: (u32, &str) = (3600, "1 hour");
-
-/// [`u32`] & [`str`] returned when using [`TimeFull::day`]
-pub const DAY_TIME_FULL: (u32, &str) = (86400, "1 day");
-
-/// [`u32`] & [`str`] returned when using [`TimeFull::month`]
-pub const MONTH_TIME_FULL: (u32, &str) = (2630016, "1 month");
-
-/// [`u32`] & [`str`] returned when using [`TimeFull::year`]
-pub const YEAR_TIME_FULL: (u32, &str) = (31557600, "1 year");
-
-/// [`u32`] & [`str`] returned when using [`TimeFull::max`]
-pub const MAX_TIME_FULL: (u32, &str) = (u32::MAX, "136 years, 1 month, 5 days, 19 hours, 54 minutes, 39 seconds");
 
 //---------------------------------------------------------------------------------------------------- TimeFull
 /// [`TimeFull`] but with full specified words
@@ -58,7 +21,7 @@ pub const MAX_TIME_FULL: (u32, &str) = (u32::MAX, "136 years, 1 month, 5 days, 1
 /// assert_eq!(TimeFull::from(2), "2 seconds");
 /// ```
 ///
-/// /// ## Size
+/// ## Size
 /// [`Str<63>`] is used internally to represent the string.
 ///
 /// ```rust
@@ -109,10 +72,84 @@ pub const MAX_TIME_FULL: (u32, &str) = (u32::MAX, "136 years, 1 month, 5 days, 1
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct TimeFull(pub(super) u32, pub(super) Str<MAX_LEN_TIME_FULL>);
+pub struct TimeFull(pub(super) u32, pub(super) Str<{ TimeFull::MAX_LEN }>);
 
 impl_math!(TimeFull, u32);
 impl_traits!(TimeFull, u32);
+
+
+//---------------------------------------------------------------------------------------------------- Constants
+impl TimeFull {
+	/// ```rust
+	/// # use readable::*;
+	/// let time = "--- years, -- months, -- days, -- hours, -- minutes, -- seconds";
+	/// assert_eq!(time.len(), TimeFull::MAX_LEN);
+	/// ```
+	pub const MAX_LEN: usize = 63;
+
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(TimeFull::UNKNOWN, 0);
+	/// assert_eq!(TimeFull::UNKNOWN, "???");
+	/// ```
+	pub const UNKNOWN: Self = Self(0, Str::from_static_str("???"));
+
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(TimeFull::ZERO, 0);
+	/// assert_eq!(TimeFull::ZERO, "0 seconds");
+	/// ```
+	pub const ZERO: Self = Self(0, Str::from_static_str("0 seconds"));
+
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(TimeFull::SECOND, 1);
+	/// assert_eq!(TimeFull::SECOND, "1 second");
+	/// ```
+	pub const SECOND: Self = Self(1, Str::from_static_str("1 second"));
+
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(TimeFull::MINUTE, 60);
+	/// assert_eq!(TimeFull::MINUTE, "1 minute");
+	/// ```
+	pub const MINUTE: Self = Self(60, Str::from_static_str("1 minute"));
+
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(TimeFull::HOUR, 3600);
+	/// assert_eq!(TimeFull::HOUR, "1 hour");
+	/// ```
+	pub const HOUR: Self = Self(3600, Str::from_static_str("1 hour"));
+
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(TimeFull::DAY, 86400);
+	/// assert_eq!(TimeFull::DAY, "1 day");
+	/// ```
+	pub const DAY: Self = Self(86400, Str::from_static_str("1 day"));
+
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(TimeFull::MONTH, 2630016);
+	/// assert_eq!(TimeFull::MONTH, "1 month");
+	/// ```
+	pub const MONTH: Self = Self(2630016, Str::from_static_str("1 month"));
+
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(TimeFull::YEAR, 31557600);
+	/// assert_eq!(TimeFull::YEAR, "1 year");
+	/// ```
+	pub const YEAR: Self = Self(31557600, Str::from_static_str("1 year"));
+
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(TimeFull::MAX, u32::MAX);
+	/// assert_eq!(TimeFull::MAX, "136 years, 1 month, 5 days, 19 hours, 54 minutes, 39 seconds");
+	/// ```
+	pub const MAX: Self = Self(u32::MAX, Str::from_static_str("136 years, 1 month, 5 days, 19 hours, 54 minutes, 39 seconds"));
+}
 
 //---------------------------------------------------------------------------------------------------- Pub Impl
 impl TimeFull {
@@ -122,93 +159,97 @@ impl TimeFull {
 
 	#[inline]
 	/// ```rust
-	/// # use readable::TimeFull;
-	/// assert_eq!(TimeFull::zero(), 0_u32);
-	/// assert_eq!(TimeFull::zero(), "0 seconds");
+	/// # use readable::*;
+	/// assert_eq!(Time::zero(), Time::ZERO);
 	/// ```
 	pub const fn zero() -> Self {
-		Self(ZERO_TIME_FULL.0, Str::from_static_str(ZERO_TIME_FULL.1))
+		Self::ZERO
 	}
 
 	#[inline]
 	/// ```rust
-	/// # use readable::TimeFull;
-	/// assert_eq!(TimeFull::second(), 1_u32);
-	/// assert_eq!(TimeFull::second(), "1 second");
+	/// # use readable::*;
+	/// assert_eq!(Time::second(), Time::SECOND);
 	/// ```
 	pub const fn second() -> Self {
-		Self(SECOND_TIME_FULL.0, Str::from_static_str(SECOND_TIME_FULL.1))
+		Self::SECOND
 	}
 
 	#[inline]
 	/// ```rust
-	/// # use readable::TimeFull;
-	/// assert_eq!(TimeFull::minute(), 60_u32);
-	/// assert_eq!(TimeFull::minute(), "1 minute");
+	/// # use readable::*;
+	/// assert_eq!(Time::minute(), Time::MINUTE);
 	/// ```
 	pub const fn minute() -> Self {
-		Self(MINUTE_TIME_FULL.0, Str::from_static_str(MINUTE_TIME_FULL.1))
+		Self::MINUTE
 	}
 
 	#[inline]
 	/// ```rust
-	/// # use readable::TimeFull;
-	/// assert_eq!(TimeFull::hour(), 3600_u32);
-	/// assert_eq!(TimeFull::hour(), "1 hour");
+	/// # use readable::*;
+	/// assert_eq!(Time::hour(), Time::HOUR);
 	/// ```
 	pub const fn hour() -> Self {
-		Self(HOUR_TIME_FULL.0, Str::from_static_str(HOUR_TIME_FULL.1))
+		Self::HOUR
 	}
 
 	#[inline]
 	/// ```rust
-	/// # use readable::TimeFull;
-	/// assert_eq!(TimeFull::day(), 86400_u32);
-	/// assert_eq!(TimeFull::day(), "1 day");
+	/// # use readable::*;
+	/// assert_eq!(Time::day(), Time::DAY);
 	/// ```
 	pub const fn day() -> Self {
-		Self(DAY_TIME_FULL.0, Str::from_static_str(DAY_TIME_FULL.1))
+		Self::DAY
 	}
 
 	#[inline]
 	/// ```rust
-	/// # use readable::TimeFull;
-	/// assert_eq!(TimeFull::month(), 2630016_u32);
-	/// assert_eq!(TimeFull::month(), "1 month");
+	/// # use readable::*;
+	/// assert_eq!(Time::month(), Time::MONTH);
 	/// ```
 	pub const fn month() -> Self {
-		Self(MONTH_TIME_FULL.0, Str::from_static_str(MONTH_TIME_FULL.1))
+		Self::MONTH
 	}
 
 	#[inline]
 	/// ```rust
-	/// # use readable::TimeFull;
-	/// assert_eq!(TimeFull::year(), 31557600_u32);
-	/// assert_eq!(TimeFull::year(), "1 year");
+	/// # use readable::*;
+	/// assert_eq!(Time::year(), Time::YEAR);
 	/// ```
 	pub const fn year() -> Self {
-		Self(YEAR_TIME_FULL.0, Str::from_static_str(YEAR_TIME_FULL.1))
+		Self::YEAR
 	}
 
 	#[inline]
 	/// ```rust
-	/// # use readable::TimeFull;
-	/// assert_eq!(TimeFull::max(), u32::MAX);
-	/// assert_eq!(TimeFull::max(), "136 years, 1 month, 5 days, 19 hours, 54 minutes, 39 seconds");
+	/// # use readable::*;
+	/// assert_eq!(Time::max(), Time::MAX);
 	/// ```
 	pub const fn max() -> Self {
-		Self(MAX_TIME_FULL.0, Str::from_static_str(MAX_TIME_FULL.1))
+		Self::MAX
 	}
 
 
 	#[inline]
 	/// ```rust
-	/// # use readable::TimeFull;
-	/// assert_eq!(TimeFull::unknown(), 0_u32);
-	/// assert_eq!(TimeFull::unknown(), "???");
+	/// # use readable::*;
+	/// assert_eq!(Time::unknown(), Time::UNKNOWN);
 	/// ```
 	pub const fn unknown() -> Self {
-		Self(UNKNOWN_TIME_FULL.0, Str::from_static_str(UNKNOWN_TIME_FULL.1))
+		Self::UNKNOWN
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::*;
+	/// assert!(TimeFull::UNKNOWN.is_unknown());
+	/// assert!(!TimeFull::ZERO.is_unknown());
+	/// ```
+	pub const fn is_unknown(&self) -> bool {
+		match *self {
+			Self::UNKNOWN => true,
+			_ => false,
+		}
 	}
 }
 
@@ -216,7 +257,7 @@ impl TimeFull {
 impl TimeFull {
 	#[inline]
 	fn plural(
-		s: &mut Str<MAX_LEN_TIME_FULL>,
+		s: &mut Str<{ TimeFull::MAX_LEN }>,
 		name: &'static str,
 		value: u32,
 		started: &mut bool,
@@ -414,7 +455,7 @@ impl_f!(f64);
 impl From<Time> for TimeFull {
 	#[inline]
 	fn from(t: Time) -> Self {
-		if t.1 == UNKNOWN_TIME.1 {
+		if t.is_unknown() {
 			return Self::unknown();
 		}
 		Self::from_priv(t.0)
@@ -423,7 +464,7 @@ impl From<Time> for TimeFull {
 impl From<&Time> for TimeFull {
 	#[inline]
 	fn from(t: &Time) -> Self {
-		if t.1 == UNKNOWN_TIME.1 {
+		if t.is_unknown() {
 			return Self::unknown();
 		}
 		Self::from_priv(t.0)
@@ -471,7 +512,7 @@ mod tests {
 	#[test]
 	fn all_ints() {
 		let mut f = 1_u64;
-		while f < (MAX_TIME_FULL.0 as u64) {
+		while f < (TimeFull::MAX.0 as u64) {
 			let t = TimeFull::from(f);
 			println!("t: {t}, f: {f}");
 			assert_eq!(t, f as u32);

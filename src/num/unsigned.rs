@@ -209,6 +209,19 @@ impl Unsigned {
 	pub const fn unknown() -> Self {
 		Self::UNKNOWN
 	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::*;
+	/// assert!(Unsigned::UNKNOWN.is_unknown());
+	/// assert!(!Unsigned::ZERO.is_unknown());
+	/// ```
+	pub const fn is_unknown(&self) -> bool {
+		match *self {
+			Self::UNKNOWN => true,
+			_ => false,
+		}
+	}
 }
 
 //---------------------------------------------------------------------------------------------------- Private functions.

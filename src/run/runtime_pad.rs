@@ -249,6 +249,19 @@ impl RuntimePad {
 	pub const fn max() -> Self {
 		Self::MAX
 	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::*;
+	/// assert!(RuntimePad::UNKNOWN.is_unknown());
+	/// assert!(!RuntimePad::ZERO.is_unknown());
+	/// ```
+	pub const fn is_unknown(&self) -> bool {
+		match self.1.as_bytes() {
+			b"??:??:??" => true,
+			_ => false,
+		}
+	}
 }
 
 //---------------------------------------------------------------------------------------------------- Private impl
