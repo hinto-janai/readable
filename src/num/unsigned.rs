@@ -499,6 +499,30 @@ impl_u!(u8,u16,u32,u64);
 #[cfg(target_pointer_width = "64")]
 impl_u!(usize);
 
+//---------------------------------------------------------------------------------------------------- From `u128`
+/// This will return [`Self::unknown`] wrapped
+/// in [`Result::Err`] if the conversion fails.
+impl TryFrom<u128> for Unsigned {
+	type Error = Self;
+	fn try_from(num: u128) -> Result<Self, Self> {
+		match u64::try_from(num) {
+			Ok(u) => Ok(Self::from_priv(u)),
+			_ => Err(Self::unknown()),
+		}
+	}
+}
+/// This will return [`Self::unknown`] wrapped
+/// in [`Result::Err`] if the conversion fails.
+impl TryFrom<&u128> for Unsigned {
+	type Error = Self;
+	fn try_from(num: &u128) -> Result<Self, Self> {
+		match u64::try_from(*num) {
+			Ok(u) => Ok(Self::from_priv(u)),
+			_ => Err(Self::unknown()),
+		}
+	}
+}
+
 //---------------------------------------------------------------------------------------------------- From `NonZeroU*`
 macro_rules! impl_nonu {
 	($( $from:ty ),* $(,)?) => {
@@ -519,6 +543,7 @@ impl_nonu! {
 #[cfg(target_pointer_width = "64")]
 impl_nonu!(NonZeroUsize,&NonZeroUsize);
 
+
 //---------------------------------------------------------------------------------------------------- From `i*`
 macro_rules! impl_i {
 	($( $from:ty ),*) => {
@@ -529,6 +554,17 @@ macro_rules! impl_i {
 				type Error = Self;
 				fn try_from(num: $from) -> Result<Self, Self> {
 					match u64::try_from(num) {
+						Ok(u) => Ok(Self::from_priv(u)),
+						_ => Err(Self::unknown()),
+					}
+				}
+			}
+			/// This will return [`Self::unknown`] wrapped
+			/// in [`Result::Err`] if the conversion fails.
+			impl TryFrom<&$from> for Unsigned {
+				type Error = Self;
+				fn try_from(num: &$from) -> Result<Self, Self> {
+					match u64::try_from(*num) {
 						Ok(u) => Ok(Self::from_priv(u)),
 						_ => Err(Self::unknown()),
 					}
@@ -588,8 +624,8 @@ impl_noni!(NonZeroIsize,&NonZeroIsize);
 //---------------------------------------------------------------------------------------------------- From `f32/f64`
 macro_rules! impl_f {
 	($from:ty) => {
-		/// This will return [`Self::unknown`]
-		/// if the input float is `NAN`, `INFINITY`, or negative.
+		/// This will return [`Self::unknown`] if the input float is
+		/// `NAN`, `INFINITY`, negative, or higher than [`u64::MAX`].
 		impl TryFrom<$from> for Unsigned {
 			type Error = Self;
 			fn try_from(float: $from) -> Result<Self, Self> {
@@ -601,6 +637,8 @@ macro_rules! impl_f {
 				}
 
 				if float.is_sign_negative() {
+					return Err(Self::unknown());
+				} else if float > u64::MAX as $from {
 					return Err(Self::unknown());
 				}
 
