@@ -3,7 +3,7 @@ name = "readable"
 version = "0.10.0"
 edition = "2021"
 authors = ["hinto.janai <hinto.janai@protonmail.com>"]
-description = "Human readable data formatting"
+description = "Human readable strings"
 documentation = "https://docs.rs/readable"
 repository = "https://github.com/hinto-janai/readable"
 readme = "README.md"
@@ -17,8 +17,8 @@ rustc-args = ["--cfg", "docsrs"]
 [features]
 default = ["full"]
 byte    = []
-date    = []
-num     = []
+date    = ["once_cell", "regex"]
+num     = ["compact_str", "seq-macro"]
 run     = []
 str     = []
 time    = []
@@ -31,13 +31,19 @@ full    = ["serde", "bincode", "byte", "date", "num", "run", "str", "time", "toa
 #inline_percent = ["readable-inlined-percent"]
 
 [dependencies]
-paste       = "1.0.14"
-seq-macro   = "0.3.5"
-compact_str = { version = "0.7.1", features = ["bytes", "serde"] }
-regex       = { version = "1.9.5" }
+paste = "1.0.14"
+
+# (De)serialization
 serde       = { version = "1.0.188", features = ["derive"], optional = true }
 bincode     = { version = "2.0.0-rc.3", features = ["serde", "derive"], optional = true }
-once_cell   = { version = "1.18.0" }
+
+# Num
+compact_str = { version = "0.7.1", features = ["bytes", "serde"], optional = true }
+seq-macro   = { version = "0.3.5", optional = true }
+
+# Date
+regex       = { version = "1.9.5", optional = true }
+once_cell   = { version = "1.18.0", optional = true }
 
 # Inlined crates.
 #readable-inlined-date    = { version = "0.1.2", optional = true }

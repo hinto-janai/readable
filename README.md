@@ -19,45 +19,45 @@ Creation of `readable` types is relatively performant.
 ## Examples
 #### Unsigned
 ```rust
-# use readable::*;
+use readable::*;
 assert_eq!(Unsigned::from(1000_u64), "1,000");
 ```
 #### Int
 ```rust
-# use readable::*;
+use readable::*;
 assert_eq!(Int::from(-1000), "-1,000");
 ```
 #### Float
 ```rust
-# use readable::*;
+use readable::*;
 assert_eq!(Float::from(1000.123), "1,000.123");
 ```
 #### Percent
 ```rust
-# use readable::*;
+use readable::*;
 assert_eq!(Percent::from(1000.123), "1,000.12%");
 ```
 #### Runtime
 ```rust
-# use readable::*;
+use readable::*;
 assert_eq!(Runtime::from(311.123),      "5:11");
 assert_eq!(RuntimePad::from(311.123),   "00:05:11");
 assert_eq!(RuntimeMilli::from(311.123), "00:05:11.123");
 ```
 #### Time
 ```rust
-# use readable::*;
+use readable::*;
 assert_eq!(Time::from(86399_u32), "23h, 59m, 59s");
 assert_eq!(TimeFull::from(86399_u32), "23 hours, 59 minutes, 59 seconds");
 ```
 #### Date
 ```rust
-# use readable::*;
+use readable::*;
 assert_eq!(Date::from_ymd(2014, 12, 31).unwrap(), "2014-12-31");
 ```
 #### Byte
 ```rust
-# use readable::*;
+use readable::*;
 assert_eq!(Byte::from(1234), "1.234 KB");
 ```
 
@@ -66,20 +66,20 @@ All number types implement `PartialEq` against `str` and their internal numbers.
 
 This is comparing `b`'s inner `String`:
 ```rust
-# use readable::*;
+use readable::*;
 let a = std::time::Duration::from_secs(86399);
 let b = TimeFull::from(a);
 assert_eq!(b, "23 hours, 59 minutes, 59 seconds");
 ```
 This is comparing `a`'s inner `i64`:
 ```rust
-# use readable::*;
+use readable::*;
 let a = Int::from(-1000);
 assert_eq!(a, -1000);
 ```
 This compares both the `u64` AND `String` inside `a` and `b`:
 ```rust
-# use readable::*;
+use readable::*;
 let a = Unsigned::from(1000_u64);
 let b = Unsigned::from(1000_u64);
 assert_eq!(a, b);
@@ -89,34 +89,34 @@ assert_eq!(a, b);
 All number types implement the common arithmetic operators `+`, `-`, `/`, `*`, `%`, outputting a new `Self`.
 #### `+` Addition
 ```rust
-# use readable::*;
+use readable::*;
 let f1 = Float::from(1.0);
 let f2 = Float::from(2.0);
 assert_eq!(f1 + f2, 3.0);
 ```
 #### `-` Subtraction
 ```rust
-# use readable::*;
+use readable::*;
 let p50 = Percent::from(50.0);
 let p25 = Percent::from(25.0);
 assert_eq!(p50 - p25, "25.00%");
 ```
 #### `/` Division
 ```rust
-# use readable::*;
+use readable::*;
 let u100 = Unsigned::from(100_u64);
 let u10  = Unsigned::from(10_u64);
 assert_eq!(u100 / u10, 10);
 ```
 #### `*` Muliplication
 ```rust
-# use readable::*;
+use readable::*;
 let u10 = Unsigned::from(10_u64);
 assert_eq!(u10 * u10, Unsigned::from(100_u64));
 ```
 #### `%` Modulo
 ```rust
-# use readable::*;
+use readable::*;
 let u10 = Unsigned::from(10_u64);
 assert_eq!(u10 % u10, 0);
 ```

@@ -23,7 +23,7 @@ use std::num::{
 /// For [`u8`], [`u16`], [`u32`], [`u64`], [`usize`] or any `NonZeroU*` variant:
 /// - Use [`Unsigned::from`]
 ///
-/// Floating point and signed interger ([`f32`], [`i32`]) inputs must use [`Unsigned::try_from`] and:
+/// Floating point and signed integer ([`f32`], [`i32`]) inputs must use [`Unsigned::try_from`] and:
 /// - (Negative) infinity floats ([`f32::INFINITY`], [`f32::NEG_INFINITY`])
 /// - NaN floats ([`f32::NAN`])
 /// - Signed floats (`-1.0`)
