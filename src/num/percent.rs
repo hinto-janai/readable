@@ -39,6 +39,14 @@ use crate::macros::{
 /// assert!(f4 == "3.0000%");
 ///```
 ///
+/// ## Size
+/// This type may or may not be heap allocated.
+///
+/// ```rust
+/// # use readable::*;
+/// assert_eq!(std::mem::size_of::<Percent>(), 32);
+/// ```
+///
 /// ## Cloning
 /// [`Clone`] may be expensive:
 /// ```rust

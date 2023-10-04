@@ -62,7 +62,15 @@ use std::num::{
 /// ```
 /// [`Unsigned::unknown`] will be returned if `try_from` errors.
 ///
-/// ## Cloning
+/// ## Size
+/// [`Str<26>`] is used internally to represent the string.
+///
+/// ```rust
+/// # use readable::*;
+/// assert_eq!(std::mem::size_of::<Unsigned>(), 40);
+/// ```
+///
+/// ## Copy
 /// [`Copy`] is available.
 ///
 /// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),

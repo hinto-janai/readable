@@ -4,20 +4,6 @@
 macro_rules! impl_common {
 	($num:ty) => {
 		#[inline]
-		/// Return a borrowed [`str`] without consuming [`Self`].
-		pub fn as_str(&self) -> &str {
-			self.1.as_str()
-		}
-
-		#[inline]
-		/// Returns the _valid_ byte slice of the inner [`String`]
-		///
-		/// These bytes can _always_ safely be used for [`std::str::from_utf8_unchecked`].
-		pub fn as_bytes(&self) -> &[u8] {
-			self.1.as_bytes()
-		}
-
-		#[inline]
 		/// Returns the inner number.
 		pub const fn inner(&self) -> $num {
 			self.0
@@ -29,6 +15,20 @@ pub(super) use impl_common;
 //---------------------------------------------------------------------------------------------------- Common constant functions.
 macro_rules! impl_const {
 	() => {
+		#[inline]
+		/// Return a borrowed [`str`] without consuming [`Self`].
+		pub const fn as_str(&self) -> &str {
+			self.1.as_str()
+		}
+
+		#[inline]
+		/// Returns the _valid_ byte slice of the inner [`String`]
+		///
+		/// These bytes can _always_ safely be used for [`std::str::from_utf8_unchecked`].
+		pub const fn as_bytes(&self) -> &[u8] {
+			self.1.as_bytes()
+		}
+
 		#[inline]
 		/// The length of the inner [`String`]
 		pub const fn len(&self) -> usize {
@@ -47,6 +47,20 @@ pub(crate) use impl_const;
 //---------------------------------------------------------------------------------------------------- Implement above for non-const
 macro_rules! impl_not_const {
 	() => {
+		#[inline]
+		/// Return a borrowed [`str`] without consuming [`Self`].
+		pub fn as_str(&self) -> &str {
+			self.1.as_str()
+		}
+
+		#[inline]
+		/// Returns the _valid_ byte slice of the inner [`String`]
+		///
+		/// These bytes can _always_ safely be used for [`std::str::from_utf8_unchecked`].
+		pub fn as_bytes(&self) -> &[u8] {
+			self.1.as_bytes()
+		}
+
 		#[inline]
 		/// The length of the inner [`String`]
 		pub fn len(&self) -> usize {

@@ -575,8 +575,6 @@ const NEG_INFINITY: &str = "-inf";
 /// ```rust
 /// assert_eq!(std::mem::size_of::<readable::Dtoa>(), 26);
 /// ```
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Copy, Clone, Debug)]
 pub struct Dtoa {
 	len: u8,
@@ -724,8 +722,6 @@ impl Dtoa {
 /// ```rust
 /// assert_eq!(std::mem::size_of::<readable::DtoaTmp>(), 25);
 /// ```
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Copy, Clone, Debug)]
 pub struct DtoaTmp {
 	bytes: [MaybeUninit<u8>; 25],

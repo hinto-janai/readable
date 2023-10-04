@@ -1,6 +1,6 @@
 //---------------------------------------------------------------------------------------------------- Use
 // use bincode::{Encode,Decode};
-// use serde::{Serialize,Deserialize};
+// use serde::{Serialize,serde::Deserialize};
 // use anyhow::anyhow;
 // use log::{error,info,warn,debug,trace};
 // use disk::{Bincode2,Json};
@@ -85,7 +85,6 @@
 /// assert_eq!(string, "hello-------------------");
 /// assert_eq!(string.len(), 24);
 /// ```
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[repr(C)]
@@ -572,6 +571,7 @@ impl<const N: usize> Str<N> {
 
 	#[inline]
 	/// Consumes `self` into a [`String`]
+	///
 	/// ``` rust
 	/// # use readable::Str;
 	/// let s = Str::<5>::from_static_str("hello");
@@ -876,6 +876,69 @@ impl<const N: usize> std::convert::TryFrom<&str> for Str<N> {
 
 		Ok(string)
 	}
+}
+
+//---------------------------------------------------------------------------------------------------- Serde
+#[cfg(feature="serde")]
+impl<const N: usize> serde::Serialize for Str<N>
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: serde::Serializer
+    {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, const N: usize> serde::Deserialize<'de> for Str<N>
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: serde::Deserializer<'de>
+    {
+        use serde::de::{self, Visitor};
+        use std::marker::PhantomData;
+
+        struct StrVisitor<const N: usize>(PhantomData<[u8; N]>);
+
+        impl<const N: usize> Visitor<'_> for StrVisitor<N> {
+            type Value = Str<N>;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write!(formatter, "a string no more than {N} bytes long")
+            }
+
+            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+                where E: de::Error,
+            {
+				let v_len = v.len();
+				if v_len > N {
+					return Err(E::invalid_length(v_len, &self));
+				}
+				let mut s = Str::new();
+				s.push_str_unchecked(v);
+				Ok(s)
+            }
+
+            fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+                where E: de::Error,
+            {
+				let Ok(v) = std::str::from_utf8(v) else {
+					return Err(E::invalid_value(de::Unexpected::Bytes(v), &self));
+				};
+
+				let v_len = v.len();
+				if v_len > N {
+					return Err(E::invalid_length(v_len, &self));
+				}
+
+				let mut s = Str::new();
+				s.push_str_unchecked(v);
+				Ok(s)
+            }
+        }
+
+        deserializer.deserialize_str(StrVisitor(PhantomData))
+    }
 }
 
 //---------------------------------------------------------------------------------------------------- TESTS

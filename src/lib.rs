@@ -66,12 +66,14 @@ pub use run::{
 	Runtime,RuntimePad,RuntimeMilli,RuntimeUnion,
 };
 
+#[cfg(feature = "time")]
 /// Human-readable time formatting
 pub mod time;
 pub use time::{
 	Time,TimeFull,
 };
 
+#[cfg(feature = "date")]
 /// Human-readable date formatting
 pub mod date;
 pub use date::{
@@ -82,4 +84,10 @@ pub use date::{
 pub mod toa;
 pub use toa::{
 	Itoa,ItoaTmp,Dtoa,DtoaTmp,
+};
+
+#[cfg(feature = "byte")]
+pub mod byte;
+pub use byte::{
+	Byte,
 };

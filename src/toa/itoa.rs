@@ -44,8 +44,6 @@ use std::fmt::write;
 /// ```rust
 /// assert_eq!(std::mem::size_of::<readable::Itoa>(), 42);
 /// ```
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Copy, Clone, Debug)]
 pub struct Itoa {
 	len: u8,
@@ -151,8 +149,6 @@ impl Itoa {
 /// ```rust
 /// assert_eq!(std::mem::size_of::<readable::ItoaTmp>(), 40);
 /// ```
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Copy, Clone, Debug)]
 pub struct ItoaTmp {
 	bytes: [MaybeUninit<u8>; I128_MAX_LEN],

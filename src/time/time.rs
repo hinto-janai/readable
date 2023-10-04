@@ -241,12 +241,12 @@ impl Time {
 	}
 
 	fn from_priv(secs: u32) -> Self {
-		#[cfg(feature = "inline_time")]
-		if secs <= 3660 {
-			// SAFETY:
-			// Cast `u64` to `u16` is safe because it's under 65_535.
-			return Self(secs, CompactString::new_inline(readable_inlined_time::inlined(secs as u16)))
-		}
+		// #[cfg(feature = "inline_time")]
+		// if secs <= 3660 {
+		// 	// SAFETY:
+		// 	// Cast `u64` to `u16` is safe because it's under 65_535.
+		// 	return Self(secs, CompactString::new_inline(readable_inlined_time::inlined(secs as u16)))
+		// }
 
 		if secs == 0 {
 			return Self::zero();

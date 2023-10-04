@@ -40,6 +40,14 @@ use std::num::{
 /// - You need to use [`Int::try_from`] for anything above [`u32`]
 /// - [`Int::unknown`] will be returned on error
 ///
+/// ## Size
+/// [`Str<26>`] is used internally to represent the string.
+///
+/// ```rust
+/// # use readable::*;
+/// assert_eq!(std::mem::size_of::<Int>(), 40);
+/// ```
+///
 /// ## Copy
 /// [`Copy`] is available.
 ///

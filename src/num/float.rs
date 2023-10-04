@@ -47,6 +47,14 @@ use crate::macros::{
 ///
 /// Formatting [`Float`] is also quite slower than [`Unsigned`] and [`Int`].
 ///
+/// ## Size
+/// This type may or may not be heap allocated.
+///
+/// ```rust
+/// # use readable::*;
+/// assert_eq!(std::mem::size_of::<Float>(), 32);
+/// ```
+///
 /// ## Cloning
 /// [`Clone`] may be a heap allocation clone:
 /// ```rust

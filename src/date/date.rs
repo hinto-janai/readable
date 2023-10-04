@@ -13,10 +13,13 @@ use crate::macros::{
 /// Returned when using [`Date::unknown`] or error situations.
 pub const UNKNOWN_DATE: &str = "????-??-??";
 
+/// The separator character for [`Date`].
+pub const DASH: u8 = b'-';
+
 /// ```rust
 /// assert_eq!(readable::date::UNKNOWN_DATE.len(), 10);
 /// ```
-const LEN: usize = 10;
+pub const MAX_LEN_DATE: usize = 10;
 
 //---------------------------------------------------------------------------------------------------- Regexes
 // Length of the input string
@@ -240,18 +243,6 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// - Month is not in-between `1-12`
 /// - Day is not in-between `1-31`
 ///
-/// Good Example:
-/// ```rust
-/// # use readable::Date;
-/// let d1 = Date::from_str("2020-12-31").unwrap();
-/// let d2 = Date::from_str("11_30_2012").unwrap();
-/// let d3 = Date::from_str("1980.5").unwrap();
-///
-/// assert!(d1 == "2020-12-31");
-/// assert!(d2 == "2012-11-30");
-/// assert!(d3 == "1980-05");
-/// ```
-///
 /// ## Trailing Characters
 /// [`Date`] is very lenient when parsing strings, as it will ignore trailing
 /// characters if there is a valid match in the first characters, for example:
@@ -286,21 +277,19 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// assert_eq!(d4, "2000-12-25");
 /// ```
 ///
-/// ## Inlining
-/// If the feature flag `inline_date` is enabled, inputs that are
-/// - In `YYYY-MM-DD` format
-/// - Range from year `1900-2100`
+/// ## Size
+/// [`Str<10>`] is used internally to represent the string.
 ///
-/// will cause [`Date::from_str`] to match on inlined static bytes.
+/// ```rust
+/// # use readable::*;
+/// assert_eq!(std::mem::size_of::<Date>(), 16);
+/// ```
 ///
-/// **Warning:** This feature is disabled by default. While it increases speed,
-/// it also _heavily_ increases build time and binary size.
-///
-/// ## Cloning
+/// ## Copy
 /// [`Copy`] is available.
 ///
 /// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
-/// but a 10 byte array buffer, literally: `[u8; 10]`.
+/// but a 10 byte array buffer, literally: [`Str<10>`].
 ///
 /// Since the max valid date is: `9999-12-31` (10 characters), a 10 byte
 /// buffer is used and enables this type to have [`Copy`].
@@ -317,10 +306,10 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// // We can still use 'a'
 /// assert_eq!(a, "2014-04-22");
 /// ```
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "serde",derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode",derive(bincode::Encode, bincode::Decode))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub struct Date((u16, u8, u8), Str<LEN>);
+pub struct Date((u16, u8, u8), Str<MAX_LEN_DATE>);
 
 impl_traits!(Date, (u16, u8, u8));
 
@@ -428,7 +417,7 @@ impl Date {
 	/// set with [`UNKNOWN_DATE`] which looks like: `????-??-??`.
 	pub fn from_y(year: u16) -> Result<Self, Self> {
 		if ok_year(year) {
-			Ok(Self::priv_y(year))
+			Ok(Self::priv_y_num(year))
 		} else {
 			Err(Self::unknown())
 		}
@@ -445,7 +434,7 @@ impl Date {
 	/// set with [`UNKNOWN_DATE`] which looks like: `????-??-??`.
 	pub fn from_ym(year: u16, month: u8) -> Result<Self, Self> {
 		if ok_year(year) && ok_month(month) {
-			Ok(Self::priv_ym(year, month))
+			Ok(Self::priv_ym_num(year, month))
 		} else {
 			Err(Self::unknown())
 		}
@@ -463,7 +452,7 @@ impl Date {
 	/// set with [`UNKNOWN_DATE`] which looks like: `????-??-??`.
 	pub fn from_ymd(year: u16, month: u8, day: u8) -> Result<Self, Self> {
 		if ok(year, month, day) {
-			Ok(Self::priv_ymd(year, month, day))
+			Ok(Self::priv_ymd_num(year, month, day))
 		} else {
 			Err(Self::unknown())
 		}
@@ -478,7 +467,7 @@ impl Date {
 	/// [`UNKNOWN_DATE`] will be returned silently if an error occurs.
 	pub fn from_y_silent(year: u16) -> Self {
 		if ok_year(year) {
-			Self::priv_y(year)
+			Self::priv_y_num(year)
 		} else {
 			Self::unknown()
 		}
@@ -494,7 +483,7 @@ impl Date {
 	/// [`UNKNOWN_DATE`] will be returned silently if an error occurs.
 	pub fn from_ym_silent(year: u16, month: u8) -> Self {
 		if ok_year(year) && ok_month(month) {
-			Self::priv_ym(year, month)
+			Self::priv_ym_num(year, month)
 		} else {
 			Self::unknown()
 		}
@@ -511,14 +500,14 @@ impl Date {
 	/// [`UNKNOWN_DATE`] will be returned silently if an error occurs.
 	pub fn from_ymd_silent(year: u16, month: u8, day: u8) -> Self {
 		if ok(year, month, day) {
-			Self::priv_ymd(year, month, day)
+			Self::priv_ymd_num(year, month, day)
 		} else {
 			Self::unknown()
 		}
 	}
 
 	#[inline]
-	#[allow(clippy::should_implement_trait)]
+	#[allow(clippy::should_implement_trait)] // i don't want to `use std::str::FromStr` everytime.
 	/// Parse arbitrary strings for a date.
 	///
 	/// If the complete date cannot be parsed, this function will
@@ -568,25 +557,25 @@ impl Date {
 	}
 
 	#[inline]
-	fn priv_from_str(string: &str) -> Result<Self, Self> {
-		let len = string.len();
+	fn priv_from_str(s: &str) -> Result<Self, Self> {
+		let len = s.len();
 
-		// If feature enabled, match on all possible
-		// `YYYY-MM-DD` strings between `1900-2100`.
-		#[cfg(feature = "inline_date")]
-		if len == 10 {
-			if let Some(date) = readable_inlined_date::inlined(string.as_bytes()) {
-				let (y, m, d, bytes) = date;
-				return Ok(Self((y, m, d), Buffer::from_unchecked(&bytes)));
-			}
-		}
+		// // If feature enabled, match on all possible
+		// // `YYYY-MM-DD` strings between `1900-2100`.
+		// #[cfg(feature = "inline_date")]
+		// if len == 10 {
+		// 	if let Some(date) = readable_inlined_date::inlined(string.as_bytes()) {
+		// 		let (y, m, d, bytes) = date;
+		// 		return Ok(Self((y, m, d), Buffer::from_unchecked(&bytes)));
+		// 	}
+		// }
 
 		// Return `YYYY`.
 		if len == 4 {
-			match string.parse::<u16>() {
+			match s.parse::<u16>() {
 				// If the string is 4 characters long, but is less than 1000,
 				// there must be leading zeros
-				Ok(y) if ok_year(y) => return Ok(Self::priv_y(y)),
+				Ok(y) if ok_year(y) => return Ok(Self::priv_y(s)),
 				_     => return Err(Self::unknown()),
 			}
 		}
@@ -603,108 +592,108 @@ impl Date {
 		// if the regexes I've made are faulty themselves (sorry).
 
 		// If input is just numbers...
-		if NUM.is_match(string) {
+		if NUM.is_match(s) {
 			match len {
 				// YM || MY
 				5 => {
-					if YM_NUM.is_match(string) {
-						let y = string[..4].parse::<u16>().unwrap();
-						let m = string[4..].parse::<u8>().unwrap();
+					if YM_NUM.is_match(s) {
+						let y = &s[..4];
+						let m = &s[4..];
 						return Ok(Self::priv_ym(y, m));
-					} else if MY_NUM.is_match(string) {
-						let m = string[..1].parse::<u8>().unwrap();
-						let y = string[1..].parse::<u16>().unwrap();
+					} else if MY_NUM.is_match(s) {
+						let m = &s[..1];
+						let y = &s[1..];
 						return Ok(Self::priv_ym(y, m));
-					} else if YEAR.is_match(string) {
-						let y = string[..4].parse::<u16>().unwrap();
+					} else if YEAR.is_match(s) {
+						let y = &s[..4];
 						return Ok(Self::priv_y(y));
 					}
 				}
 
 				// YMM || YMD || MDY || DMY
 				6 => {
-					if YMM_NUM.is_match(string) {
-						let y = string[..4].parse::<u16>().unwrap();
-						let m = string[4..].parse::<u8>().unwrap();
+					if YMM_NUM.is_match(s) {
+						let y = &s[..4];
+						let m = &s[4..];
 						return Ok(Self::priv_ym(y, m));
-					} else if YMD_NUM.is_match(string) {
-						let y = string[..4].parse::<u16>().unwrap();
-						let m = string[4..5].parse::<u8>().unwrap();
-						let d = string[5..].parse::<u8>().unwrap();
+					} else if YMD_NUM.is_match(s) {
+						let y = &s[..4];
+						let m = &s[4..5];
+						let d = &s[5..];
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if MDY_NUM.is_match(string) {
-						let m = string[..1].parse::<u8>().unwrap();
-						let d = string[1..2].parse::<u8>().unwrap();
-						let y = string[2..].parse::<u16>().unwrap();
+					} else if MDY_NUM.is_match(s) {
+						let m = &s[..1];
+						let d = &s[1..2];
+						let y = &s[2..];
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if DMY_NUM.is_match(string) {
-						let d = string[..1].parse::<u8>().unwrap();
-						let m = string[1..2].parse::<u8>().unwrap();
-						let y = string[2..].parse::<u16>().unwrap();
+					} else if DMY_NUM.is_match(s) {
+						let d = &s[..1];
+						let m = &s[1..2];
+						let y = &s[2..];
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if YEAR.is_match(string) {
-						let y = string[..4].parse::<u16>().unwrap();
+					} else if YEAR.is_match(s) {
+						let y = &s[..4];
 						return Ok(Self::priv_y(y));
 					}
 				},
 
 				// YMMD || YMDD || MMDY || MDDY || DMMY || DDMY
 				7 => {
-					if YMMD_NUM.is_match(string) {
-						let y = string[..4].parse::<u16>().unwrap();
-						let m = string[4..5].parse::<u8>().unwrap();
-						let d = string[6..].parse::<u8>().unwrap();
+					if YMMD_NUM.is_match(s) {
+						let y = &s[..4];
+						let m = &s[4..6];
+						let d = &s[6..];
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if YMDD_NUM.is_match(string) {
-						let y = string[..4].parse::<u16>().unwrap();
-						let m = string[4..5].parse::<u8>().unwrap();
-						let d = string[5..].parse::<u8>().unwrap();
+					} else if YMDD_NUM.is_match(s) {
+						let y = &s[..4];
+						let m = &s[4..5];
+						let d = &s[5..];
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if MMDY_NUM.is_match(string) {
-						let m = string[..2].parse::<u8>().unwrap();
-						let d = string[2..3].parse::<u8>().unwrap();
-						let y = string[3..].parse::<u16>().unwrap();
+					} else if MMDY_NUM.is_match(s) {
+						let m = &s[..2];
+						let d = &s[2..3];
+						let y = &s[3..];
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if MDDY_NUM.is_match(string) {
-						let m = string[..1].parse::<u8>().unwrap();
-						let d = string[1..3].parse::<u8>().unwrap();
-						let y = string[3..].parse::<u16>().unwrap();
+					} else if MDDY_NUM.is_match(s) {
+						let m = &s[..1];
+						let d = &s[1..3];
+						let y = &s[3..];
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if DMMY_NUM.is_match(string) {
-						let d = string[..1].parse::<u8>().unwrap();
-						let m = string[1..3].parse::<u8>().unwrap();
-						let y = string[3..].parse::<u16>().unwrap();
+					} else if DMMY_NUM.is_match(s) {
+						let d = &s[..1];
+						let m = &s[1..3];
+						let y = &s[3..];
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if DDMY_NUM.is_match(string) {
-						let d = string[..2].parse::<u8>().unwrap();
-						let m = string[2..3].parse::<u8>().unwrap();
-						let y = string[3..].parse::<u16>().unwrap();
+					} else if DDMY_NUM.is_match(s) {
+						let d = &s[..2];
+						let m = &s[2..3];
+						let y = &s[3..];
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if YEAR.is_match(string) {
-						let y = string[..4].parse::<u16>().unwrap();
+					} else if YEAR.is_match(s) {
+						let y = &s[..4];
 						return Ok(Self::priv_y(y));
 					}
 				},
 
 				// YMMDD || MMDDY || DDMMY
 				_ => {
-					if YMMDD_NUM.is_match(string) {
-						let y = string[..4].parse::<u16>().unwrap();
-						let m = string[4..6].parse::<u8>().unwrap();
-						let d = string[6..8].parse::<u8>().unwrap();
+					if YMMDD_NUM.is_match(s) {
+						let y = &s[..4];
+						let m = &s[4..6];
+						let d = &s[6..8];
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if MMDDY_NUM.is_match(string) {
-						let m = string[..2].parse::<u8>().unwrap();
-						let d = string[2..4].parse::<u8>().unwrap();
-						let y = string[4..8].parse::<u16>().unwrap();
+					} else if MMDDY_NUM.is_match(s) {
+						let m = &s[..2];
+						let d = &s[2..4];
+						let y = &s[4..8];
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if DDMMY_NUM.is_match(string) {
-						let d = string[..2].parse::<u8>().unwrap();
-						let m = string[2..4].parse::<u8>().unwrap();
-						let y = string[4..8].parse::<u16>().unwrap();
+					} else if DDMMY_NUM.is_match(s) {
+						let d = &s[..2];
+						let m = &s[2..4];
+						let y = &s[4..8];
 						return Ok(Self::priv_ymd(y, m, d));
-					} else if YEAR.is_match(string) {
-						let y = string[..4].parse::<u16>().unwrap();
+					} else if YEAR.is_match(s) {
+						let y = &s[..4];
 						return Ok(Self::priv_y(y));
 					}
 				},
@@ -716,147 +705,147 @@ impl Date {
 		match len {
 			// Y.M || M.Y
 			6 => {
-				if YM.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
-					let m = string[5..].parse::<u8>().unwrap();
+				if YM.is_match(s) {
+					let y = &s[..4];
+					let m = &s[5..];
 					return Ok(Self::priv_ym(y, m));
-				} else if MY.is_match(string) {
-					let m = string[..1].parse::<u8>().unwrap();
-					let y = string[2..].parse::<u16>().unwrap();
+				} else if MY.is_match(s) {
+					let m = &s[..1];
+					let y = &s[2..];
 					return Ok(Self::priv_ym(y, m));
-				} else if YEAR.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
+				} else if YEAR.is_match(s) {
+					let y = &s[..4];
 					return Ok(Self::priv_y(y));
 				}
 			},
 
 			// Y.MM || MM.Y
 			7 => {
-				if YMM.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
-					let m = string[5..].parse::<u8>().unwrap();
+				if YMM.is_match(s) {
+					let y = &s[..4];
+					let m = &s[5..];
 					return Ok(Self::priv_ym(y, m));
-				} else if MMY.is_match(string) {
-					let m = string[..2].parse::<u8>().unwrap();
-					let y = string[3..].parse::<u16>().unwrap();
+				} else if MMY.is_match(s) {
+					let m = &s[..2];
+					let y = &s[3..];
 					return Ok(Self::priv_ym(y, m));
 				// Fallback, try to at least parse YEAR + MONTH or at least YEAR.
-				} else if YM.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
-					let m = string[5..6].parse::<u8>().unwrap();
+				} else if YM.is_match(s) {
+					let y = &s[..4];
+					let m = &s[5..6];
 					return Ok(Self::priv_ym(y, m));
-				} else if YEAR.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
+				} else if YEAR.is_match(s) {
+					let y = &s[..4];
 					return Ok(Self::priv_y(y));
 				}
 			},
 
 			// Y.M.D || M.D.Y || D.M.Y
 			8 => {
-				if YMD.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
-					let m = string[5..6].parse::<u8>().unwrap();
-					let d = string[7..].parse::<u8>().unwrap();
+				if YMD.is_match(s) {
+					let y = &s[..4];
+					let m = &s[5..6];
+					let d = &s[7..];
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if MDY.is_match(string) {
-					let m = string[..1].parse::<u8>().unwrap();
-					let d = string[2..3].parse::<u8>().unwrap();
-					let y = string[4..].parse::<u16>().unwrap();
+				} else if MDY.is_match(s) {
+					let m = &s[..1];
+					let d = &s[2..3];
+					let y = &s[4..];
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if DMY.is_match(string) {
-					let d = string[..1].parse::<u8>().unwrap();
-					let m = string[2..3].parse::<u8>().unwrap();
-					let y = string[4..].parse::<u16>().unwrap();
+				} else if DMY.is_match(s) {
+					let d = &s[..1];
+					let m = &s[2..3];
+					let y = &s[4..];
 					return Ok(Self::priv_ymd(y, m, d));
 				// Fallback, try to at least parse YEAR + MONTH or at least YEAR.
-				} else if YMM.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
-					let m = string[5..7].parse::<u8>().unwrap();
+				} else if YMM.is_match(s) {
+					let y = &s[..4];
+					let m = &s[5..7];
 					return Ok(Self::priv_ym(y, m));
-				} else if YM.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
-					let m = string[5..6].parse::<u8>().unwrap();
+				} else if YM.is_match(s) {
+					let y = &s[..4];
+					let m = &s[5..6];
 					return Ok(Self::priv_ym(y, m));
-				} else if YEAR.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
+				} else if YEAR.is_match(s) {
+					let y = &s[..4];
 					return Ok(Self::priv_y(y));
 				}
 			},
 
 			// Y.MM.D || Y.M.DD || MM.D.Y || M.DD.Y || D.MM.Y || DD.M.Y
 			9 => {
-				if YMMD.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
-					let m = string[5..7].parse::<u8>().unwrap();
+				if YMMD.is_match(s) {
+					let y = &s[..4];
+					let m = &s[5..7];
 					return Ok(Self::priv_ym(y, m));
-				} else if YMDD.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
-					let m = string[5..6].parse::<u8>().unwrap();
-					let d = string[7..].parse::<u8>().unwrap();
+				} else if YMDD.is_match(s) {
+					let y = &s[..4];
+					let m = &s[5..6];
+					let d = &s[7..];
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if MMDY.is_match(string) {
-					let m = string[..2].parse::<u8>().unwrap();
-					let d = string[3..4].parse::<u8>().unwrap();
-					let y = string[5..].parse::<u16>().unwrap();
+				} else if MMDY.is_match(s) {
+					let m = &s[..2];
+					let d = &s[3..4];
+					let y = &s[5..];
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if MDDY.is_match(string) {
-					let m = string[..1].parse::<u8>().unwrap();
-					let d = string[2..4].parse::<u8>().unwrap();
-					let y = string[5..].parse::<u16>().unwrap();
+				} else if MDDY.is_match(s) {
+					let m = &s[..1];
+					let d = &s[2..4];
+					let y = &s[5..];
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if DMMY.is_match(string) {
-					let d = string[..1].parse::<u8>().unwrap();
-					let m = string[2..4].parse::<u8>().unwrap();
-					let y = string[5..].parse::<u16>().unwrap();
+				} else if DMMY.is_match(s) {
+					let d = &s[..1];
+					let m = &s[2..4];
+					let y = &s[5..];
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if DDMY.is_match(string) {
-					let d = string[..2].parse::<u8>().unwrap();
-					let m = string[3..4].parse::<u8>().unwrap();
-					let y = string[5..].parse::<u16>().unwrap();
+				} else if DDMY.is_match(s) {
+					let d = &s[..2];
+					let m = &s[3..4];
+					let y = &s[5..];
 					return Ok(Self::priv_ymd(y, m, d));
 				// Fallback, try to at least parse YEAR + MONTH or at least YEAR.
-				} else if YMM.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
-					let m = string[5..7].parse::<u8>().unwrap();
+				} else if YMM.is_match(s) {
+					let y = &s[..4];
+					let m = &s[5..7];
 					return Ok(Self::priv_ym(y, m));
-				} else if YM.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
-					let m = string[5..6].parse::<u8>().unwrap();
+				} else if YM.is_match(s) {
+					let y = &s[..4];
+					let m = &s[5..6];
 					return Ok(Self::priv_ym(y, m));
-				} else if YEAR.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
+				} else if YEAR.is_match(s) {
+					let y = &s[..4];
 					return Ok(Self::priv_y(y));
 				}
 			},
 
 			// Y.MM.DD || MM.DD.Y || DD.MM.Y
 			_ => {
-				if YMMDD.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
-					let m = string[5..7].parse::<u8>().unwrap();
-					let d = string[8..10].parse::<u8>().unwrap();
+				if YMMDD.is_match(s) {
+					let y = &s[..4];
+					let m = &s[5..7];
+					let d = &s[8..10];
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if MMDDY.is_match(string) {
-					let m = string[..2].parse::<u8>().unwrap();
-					let d = string[3..5].parse::<u8>().unwrap();
-					let y = string[6..10].parse::<u16>().unwrap();
+				} else if MMDDY.is_match(s) {
+					let m = &s[..2];
+					let d = &s[3..5];
+					let y = &s[6..10];
 					return Ok(Self::priv_ymd(y, m, d));
-				} else if DDMMY.is_match(string) {
-					let d = string[..2].parse::<u8>().unwrap();
-					let m = string[3..5].parse::<u8>().unwrap();
-					let y = string[6..10].parse::<u16>().unwrap();
+				} else if DDMMY.is_match(s) {
+					let d = &s[..2];
+					let m = &s[3..5];
+					let y = &s[6..10];
 					return Ok(Self::priv_ymd(y, m, d));
 				// Fallback, try to at least parse YEAR + MONTH or at least YEAR.
-				} else if YMM.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
-					let m = string[5..7].parse::<u8>().unwrap();
+				} else if YMM.is_match(s) {
+					let y = &s[..4];
+					let m = &s[5..7];
 					return Ok(Self::priv_ym(y, m));
-				} else if YM.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
-					let m = string[5..6].parse::<u8>().unwrap();
+				} else if YM.is_match(s) {
+					let y = &s[..4];
+					let m = &s[5..6];
 					return Ok(Self::priv_ym(y, m));
-				} else if YEAR.is_match(string) {
-					let y = string[..4].parse::<u16>().unwrap();
+				} else if YEAR.is_match(s) {
+					let y = &s[..4];
 					return Ok(Self::priv_y(y));
 				}
 			},
@@ -872,55 +861,188 @@ impl Date {
 	// INVARIANT:
 	// The inputs _must_ be correct.
 	// Private functions for construction.
+	//
+	// The callers are responsible for giving:
+	// - A year slice that is always `4` length
+	// - A month slice that is always `1` or `2` length
+	// - A day slice that is always `1` or `2` length
 	#[inline]
-	fn priv_y(y: u16) -> Self {
-		Self((y, 0, 0), Self::from_4_unchecked(itoa!(y).as_bytes()))
+	fn priv_y(year: &str) -> Self {
+		debug_assert_eq!(year.len(), 4);
+		let y = year.parse::<u16>().unwrap();
+		Self::priv_y_num(y)
 	}
 	#[inline]
-	fn priv_ym(y: u16, m: u8) -> Self {
-		let s = format_compact!("{y}-{m:0>2}");
-		Self((y, m, 0), Self::from_unchecked(s.as_bytes()))
+	fn priv_ym(year: &str, month: &str) -> Self {
+		debug_assert_eq!(year.len(), 4);
+		debug_assert!(month.len() <= 2);
+		debug_assert!(month.len() >= 1);
+		let y = year.parse::<u16>().unwrap();
+		let m = month.parse::<u8>().unwrap();
+		Self::priv_ym_num(y, m)
 	}
 	#[inline]
-	fn priv_ymd(y: u16, m: u8, d: u8) -> Self {
-		let s = format_compact!("{y}-{m:0>2}-{d:0>2}");
-		Self((y, m, d), Self::from_unchecked(s.as_bytes()))
+	fn priv_ymd(year: &str, month: &str, day: &str) -> Self {
+		debug_assert_eq!(year.len(), 4);
+		debug_assert!(month.len() <= 2);
+		debug_assert!(month.len() >= 1);
+		debug_assert!(day.len() <= 2);
+		debug_assert!(day.len() >= 1);
+		let y = year.parse::<u16>().unwrap();
+		let m = month.parse::<u8>().unwrap();
+		let d = day.parse::<u8>().unwrap();
+		Self::priv_ymd_num(y, m, d)
 	}
 
 	#[inline]
-	// INVARIANT:
-	// Assumes input is `4` bytes.
-	fn from_4_unchecked(byte: &[u8]) -> Str<LEN> {
-		let mut buf = [0_u8; 10];
-		buf[..4].copy_from_slice(&byte[..4]);
+	fn priv_y_num(y: u16) -> Self {
+		let mut buf = [0_u8; MAX_LEN_DATE];
+		Self::format_year(&mut buf, itoa!(y));
+		// SAFETY: we're manually creating a `Str`.
+		// This is okay because we filled the bytes
+		// and know the length.
+		let string = unsafe { Str::from_raw(4, buf) };
+
+		Self((y, 0, 0), string)
+	}
+
+	#[inline]
+	fn priv_ym_num(y: u16, m: u8) -> Self {
+		let mut buf = [0_u8; MAX_LEN_DATE];
+		let b = &mut buf;
+
+		Self::format_year(b, itoa!(y));
+		b[4] = DASH;
+		Self::format_month(b, Self::match_month(m));
 
 		// SAFETY: we're manually creating a `Str`.
 		// This is okay because we filled the bytes
 		// and know the length.
-		unsafe { Str::from_raw(4, buf) }
+		let string = unsafe { Str::from_raw(7, buf) };
+
+		Self((y, m, 0), string)
 	}
 
 	#[inline]
-	// INVARIANT:
-	// Assumes input is `5-10` bytes.
-	fn from_unchecked(byte: &[u8]) -> Str<LEN> {
-		let len = byte.len();
+	fn priv_ymd_num(y: u16, m: u8, d: u8) -> Self {
+		let mut buf = [0_u8; MAX_LEN_DATE];
+		let b = &mut buf;
 
-		let mut buf = [0_u8; 10];
-		match len {
-			5  => buf[..5].copy_from_slice(&byte[..5]),
-			6  => buf[..6].copy_from_slice(&byte[..6]),
-			7  => buf[..7].copy_from_slice(&byte[..7]),
-			8  => buf[..8].copy_from_slice(&byte[..8]),
-			9  => buf[..9].copy_from_slice(&byte[..9]),
-			10 => buf[..10].copy_from_slice(&byte[..10]),
-			_  => unreachable!(),
-		};
+		Self::format_year(b, itoa!(y));
+		b[4] = DASH;
+		Self::format_month(b, Self::match_month(m));
+		b[7] = DASH;
+		Self::format_day(b, Self::match_day(d));
 
 		// SAFETY: we're manually creating a `Str`.
 		// This is okay because we filled the bytes
 		// and know the length.
-		unsafe { Str::from_raw(len as u8, buf) }
+		let string = unsafe { Str::from_raw(MAX_LEN_DATE as u8, buf) };
+
+		Self((y, m, d), string)
+	}
+
+	#[inline]
+	// Format `YYYY`.
+	fn format_year(buf: &mut [u8; MAX_LEN_DATE], year: &str) {
+		buf[..4].copy_from_slice(year.as_bytes());
+	}
+
+	#[inline]
+	// Pad month if needed.
+	fn format_month(buf: &mut [u8; MAX_LEN_DATE], month: &str) {
+		let m = month.as_bytes();
+
+		debug_assert!(m.len() >= 1);
+		debug_assert!(m.len() <= 2);
+
+		if m.len() == 1 {
+			buf[5] = b'0';
+			buf[6] = m[0];
+		} else {
+			buf[5] = m[0];
+			buf[6] = m[1];
+		}
+	}
+
+	#[inline]
+	// Pad day if needed.
+	fn format_day(buf: &mut [u8; MAX_LEN_DATE], day: &str) {
+		let d = day.as_bytes();
+
+		debug_assert!(d.len() >= 1);
+		debug_assert!(d.len() <= 2);
+
+		if d.len() == 1 {
+			buf[8] = b'0';
+			buf[9] = d[0];
+		} else {
+			buf[8] = d[0];
+			buf[9] = d[1];
+		}
+	}
+
+	#[inline]
+	/// INVARIANT: input must be 1..=12
+	const fn match_month(m: u8) -> &'static str {
+		debug_assert!(m >= 1);
+		debug_assert!(m <= 12);
+		match m {
+			1  => "1",
+			2  => "2",
+			3  => "3",
+			4  => "4",
+			5  => "5",
+			6  => "6",
+			7  => "7",
+			8  => "8",
+			9  => "9",
+			10 => "10",
+			11 => "11",
+			12 => "12",
+			_ => unreachable!(),
+		}
+	}
+
+	#[inline]
+	/// INVARIANT: input must be 1..=31
+	const fn match_day(d: u8) -> &'static str {
+		debug_assert!(d >= 1);
+		debug_assert!(d <= 31);
+		match d {
+			1  => "1",
+			2  => "2",
+			3  => "3",
+			4  => "4",
+			5  => "5",
+			6  => "6",
+			7  => "7",
+			8  => "8",
+			9  => "9",
+			10 => "10",
+			11 => "11",
+			12 => "12",
+			13 => "13",
+			14 => "14",
+			15 => "15",
+			16 => "16",
+			17 => "17",
+			18 => "18",
+			19 => "19",
+			20 => "20",
+			21 => "21",
+			22 => "22",
+			23 => "23",
+			24 => "24",
+			25 => "25",
+			26 => "26",
+			27 => "27",
+			28 => "28",
+			29 => "29",
+			30 => "30",
+			31 => "31",
+			_ => unreachable!(),
+		}
 	}
 }
 
@@ -945,17 +1067,17 @@ mod tests {
 		assert_eq!(a.cmp(&d), Ordering::Greater);
 
 		for i in 1..12 {
-			let s = format_compact!("2020-{:0>2}-01", i);
+			let s = format_compact!("2020-{:0>2}-01",i);
 			let b = Date::from_str(&s).unwrap();
 			assert_eq!(a.cmp(&b), Ordering::Greater);
 		}
 		for i in 2..32 {
-			let s = format_compact!("2020-12-{:0>2}", i);
+			let s = format_compact!("2020-12-{:0>2}",i);
 			let b = Date::from_str(&s).unwrap();
 			assert_eq!(a.cmp(&b), Ordering::Less);
 		}
 		for i in 2021..9999 {
-			let s = format_compact!("{}-12-01", i);
+			let s = format_compact!("{}-12-01",i);
 			let b = Date::from_str(&s).unwrap();
 			assert_eq!(a.cmp(&b), Ordering::Less);
 		}
@@ -1062,649 +1184,5 @@ mod tests {
 		assert_eq!(Date::from_str("25/12/2020").unwrap(), EXPECTED);
 		assert_eq!(Date::from_str("25.12.2020").unwrap(), EXPECTED);
 		assert_eq!(Date::from_str("25_12_2020").unwrap(), EXPECTED);
-	}
-
-	//-------------------------------------------------------------------------------- Regex tests.
-	//-------------------------------------------------------------------------------- `YearMonthDay`
-	const SEPARATORS: [char; 16] = ['-', ' ', '_', '.', '/', '\\', '+', '^', '@', '|', ',', ':', ';', '\'', '"', 'x'];
-
-	#[test]
-	#[ignore]
-	fn regex_num() {
-		for y in 0..1000 {
-			assert!(!NUM.is_match(&format_compact!("{y}")));
-			assert!(!NUM.is_match(&format_compact!("{y} ")));
-			assert!(!NUM.is_match(&format_compact!("{y}  ")));
-		}
-		for y in 1000..1_000_000 {
-			assert!(!NUM.is_match(&format_compact!(" {y}")));
-			assert!(!NUM.is_match(&format_compact!("{y} ")));
-			assert!(!NUM.is_match(&format_compact!(" {y} ")));
-			assert!(NUM.is_match(&format_compact!("{y}")));
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_year() {
-		for y in 0..1000 {
-			assert!(!YEAR.is_match(&format_compact!("{y}")));
-			assert!(!YEAR.is_match(&format_compact!("{y} ")));
-			assert!(!YEAR.is_match(&format_compact!("{y}  ")));
-		}
-		for y in 1000..10_000 {
-			assert!(!YEAR.is_match(&format_compact!(" {y}")));
-			assert!(YEAR.is_match(&format_compact!("{y}")));
-			assert!(YEAR.is_match(&format_compact!("{y} ")));
-			assert!(YEAR.is_match(&format_compact!("{y}  ")));
-		}
-	}
-
-
-	#[test]
-	#[ignore]
-	fn regex_ym_num() {
-		for y in 0..1000 {
-			for m in 1..10 {
-				assert!(!YM_NUM.is_match(&format_compact!("{y}{m}")));
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..10 {
-				assert!(YM_NUM.is_match(&format_compact!("{y}{m}")));
-			}
-		}
-		for m in 1..10 {
-			assert!(!YM_NUM.is_match(&format_compact!("10000{m}")));
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_ymm_num() {
-		for y in 0..1000 {
-			for m in 1..10 {
-				assert!(!YMM_NUM.is_match(&format_compact!("{y}{m:0>2}")));
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..10 {
-				assert!(YMM_NUM.is_match(&format_compact!("{y}{m:0>2}")));
-			}
-		}
-		for m in 1..10 {
-			assert!(!YMM_NUM.is_match(&format_compact!("10000{m:0>2}")));
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_ymd_num() {
-		for y in 0..1000 {
-			for m in 1..10 {
-				for d in 1..10 {
-					assert!(!YMD_NUM.is_match(&format_compact!("{y}{m}{d}")));
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..10 {
-				for d in 1..10 {
-					assert!(YMD_NUM.is_match(&format_compact!("{y}{m}{d}")));
-				}
-			}
-		}
-		for m in 1..10 {
-			for d in 1..10 {
-				assert!(!YMD_NUM.is_match(&format_compact!("10000{m}{d}")));
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_ymmd_num() {
-		for y in 1000..10_000 {
-			for m in 1..13 {
-				for d in 1..10 {
-					assert!(YMMD_NUM.is_match(&format_compact!("{y}{m:0>2}{d}")));
-				}
-				for d in 10..32 {
-					assert!(!YMMD_NUM.is_match(&format_compact!("{y}{m:0>2}{d}")));
-				}
-			}
-		}
-		for m in 1..13 {
-			for d in 1..32 {
-				assert!(!YMMD_NUM.is_match(&format_compact!("10000{m:0>2}{d}")));
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_ymdd_num() {
-		for y in 1000..10_000 {
-			for m in 1..10 {
-				for d in 1..32 {
-					assert!(YMDD_NUM.is_match(&format_compact!("{y}{m}{d:0>2}")));
-				}
-				for d in 32..99 {
-					assert!(!YMDD_NUM.is_match(&format_compact!("{y}{m}{d:0>2}")));
-				}
-			}
-		}
-		for m in 1..13 {
-			for d in 1..32 {
-				assert!(!YMDD_NUM.is_match(&format_compact!("10000{m}{d:0>2}")));
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_ymmdd_num() {
-		for y in 1000..10_000 {
-			for m in 1..13 {
-				for d in 1..32 {
-					assert!(YMMDD_NUM.is_match(&format_compact!("{y}{m:0>2}{d:0>2}")));
-				}
-				for d in 32..99 {
-					assert!(!YMMDD_NUM.is_match(&format_compact!("{y}{m:0>2}{d:0>2}")));
-				}
-			}
-		}
-		for m in 0..99 {
-			for d in 0..99 {
-				assert!(!YMMDD_NUM.is_match(&format_compact!("10000{m:0>2}{d:0>2}")));
-			}
-		}
-	}
-
-	//-------------------------------------------------------------------------------- `YEAR MONTH DAY`
-	#[test]
-	#[ignore]
-	fn regex_ym() {
-		assert!(YM.is_match(&format_compact!("2022-1")));
-		assert!(!YM.is_match(&format_compact!("202201")));
-		for y in 0..1000 {
-			for m in 1..10 {
-				for s in SEPARATORS {
-					assert!(!YM.is_match(&format_compact!("{y}{s}{m}")));
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..10 {
-				for s in SEPARATORS {
-					assert!(YM.is_match(&format_compact!("{y}{s}{m}")));
-				}
-			}
-		}
-		for m in 1..10 {
-			for s in SEPARATORS {
-				assert!(!YM.is_match(&format_compact!("10000{s}{m}")));
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_ymm() {
-		assert!(YMM.is_match(&format_compact!("2022-12")));
-		assert!(!YMM.is_match(&format_compact!("2022012")));
-		for y in 0..1000 {
-			for m in 1..13 {
-				for s in SEPARATORS {
-					assert!(!YMM.is_match(&format_compact!("{y}{s}{m:0>2}")));
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..13 {
-				for s in SEPARATORS {
-					assert!(YMM.is_match(&format_compact!("{y}{s}{m:0>2}")));
-				}
-			}
-		}
-		for m in 1..13 {
-			for s in SEPARATORS {
-				assert!(!YMM.is_match(&format_compact!("10000{s}{m:0>2}")));
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_ymd() {
-		assert!(YMD.is_match(&format_compact!("2022-1-1")));
-		assert!(!YMD.is_match(&format_compact!("20220101")));
-		for y in 0..1000 {
-			for m in 1..10 {
-				for d in 1..10 {
-					for s in SEPARATORS {
-						assert!(!YMD.is_match(&format_compact!("{y}{s}{m}{s}{d}")));
-					}
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..10 {
-				for d in 1..10 {
-					for s in SEPARATORS {
-						assert!(YMD.is_match(&format_compact!("{y}{s}{m}{s}{d}")));
-					}
-				}
-			}
-		}
-		for m in 1..10 {
-			for d in 1..10 {
-				for s in SEPARATORS {
-					assert!(!YMD.is_match(&format_compact!("10000{s}{m}{s}{d}")));
-				}
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_ymmd() {
-		assert!(YMMD.is_match(&format_compact!("2022-12-1")));
-		assert!(!YMMD.is_match(&format_compact!("202201201")));
-		for y in 0..1000 {
-			for m in 1..13 {
-				for d in 1..10 {
-					for s in SEPARATORS {
-						assert!(!YMMD.is_match(&format_compact!("{y}{s}{m:0>2}{s}{d}")));
-					}
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..13 {
-				for d in 1..10 {
-					for s in SEPARATORS {
-						assert!(YMMD.is_match(&format_compact!("{y}{s}{m:0>2}{s}{d}")));
-					}
-				}
-			}
-		}
-		for m in 1..13 {
-			for d in 1..10 {
-				for s in SEPARATORS {
-					assert!(!YMMD.is_match(&format_compact!("10000{s}{m:0>2}{s}{d}")));
-				}
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_ymdd() {
-		assert!(YMDD.is_match(&format_compact!("2022-1-31")));
-		assert!(!YMDD.is_match(&format_compact!("2022-1031")));
-		assert!(!YMDD.is_match(&format_compact!("202201031")));
-		for y in 0..1000 {
-			for m in 1..10 {
-				for d in 1..32 {
-					for s in SEPARATORS {
-						assert!(!YMDD.is_match(&format_compact!("{y}{s}{m}{s}{d:0>2}")));
-					}
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..10 {
-				for d in 1..32 {
-					for s in SEPARATORS {
-						assert!(YMDD.is_match(&format_compact!("{y}{s}{m}{s}{d:0>2}")));
-					}
-				}
-			}
-		}
-		for m in 1..10 {
-			for d in 1..32 {
-				for s in SEPARATORS {
-					assert!(!YMDD.is_match(&format_compact!("10000{s}{m}{s}{d:0>2}")));
-				}
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_ymmdd() {
-		assert!(YMMDD.is_match(&format_compact!("2022-12-31")));
-		assert!(!YMMDD.is_match(&format_compact!("2022012-31")));
-		assert!(!YMMDD.is_match(&format_compact!("2022012031")));
-		for y in 0..1000 {
-			for m in 1..13 {
-				for d in 1..32 {
-					for s in SEPARATORS {
-						assert!(!YMMDD.is_match(&format_compact!("{y}{s}{m:0>2}{s}{d:0>2}")));
-					}
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..13 {
-				for d in 1..32 {
-					for s in SEPARATORS {
-						assert!(YMMDD.is_match(&format_compact!("{y}{s}{m:0>2}{s}{d:0>2}")));
-					}
-				}
-			}
-		}
-		for m in 1..13 {
-			for d in 1..32 {
-				for s in SEPARATORS {
-					assert!(!YMMDD.is_match(&format_compact!("10000{s}{m:0>2}{s}{d:0>2}")));
-				}
-			}
-		}
-	}
-
-	//-------------------------------------------------------------------------------- `MONTH DAY YEAR`
-	#[test]
-	#[ignore]
-	fn regex_my() {
-		assert!(MY.is_match("1.2020"));
-		assert!(!MY.is_match("1202020"));
-		assert!(!MY.is_match("12.2020"));
-		assert!(!MY.is_match("13.2020"));
-		for y in 0..1000 {
-			for m in 1..10 {
-				for s in SEPARATORS {
-					assert!(!MY.is_match(&format_compact!("{m}{s}{y}")));
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..10 {
-				for s in SEPARATORS {
-					assert!(MY.is_match(&format_compact!("{m}{s}{y}")));
-				}
-			}
-		}
-		for m in 1..10 {
-			for s in SEPARATORS {
-				assert!(!MY.is_match(&format_compact!("{m}{s}10000")));
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_mmy() {
-		assert!(MMY.is_match("01.2020"));
-		assert!(MMY.is_match("12.2020"));
-		assert!(!MMY.is_match("13.2020"));
-		assert!(!MMY.is_match("1202020"));
-		for y in 0..1000 {
-			for m in 1..13 {
-				for s in SEPARATORS {
-					assert!(!MMY.is_match(&format_compact!("{m:0>2}{s}{y}")));
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..13 {
-				for s in SEPARATORS {
-					assert!(MMY.is_match(&format_compact!("{m:0>2}{s}{y}")));
-				}
-			}
-		}
-		for m in 1..13 {
-			for s in SEPARATORS {
-				assert!(!MMY.is_match(&format_compact!("{m:0>2}{s}10000")));
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_mdy() {
-		assert!(MDY.is_match("9.9.2020"));
-		assert!(!MDY.is_match("0.0.2020"));
-		assert!(!MDY.is_match("12012.2020"));
-		assert!(!MDY.is_match("13.12.2020"));
-		for y in 0..1000 {
-			for m in 1..10 {
-				for d in 1..10 {
-					for s in SEPARATORS {
-						assert!(!MDY.is_match(&format_compact!("{m}{s}{d}{s}{y}")));
-					}
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..10 {
-				for d in 1..10 {
-					for s in SEPARATORS {
-						assert!(MDY.is_match(&format_compact!("{m}{s}{d}{s}{y}")));
-					}
-				}
-			}
-		}
-		for m in 1..10 {
-			for d in 1..10 {
-				for s in SEPARATORS {
-					assert!(!MDY.is_match(&format_compact!("{m}{s}{d}{s}10000")));
-				}
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_mmdy() {
-		assert!(MMDY.is_match("12.9.2020"));
-		assert!(MMDY.is_match("01.9.2020"));
-		assert!(!MMDY.is_match("00.1.2020"));
-		assert!(!MMDY.is_match("13.12.2020"));
-		assert!(!MMDY.is_match("12012.2020"));
-		for y in 0..1000 {
-			for m in 1..13 {
-				for d in 1..10 {
-					for s in SEPARATORS {
-						assert!(!MMDY.is_match(&format_compact!("{m:0>2}{s}{d}{s}{y}")));
-					}
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..13 {
-				for d in 1..10 {
-					for s in SEPARATORS {
-						assert!(MMDY.is_match(&format_compact!("{m:0>2}{s}{d}{s}{y}")));
-					}
-				}
-			}
-		}
-		for m in 1..13 {
-			for d in 1..10 {
-				for s in SEPARATORS {
-					assert!(!MMDY.is_match(&format_compact!("{m:0>2}{s}{d}{s}10000")));
-				}
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_mddy() {
-		assert!(MDDY.is_match("9.31.2020"));
-		assert!(MDDY.is_match("9.01.2020"));
-		assert!(!MDDY.is_match("9.3.2020"));
-		assert!(!MDDY.is_match("9.32.2020"));
-		assert!(!MDDY.is_match("903102020"));
-		for y in 0..1000 {
-			for m in 1..10 {
-				for d in 1..32 {
-					for s in SEPARATORS {
-						assert!(!MDDY.is_match(&format_compact!("{m}{s}{d:0>2}{s}{y}")));
-					}
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..10 {
-				for d in 1..32 {
-					for s in SEPARATORS {
-						assert!(MDDY.is_match(&format_compact!("{m}{s}{d:0>2}{s}{y}")));
-					}
-				}
-			}
-		}
-		for m in 1..10 {
-			for d in 1..32 {
-				for s in SEPARATORS {
-					assert!(!MDDY.is_match(&format_compact!("{m}{s}{d:0>2}{s}10000")));
-				}
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_mmddy() {
-		assert!(MMDDY.is_match("12.31.2020"));
-		assert!(MMDDY.is_match("01.01.2020"));
-		assert!(!MMDDY.is_match("00.00.2020"));
-		assert!(!MMDDY.is_match("12.32.2020"));
-		assert!(!MMDDY.is_match("13.31.2020"));
-		assert!(!MMDDY.is_match("1203102020"));
-		for y in 0..1000 {
-			for m in 1..13 {
-				for d in 1..32 {
-					for s in SEPARATORS {
-						assert!(!MMDDY.is_match(&format_compact!("{m:0>2}{s}{d:0>2}{s}{y}")));
-					}
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..13 {
-				for d in 1..32 {
-					for s in SEPARATORS {
-						assert!(MMDDY.is_match(&format_compact!("{m:0>2}{s}{d:0>2}{s}{y}")));
-					}
-				}
-			}
-		}
-		for m in 1..13 {
-			for d in 1..32 {
-				for s in SEPARATORS {
-					assert!(!MMDDY.is_match(&format_compact!("{m:0>2}{s}{d:0>2}{s}10000")));
-				}
-			}
-		}
-	}
-
-	//-------------------------------------------------------------------------------- `DAY MONTH YEAR`
-	#[test]
-	#[ignore]
-	fn regex_dmy() {
-		assert!(DMY.is_match("9.9.2020"));
-		assert!(DMY.is_match("1.1.2020"));
-		assert!(!DMY.is_match("0.0.2020"));
-		assert!(!DMY.is_match("10.10.2020"));
-		assert!(!DMY.is_match("32.13.2020"));
-		assert!(!DMY.is_match("3101202020"));
-		for y in 0..1000 {
-			for m in 1..10 {
-				for d in 1..10 {
-					for s in SEPARATORS {
-						assert!(!DMY.is_match(&format_compact!("{d}{s}{m}{s}{y}")));
-					}
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..10 {
-				for d in 1..10 {
-					for s in SEPARATORS {
-						assert!(DMY.is_match(&format_compact!("{d}{s}{m}{s}{y}")));
-					}
-				}
-			}
-		}
-		for m in 1..10 {
-			for d in 1..10 {
-				for s in SEPARATORS {
-					assert!(!DMY.is_match(&format_compact!("{d}{s}{m}{s}10000")));
-				}
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_ddmy() {
-		assert!(DDMY.is_match("31.9.2020"));
-		assert!(!DDMY.is_match("10.10.2020"));
-		assert!(!DDMY.is_match("32.9.2020"));
-		assert!(!DDMY.is_match("310902020"));
-		for y in 0..1000 {
-			for m in 1..10 {
-				for d in 1..32 {
-					for s in SEPARATORS {
-						assert!(!DDMY.is_match(&format_compact!("{d:0>2}{s}{m}{s}{y}")));
-					}
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..10 {
-				for d in 1..32 {
-					for s in SEPARATORS {
-						assert!(DDMY.is_match(&format_compact!("{d:0>2}{s}{m}{s}{y}")));
-					}
-				}
-			}
-		}
-		for m in 1..10 {
-			for d in 1..32 {
-				for s in SEPARATORS {
-					assert!(!DDMY.is_match(&format_compact!("{d:0>2}{s}{m}{s}10000")));
-				}
-			}
-		}
-	}
-
-	#[test]
-	#[ignore]
-	fn regex_ddmmy() {
-		assert!(DDMMY.is_match("31.12.2020"));
-		assert!(DDMMY.is_match("01.01.2020"));
-		assert!(!DDMMY.is_match("10.13.2020"));
-		assert!(!DDMMY.is_match("32.12.2020"));
-		assert!(!DDMMY.is_match("00.00.2020"));
-		assert!(!DDMMY.is_match("0000002020"));
-		for y in 0..1000 {
-			for m in 1..13 {
-				for d in 1..32 {
-					for s in SEPARATORS {
-						assert!(!DDMMY.is_match(&format_compact!("{d:0>2}{s}{m:0>2}{s}{y}")));
-					}
-				}
-			}
-		}
-		for y in 1000..10_000 {
-			for m in 1..13 {
-				for d in 1..32 {
-					for s in SEPARATORS {
-						assert!(DDMMY.is_match(&format_compact!("{d:0>2}{s}{m:0>2}{s}{y}")));
-					}
-				}
-			}
-		}
-		for m in 1..10 {
-			for d in 1..32 {
-				for s in SEPARATORS {
-					assert!(!DDMMY.is_match(&format_compact!("{d:0>2}{s}{m:0>2}{s}10000")));
-				}
-			}
-		}
 	}
 }

@@ -305,7 +305,6 @@ pub trait HeadTail {
 /// - Implements [`Display`] and thus `.to_string()`
 /// - Can indicate whether the input string was actually cut or not
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct Head<'a> {
 	string: &'a str,
@@ -319,7 +318,6 @@ pub struct Head<'a> {
 /// - Implements [`Display`] and thus `.to_string()`
 /// - Can indicate whether the input string was actually cut or not
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct Tail<'a> {
 	string: &'a str,
@@ -528,7 +526,6 @@ impl_cow!(HeadDot, TailDot);
 /// - Can selectively show head/tail portions
 /// - Can indicate whether the input string was actually cut or not
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct HeadTailStr<'a> {
 	// This holds the whole string if `head + tail > input_len`
@@ -594,7 +591,6 @@ impl HeadTailStr<'_> {
 /// assert_eq!(no_dot.to_string(), "head tail");
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct HeadTailDot<'a> {
 	// This holds the whole string if `head + tail > input_len`

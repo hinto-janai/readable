@@ -115,8 +115,16 @@ assert_eq!(u10 % u10, 0);
 ## Feature Flags
 | Flag             | Purpose |
 |------------------|---------|
-| `serde`          | Enables [`serde`](https://docs.rs/serde) on all types
-| `bincode`        | Enables [`bincode 2.0.0-rc.3`](https://docs.rs/bincode/2.0.0-rc.3/bincode/index.html)'s `Encode/Decode` on all types
+| `serde`          | Enables [`serde`](https://docs.rs/serde) on most types
+| `bincode`        | Enables [`bincode 2.0.0-rc.3`](https://docs.rs/bincode/2.0.0-rc.3/bincode/index.html)'s `Encode/Decode` on most types
+| `byte`           | Enables the `byte` module
+| `date`           | Enables the `date` module
+| `num`            | Enables the `num` module
+| `run`            | Enables the `run` module
+| `str`            | Enables the `str` module
+| `time`           | Enables the `time` module
+| `toa`            | Enables the `toa` module
+| `full`           | Enables everything above. This is on by default.
 
 ## Re-Exports
 Types are separated per module depending on what type of data they take as input, and what type of data they output.
