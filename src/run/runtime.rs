@@ -631,7 +631,7 @@ macro_rules! impl_runtime {
 						runtime.inner(),
 						// SAFETY: Input string must be the same length.
 						// We know `as_str_full()` always returns the correct str.
-						Str::from_str(runtime.$str_function()),
+						Str::from_str_exact(runtime.$str_function()),
 					)
 				}
 			}
@@ -642,7 +642,7 @@ macro_rules! impl_runtime {
 						runtime.inner(),
 						// SAFETY: Input string must be the same length.
 						// We know `as_str_full()` always returns the correct str.
-						Str::from_str(runtime.$str_function()),
+						Str::from_str_exact(runtime.$str_function()),
 					)
 				}
 			}

@@ -4,6 +4,9 @@
 // use anyhow::anyhow;
 // use log::{error,info,warn,debug,trace};
 // use disk::{Bincode2,Json};
+use std::sync::Arc;
+use std::rc::Rc;
+use std::borrow::Cow;
 
 //---------------------------------------------------------------------------------------------------- Str
 /// A (potentially) cache-friendly fixed size stack string
@@ -848,7 +851,7 @@ impl<const N: usize> Str<N> {
 	///
 	/// ```rust
 	/// # use readable::*;
-	/// let s = Str::<5>::from_str("12345");
+	/// let s = Str::<5>::from_str_exact("12345");
 	/// assert_eq!(s, "12345");
 	/// ```
 	///
@@ -860,10 +863,10 @@ impl<const N: usize> Str<N> {
 	/// ```rust,should_panic
 	/// # use readable::*;
 	/// // 1 too many characters, will panic.
-	/// let s = Str::<4>::from_str("12345");
+	/// let s = Str::<4>::from_str_exact("12345");
 	/// ```
-	pub fn from_str(string: &str) -> Self {
-		Self::from_bytes(string.as_bytes())
+	pub fn from_str_exact(string: &str) -> Self {
+		Self::from_bytes_exact(string.as_bytes())
 	}
 
 	#[inline]
@@ -871,7 +874,7 @@ impl<const N: usize> Str<N> {
 	///
 	/// ```rust
 	/// # use readable::*;
-	/// let s = Str::<5>::from_bytes(b"12345");
+	/// let s = Str::<5>::from_bytes_exact(b"12345");
 	/// assert_eq!(s, "12345");
 	/// ```
 	///
@@ -879,16 +882,16 @@ impl<const N: usize> Str<N> {
 	/// The bytes must be valid UTF-8.
 	///
 	/// ## Panics
-	/// The input input bytes `bytes`'s length must
+	/// The input bytes `bytes`'s length must
 	/// be exactly equal to `Self::CAPACITY` or this
 	/// function will panic.
 	///
 	/// ```rust,should_panic
 	/// # use readable::*;
 	/// // 1 too many characters, will panic.
-	/// let s = Str::<4>::from_bytes(b"12345");
+	/// let s = Str::<4>::from_bytes_exact(b"12345");
 	/// ```
-	pub fn from_bytes(bytes: &[u8]) -> Self {
+	pub fn from_bytes_exact(bytes: &[u8]) -> Self {
 		let mut buf = [0; N];
 		buf.copy_from_slice(&bytes);
 		Self {
@@ -896,6 +899,62 @@ impl<const N: usize> Str<N> {
 			buf,
 		}
 	}
+}
+
+//---------------------------------------------------------------------------------------------------- From
+macro_rules! impl_from_str {
+	($($string:ty),*) => {
+		$(
+			impl<const N: usize> TryFrom<$string> for Str<N> {
+				type Error = usize;
+
+				#[inline]
+				/// This takes in a [`&str`] of any length (equal to or less than N)
+				/// and will return a `Str` with that same string.
+				///
+				/// If this function fails, [`Result::Err`] is returned with how many extra bytes couldn't fit.
+				///
+				/// ```rust
+				/// # use readable::Str;
+				/// // Input string is 4 in length, we can't copy it.
+				/// // There is 1 extra byte that can't fit.
+				/// assert_eq!(Str::<3>::try_from("abcd"), Err(1));
+				/// ```
+				///
+				/// ## Compile-time panic
+				/// This function will panic at compile time if `N > 255`.
+				/// ```rust,ignore
+				/// # use readable::Str;
+				/// // Compile error!
+				/// Str::<256>::try_from("");
+				/// ```
+				fn try_from(string: $string) -> Result<Self, Self::Error> {
+					let len = string.len();
+
+					if len == 0 {
+						Ok(Self::new())
+					} else if len < N {
+						let mut this = Self::new();
+						this.push_str_unchecked(&string);
+						Ok(this)
+					} else if len == N {
+						let this = Self::from_str_exact(&string);
+						Ok(this)
+					} else {
+						Err(len - N)
+					}
+				}
+			}
+		)*
+	};
+}
+impl_from_str! {
+	&str,
+	Arc<str>, &Arc<str>,
+	Box<str>, &Box<str>,
+	Rc<str>, &Rc<str>,
+	Cow<'_, str>, &Cow<'_, str>,
+	String, &String
 }
 
 //---------------------------------------------------------------------------------------------------- Traits
@@ -922,39 +981,9 @@ impl<const N: usize> std::convert::AsRef<str> for Str<N> {
 	}
 }
 
-impl<const N: usize> std::convert::TryFrom<&str> for Str<N> {
-	type Error = usize;
-
-	/// If this function fails, [`Result::Err`] is returned with how many extra bytes couldn't fit.
-	///
-	/// ```rust
-	/// # use readable::Str;
-	/// // Input string is 4 in length, we can't copy it.
-	/// // There is 1 extra byte that can't fit.
-	/// assert_eq!(Str::<3>::try_from("abcd"), Err(1));
-	/// ```
-	///
-	/// ## Compile-time panic
-	/// This function will panic at compile time if `N > 255`.
-	/// ```rust,ignore
-	/// # use readable::Str;
-	/// // Compile error!
-	/// Str::<256>::try_from("");
-	/// ```
-	fn try_from(s: &str) -> Result<Self, Self::Error> {
-		let str_len = s.len();
-
-		if str_len > N {
-			return Err(str_len - N);
-		}
-
-		let mut string = Self::new();
-
-		// Safety: At this point, we know the string
-		// can fit so we don't need to check.
-		string.copy_str_unchecked(s);
-
-		Ok(string)
+impl<const N: usize> std::borrow::Borrow<str> for Str<N> {
+	fn borrow(&self) -> &str {
+		self.as_str()
 	}
 }
 
