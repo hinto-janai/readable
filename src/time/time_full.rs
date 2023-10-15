@@ -90,9 +90,9 @@ impl TimeFull {
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(TimeFull::UNKNOWN, 0);
-	/// assert_eq!(TimeFull::UNKNOWN, "???");
+	/// assert_eq!(TimeFull::UNKNOWN, "(unknown)");
 	/// ```
-	pub const UNKNOWN: Self = Self(0, Str::from_static_str("???"));
+	pub const UNKNOWN: Self = Self(0, Str::from_static_str("(unknown)"));
 
 	/// ```rust
 	/// # use readable::*;

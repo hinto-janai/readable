@@ -100,9 +100,9 @@ impl Time {
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Time::UNKNOWN, 0);
-	/// assert_eq!(Time::UNKNOWN, "???");
+	/// assert_eq!(Time::UNKNOWN, "(unknown)");
 	/// ```
-	pub const UNKNOWN: Self = Self(0, Str::from_static_str("???"));
+	pub const UNKNOWN: Self = Self(0, Str::from_static_str("(unknown)"));
 
 	/// ```rust
 	/// # use readable::*;

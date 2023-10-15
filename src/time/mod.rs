@@ -73,3 +73,6 @@ pub use time::*;
 
 mod time_full;
 pub use time_full::*;
+
+mod uptime;
+pub use uptime::*;
