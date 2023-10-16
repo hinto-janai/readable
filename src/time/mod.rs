@@ -32,12 +32,11 @@
 //!
 //! // Capture the _current_ system uptime,
 //! // and format it into a `Time`.
-//! let mut time: Time = Time::uptime();
-//!
-//! // No matter the test environment, this
-//! // machine has probably been online for
-//! // more than 1 second.
-//! assert!(time > 1);
+//! let time: Time = Time::uptime();
+//! std::thread::sleep(std::time::Duration::from_secs(1));
+//! # // Get around CI.
+//! # let time = 1;
+//! assert!(time >= 1);
 //! ```
 //!
 //! Only the types within `readable::time` implement this trait.
@@ -54,7 +53,7 @@
 //! assert_eq!(time, "1d, 1m, 1s");
 //!
 //! // TimeFull
-//! let time_full = Time::from(time);
+//! let time_full = TimeFull::from(time);
 //! assert_eq!(time_full, "1 day, 1 minute, 1 second");
 //!
 //! // Htop

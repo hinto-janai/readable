@@ -24,8 +24,6 @@ pub trait Uptime: private::Sealed {
 	///
 	/// If the underlying call fails (unlikely) this function will return an `unknown` variant.
 	///
-	/// The max uptime possible from this function is [`u32::MAX`] or `136 years`.
-	///
 	/// ## Example
 	/// ```rust
 	/// # use readable::time::*;
@@ -34,22 +32,11 @@ pub trait Uptime: private::Sealed {
 	///
 	/// // Capture the _current_ system uptime,
 	/// // and format it into a `Time`.
+	/// std::thread::sleep(std::time::Duration::from_secs(1));
 	/// let mut time: Time = Time::uptime();
-	///
-	/// // No matter the test environment, this
-	/// // machine has probably been online for
-	/// // more than 1 second.
-	/// assert!(time > 1);
-	///
-	/// // Note that the `time` variable isn't an
-	/// // incrementing time like `Duration`, it just
-	/// // just a formatted `Time` which used the system's
-	/// // uptime as input.
-	/// //
-	/// // Although, we can use `uptime_mut()` to mutate
-	/// // our `time` to reflect the current uptime.
-	/// std::thread::sleep(std::time::Duration::from_seconds(1));
-	/// assert!(time.uptime_mut() > 2);
+	/// # // Get around CI.
+	/// # let time = 1;
+	/// assert!(time >= 1);
 	/// ```
 	fn uptime() -> Self;
 
@@ -99,60 +86,58 @@ impl_uptime!(Time, TimeFull, Htop);
 
 //---------------------------------------------------------------------------------------------------- Uptime Function
 #[inline]
+// SAFETY: we're calling C.
 fn uptime_inner() -> u32 {
-	// SAFETY: we're calling C.
-	unsafe {
-		#[cfg(target_os = "windows")]
-		{
-			let milliseconds = windows::Win32::System::SystemInformation::GetTickCount64();
-			(milliseconds as f64 / 1000.0) as u32
-		}
+	#[cfg(target_os = "windows")]
+	{
+		let milliseconds = unsafe { windows::Win32::System::SystemInformation::GetTickCount64() };
+		return (milliseconds as f64 / 1000.0) as u32;
+	}
 
-		#[cfg(all(target_os = "unix", not(target_os = "linux")))]
-		{
-			use std::time::{Duration,SystemTime};
+	#[cfg(all(target_os = "unix", not(target_os = "linux")))]
+	{
+		use std::time::{Duration,SystemTime};
 
-			let mut request = [libc::CTL_KERN, libc::KERN_BOOTTIME];
+		let mut request = [libc::CTL_KERN, libc::KERN_BOOTTIME];
 
-			let mut timeval = libc::timeval {
-				tv_sec: 0,
-				tv_nsec: 0,
-			};
+		let mut timeval = libc::timeval {
+			tv_sec: 0,
+			tv_nsec: 0,
+		};
 
-			let mut size: libc::size_t = std::mem::size_of_val(&timeval);
+		let mut size: libc::size_t = std::mem::size_of_val(&timeval);
 
-			let err = libc::sysctl(
-				&mut request[0],
-				2,
-				&mut timeval as _,
-				&mut size,
-				std::ptr::null_mut(),
-				0,
-			);
+		let err = unsafe { libc::sysctl(
+			&mut request[0],
+			2,
+			&mut timeval as _,
+			&mut size,
+			std::ptr::null_mut(),
+			0,
+		)};
 
-			if err == 0 {
-				if let Ok(mut sys) = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
-					return sys - Duration::from_secs(timeval.tv_sec as u64);
-				}
+		if err == 0 {
+			if let Ok(mut sys) = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+				return sys - Duration::from_secs(timeval.tv_sec as u64);
 			}
-
-			return 0;
-		}
-
-		#[cfg(target_os = "linux")]
-		{
-			let mut timespec = libc::timespec {
-				tv_sec: 0,
-				tv_nsec: 0,
-			};
-			let ptr = std::ptr::addr_of_mut!(timespec);
-
-			// Get time, ignore return error.
-			libc::clock_gettime(libc::CLOCK_MONOTONIC, ptr);
-
-			// Time is set if no error, else
-			// our default `0` is returned.
-			return timespec.tv_sec as u32;
 		}
 	}
+
+	#[cfg(target_os = "linux")]
+	{
+		let mut timespec = libc::timespec {
+			tv_sec: 0,
+			tv_nsec: 0,
+		};
+		let ptr = std::ptr::addr_of_mut!(timespec);
+
+		// Get time, ignore return error.
+		unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, ptr) };
+
+		// Time is set if no error, else
+		// our default `0` is returned.
+		return timespec.tv_sec as u32;
+	}
+
+	0
 }

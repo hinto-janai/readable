@@ -14,12 +14,15 @@ Types of changes:
 
 ---
 
-
 # readable Unreleased
+
+---
+
+# readable v0.11.0 - 2023-10-15
 ## Added
 * `Htop` type in `readable::time` for [`htop`](https://github.com/htop-dev/htop)-style uptime formatting
 * `Uptime` trait for getting system uptime and formatting directly into a `Time`, `TimeFull` or `Htop`
-* `TryFrom` implementations for smart pointer strings (`Arc<str>`, `Box<str>`, etc)
+* `TryFrom` implementations from smart pointer strings (`Arc<str>`, `Box<str>`, etc) for `Str`
 
 ## Changed
 * `Str::from_str()` -> `Str::from_str_exact()`
