@@ -67,10 +67,9 @@ pub use run::{
 };
 
 #[cfg(feature = "time")]
-/// Human-readable time formatting
 pub mod time;
 pub use time::{
-	Time,TimeFull,Uptime,
+	Time,TimeFull,Uptime,Htop,
 };
 
 #[cfg(feature = "date")]

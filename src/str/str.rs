@@ -9,7 +9,7 @@ use std::rc::Rc;
 use std::borrow::Cow;
 
 //---------------------------------------------------------------------------------------------------- Str
-/// A (potentially) cache-friendly fixed size stack string
+/// A fixed sized stack string
 ///
 /// [`Str`] is a generic stack-based string with a maximum byte length of [`u8::MAX`].
 ///

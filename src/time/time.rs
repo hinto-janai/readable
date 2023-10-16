@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------------------------------- Use
-use crate::time::TimeFull;
+use crate::time::{Htop,TimeFull};
 use crate::str::Str;
 use crate::macros::{
 	return_bad_float,impl_common,
@@ -15,7 +15,7 @@ use crate::itoa;
 /// suffixed with a single letter indicated the unit.
 ///
 /// ## Size
-/// [`Str<63>`] is used internally to represent the string.
+/// [`Str<29>`] is used internally to represent the string.
 ///
 /// ```rust
 /// # use readable::*;
@@ -34,7 +34,7 @@ use crate::itoa;
 /// ```
 /// # use readable::*;
 /// assert_eq!(Time::minute().inner(), 60);
-/// assert_eq!(Time::month().inner(),  2630016);
+/// assert_eq!(Time::month().inner(),  2678400);
 ///
 /// assert_eq!(Time::minute() + 3601, "1h, 1m, 1s");
 /// assert_eq!(Time::month() + 3661,  "1m, 1h, 1m, 1s");
@@ -70,14 +70,15 @@ use crate::itoa;
 /// assert_eq!(Time::from(93600_u32),    "1d, 2h");
 /// assert_eq!(Time::from(604799_u32),   "6d, 23h, 59m, 59s");
 /// assert_eq!(Time::from(604800_u32),   "7d");
-/// assert_eq!(Time::from(2630016_u32),  "1m");
-/// assert_eq!(Time::from(3234815_u32),  "1m, 6d, 23h, 59m, 59s");
-/// assert_eq!(Time::from(5260032_u32),  "2m");
-/// assert_eq!(Time::from(31557600_u32), "1y");
-/// assert_eq!(Time::from(63115200_u32), "2y");
+/// assert_eq!(Time::from(2678400_u32),  "1m");
+/// assert_eq!(Time::from(3283199_u32),  "1m, 6d, 23h, 59m, 59s");
+/// assert_eq!(Time::from(5356800_u32),  "2m");
+/// assert_eq!(Time::from(31536000_u32), "1y");
+/// assert_eq!(Time::from(63072000_u32), "2y");
+/// println!("{}", Time::from(u32::MAX));
 /// assert_eq!(
 ///     Time::from(u32::MAX),
-///     "136y, 1m, 5d, 19h, 54m, 39s",
+///     "136y, 2m, 8d, 6h, 28m, 15s",
 /// );
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -141,24 +142,24 @@ impl Time {
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Time::MONTH, 2630016);
+	/// assert_eq!(Time::MONTH, 2678400);
 	/// assert_eq!(Time::MONTH, "1m");
 	/// ```
-	pub const MONTH: Self = Self(2630016, Str::from_static_str("1m"));
+	pub const MONTH: Self = Self(2678400, Str::from_static_str("1m"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Time::YEAR, 31557600);
+	/// assert_eq!(Time::YEAR, 31536000);
 	/// assert_eq!(Time::YEAR, "1y");
 	/// ```
-	pub const YEAR: Self = Self(31557600, Str::from_static_str("1y"));
+	pub const YEAR: Self = Self(31536000, Str::from_static_str("1y"));
 
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Time::MAX, u32::MAX);
-	/// assert_eq!(Time::MAX, "136y, 1m, 5d, 19h, 54m, 39s");
+	/// assert_eq!(Time::MAX, "136y, 2m, 8d, 6h, 28m, 15s");
 	/// ```
-	pub const MAX: Self = Self(u32::MAX, Str::from_static_str("136y, 1m, 5d, 19h, 54m, 39s"));
+	pub const MAX: Self = Self(u32::MAX, Str::from_static_str("136y, 2m, 8d, 6h, 28m, 15s"));
 }
 
 //---------------------------------------------------------------------------------------------------- Pub Impl
@@ -294,10 +295,10 @@ impl Time {
 			return Self::zero();
 		}
 
-		let years    = secs / 31_557_600;  // 365.25d
-		let ydays    = secs % 31_557_600;
-		let months   = ydays / 2_630_016;  // 30.44d
-		let mdays    = ydays % 2_630_016;
+		let years    = secs / 31_536_000;  // 365 days
+		let ydays    = secs % 31_536_000;
+		let months   = ydays / 2_678_400;  // 31 days
+		let mdays    = ydays % 2_678_400;
 		let days     = mdays / 86400;
 		let day_secs = mdays % 86400;
 		let hours    = day_secs / 3600;
@@ -457,25 +458,32 @@ macro_rules! impl_f {
 impl_f!(f32);
 impl_f!(f64);
 
-//---------------------------------------------------------------------------------------------------- From Time
-impl From<TimeFull> for Time {
-	#[inline]
-	fn from(t: TimeFull) -> Self {
-		if t.is_unknown() {
-			return Self::unknown();
+//---------------------------------------------------------------------------------------------------- Other Time Impl.
+macro_rules! impl_from_time {
+	($this:ty => $($other:ty),* $(,)?) => { $(
+		impl From<$other> for $this {
+			#[inline]
+			fn from(from: $other) -> Self {
+				if from.is_unknown() {
+					Self::unknown()
+				} else {
+					Self::from_priv(from.0)
+				}
+			}
 		}
-		Self::from_priv(t.0)
-	}
-}
-impl From<&TimeFull> for Time {
-	#[inline]
-	fn from(t: &TimeFull) -> Self {
-		if t.is_unknown() {
-			return Self::unknown();
+		impl From<&$other> for $this {
+			#[inline]
+			fn from(from: &$other) -> Self {
+				if from.is_unknown() {
+					Self::unknown()
+				} else {
+					Self::from_priv(from.0)
+				}
+			}
 		}
-		Self::from_priv(t.0)
-	}
+	)*}
 }
+impl_from_time!(Time => TimeFull, Htop);
 
 //---------------------------------------------------------------------------------------------------- Trait Impl
 impl From<std::time::Duration> for Time {

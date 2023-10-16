@@ -2,6 +2,7 @@
 use crate::time::{
 	Time,
 	TimeFull,
+	Htop,
 };
 
 //---------------------------------------------------------------------------------------------------- Uptime Trait
@@ -72,6 +73,7 @@ mod private {
 	pub trait Sealed {}
 	impl Sealed for Time {}
 	impl Sealed for TimeFull {}
+	impl Sealed for Htop {}
 }
 
 macro_rules! impl_uptime {
@@ -93,7 +95,7 @@ macro_rules! impl_uptime {
 		)*
 	};
 }
-impl_uptime!(Time, TimeFull);
+impl_uptime!(Time, TimeFull, Htop);
 
 //---------------------------------------------------------------------------------------------------- Uptime Function
 #[inline]

@@ -21,8 +21,71 @@
 //! - Larger than [`Time::MAX`]
 //! - [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`] (or the [`f64`] versions)
 //!
+//! ## Uptime
+//! This module contains [`Uptime`] which is a trait that allows direct conversion
+//! from the _live_ system uptime to a type within this module, e.g:
+//!
+//! ```rust
+//! # use readable::time::*;
+//! // Introduce trait into scope.
+//! use readable::Uptime;
+//!
+//! // Capture the _current_ system uptime,
+//! // and format it into a `Time`.
+//! let mut time: Time = Time::uptime();
+//!
+//! // No matter the test environment, this
+//! // machine has probably been online for
+//! // more than 1 second.
+//! assert!(time > 1);
+//! ```
+//!
+//! Only the types within `readable::time` implement this trait.
+//!
+//! ## From other [`Time`] types
+//! All types in this module support lossless conversion with each other using [`From`].
+//!
+//! If the type is an `unknown` variant, that will also be maintained.
+//!
+//! ```rust
+//! # use readable::*;
+//! // Time
+//! let time = Time::from(86461);
+//! assert_eq!(time, "1d, 1m, 1s");
+//!
+//! // TimeFull
+//! let time_full = Time::from(time);
+//! assert_eq!(time_full, "1 day, 1 minute, 1 second");
+//!
+//! // Htop
+//! let htop = Htop::from(time_full);
+//! assert_eq!(htop, "1 day, 00:01:01");
+//!
+//! // ... wrapping full circle.
+//! let time2 = Time::from(htop);
+//! assert_eq!(time, time2);
+//!
+//! // Maintain the `unknown` variant.
+//! let unknown = Time::unknown();
+//! assert_eq!(unknown, Time::UNKNOWN);
+//! assert_eq!(Htop::from(unknown), Htop::UNKNOWN);
+//! ```
+//!
+//! ## Naive Time
+//! These types naively assume that:
+//! 1. Each day is `86400` seconds
+//! 2. Each month is `31` days
+//! 3. Each year is `365` days
+//!
+//! This is incorrect as not all months are 31 days long and leap years exist.
+//!
 //! ## Formatting
-//! The lowest unit is `second`, the highest is `year`, and `week` is skipped in favor of `7 days`.
+//! The formatting for [`Time`] & [`TimeFull`] is:
+//! - The lowest unit is `second`
+//! - The highest is `year`
+//! - `week` is skipped in favor of `7 days`
+//!
+//! See [`Htop`] for its formatting rules.
 //!
 //! ## Copy
 //! [`Copy`] is available.
@@ -64,9 +127,6 @@
 //! assert!(Time::from(10_u32) * 10 == Time::from(100_u32));
 //! assert!(Time::from(10_u32) % 10 == Time::from(0_u32));
 //! ```
-//!
-//! ## Credit
-//! The formatting code was taken from `https://docs.rs/humantime` (and modified).
 
 mod time;
 pub use time::*;
@@ -76,3 +136,6 @@ pub use time_full::*;
 
 mod uptime;
 pub use uptime::*;
+
+mod htop;
+pub use htop::*;
