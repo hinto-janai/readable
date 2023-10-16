@@ -44,7 +44,6 @@
 //---------------------------------------------------------------------------------------------------- Hidden imports
 pub(crate) mod macros;
 
-#[cfg(feature = "str")]
 /// General string utilities
 pub mod str;
 pub use str::{
@@ -52,7 +51,6 @@ pub use str::{
 };
 
 
-#[cfg(feature = "num")]
 /// Human-readable number formatting
 pub mod num;
 pub use num::{
@@ -60,32 +58,27 @@ pub use num::{
 };
 pub(crate) use toa::Itoa64;
 
-#[cfg(feature = "run")]
 pub mod run;
 pub use run::{
 	Runtime,RuntimePad,RuntimeMilli,RuntimeUnion,
 };
 
-#[cfg(feature = "time")]
 pub mod time;
 pub use time::{
 	Time,TimeFull,Uptime,Htop,TimeUnit,
 };
 
-#[cfg(feature = "date")]
 /// Human-readable date formatting
 pub mod date;
 pub use date::{
 	Date,
 };
 
-#[cfg(feature = "toa")]
 pub mod toa;
 pub use toa::{
 	Itoa,ItoaTmp,Dtoa,DtoaTmp,
 };
 
-#[cfg(feature = "byte")]
 pub mod byte;
 pub use byte::{
 	Byte,

@@ -326,16 +326,16 @@ impl TimeUnit {
 		let months     = years_rem / 2_678_400;  // 31 days
 		let months_rem = years_rem % 2_678_400;
 
-		let weeks     = months_rem / 604800;
-		let weeks_rem = months_rem % 604800;
+		let weeks     = months_rem / 604_800; // 7 days
+		let weeks_rem = months_rem % 604_800;
 
-		let days     = weeks_rem / 86400;
-		let days_rem = weeks_rem % 86400;
+		let days     = weeks_rem / 86_400; // 24 hours
+		let days_rem = weeks_rem % 86_400;
 
-		let hours     = days_rem / 3600;
-		let hours_rem = days_rem % 3600;
+		let hours     = days_rem / 3_600; // 60 minutes
+		let hours_rem = days_rem % 3_600;
 
-		let minutes = hours_rem / 60;
+		let minutes = hours_rem / 60; // 60 seconds
 		let seconds = hours_rem % 60;
 
 		Self {
@@ -351,6 +351,153 @@ impl TimeUnit {
 		}
 	}
 
+	#[inline]
+	/// Create [`Self`] with minutes as input
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let unit = TimeUnit::from_minutes(1);
+	/// assert_eq!(unit.inner(), 60);
+	/// ```
+	///
+	/// ## Maximum Input
+	/// The maximum input is `71_582_788` minutes before this function saturates.
+	pub const fn from_minutes(minutes: u32) -> Self { Self::new(minutes.saturating_mul(60)) }
+
+	#[inline]
+	/// Create [`Self`] with hours as input
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let unit = TimeUnit::from_hours(1);
+	/// assert_eq!(unit.inner(), 3_600);
+	/// ```
+	///
+	/// ## Maximum Input
+	/// The maximum input is `1_193_046` hours before this function saturates.
+	pub const fn from_hours(hours: u32) -> Self { Self::new(hours.saturating_mul(3_600)) }
+
+	#[inline]
+	/// Create [`Self`] with days as input
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let unit = TimeUnit::from_days(1);
+	/// assert_eq!(unit.inner(), 86_400);
+	/// ```
+	///
+	/// ## Maximum Input
+	/// The maximum input is `49_710` days before this function saturates.
+	pub const fn from_days(days: u16) -> Self { Self::new((days as u32).saturating_mul(86_400)) }
+
+	#[inline]
+	/// Create [`Self`] with weeks as input
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let unit = TimeUnit::from_weeks(1);
+	/// assert_eq!(unit.inner(), 604_800);
+	/// ```
+	///
+	/// ## Maximum Input
+	/// The maximum input is `7_101` weeks before this function saturates.
+	pub const fn from_weeks(weeks: u16) -> Self { Self::new((weeks as u32).saturating_mul(604_800)) }
+
+	#[inline]
+	/// Create [`Self`] with months as input
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let unit = TimeUnit::from_months(1);
+	/// assert_eq!(unit.inner(), 2_678_400);
+	/// ```
+	///
+	/// ## Maximum Input
+	/// The maximum input is `1_603` months before this function saturates.
+	pub const fn from_months(months: u16) -> Self { Self::new((months as u32).saturating_mul(2_678_400)) }
+
+	#[inline]
+	/// Create [`Self`] with years as input
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let unit = TimeUnit::from_years(1);
+	/// assert_eq!(unit.inner(), 31_536_000);
+	/// ```
+	///
+	/// ## Maximum Input
+	/// The maximum input is `136` years before this function saturates.
+	pub const fn from_years(years: u8) -> Self { Self::new((years as u32).saturating_mul(31_536_000)) }
+
+	/// Create a new [`TimeUnit`] from a variety of input
+	///
+	/// This multiplies and combines all the input.
+	///
+	/// ## Maximum Input
+	/// If the total _second_ count of all the inputs combined exceeds [`u32::MAX`]
+	/// then this function will saturate and return [`TimeUnit::MAX`].
+	///
+	/// ## Examples
+	/// ```rust
+	/// # use readable::*;
+	/// let unit = TimeUnit::new_variety(
+	/// 	0, // years   (0s)
+	/// 	1, // months  (2678400s)
+	/// 	2, // weeks   (1209600s)
+	/// 	3, // days    (259200s)
+	/// 	4, // hours   (14400s)
+	/// 	5, // minutes (300s)
+	/// 	6, // seconds (6s)
+	/// );
+	///
+	/// // Total second count: 4,161,906 seconds
+	/// assert_eq!(unit.inner(), 4_161_906);
+	/// assert_eq!(unit.years(),   0);
+	/// assert_eq!(unit.months(),  1);
+	/// assert_eq!(unit.weeks(),   2);
+	/// assert_eq!(unit.days(),    3);
+	/// assert_eq!(unit.hours(),   4);
+	/// assert_eq!(unit.minutes(), 5);
+	/// assert_eq!(unit.seconds(), 6);
+	/// ```
+	///
+	/// Example of saturating inputs.
+	/// ```rust
+	/// # use readable::*;
+	/// let unit = TimeUnit::new_variety(
+	/// 	172,   // years
+	/// 	134,   // months
+	/// 	22,    // weeks
+	/// 	32575, // days
+	/// 	46,    // hours
+	/// 	5123,  // minutes
+	/// 	54,    // seconds
+	/// );
+	///
+	/// assert_eq!(unit, TimeUnit::MAX);
+	/// ```
+	pub const fn new_variety(
+		years:   u8,
+		months:  u16,
+		weeks:   u16,
+		days:    u16,
+		hours:   u32,
+		minutes: u32,
+		seconds: u32,
+	) -> Self {
+		let mut inner: u32 = 0;
+
+		inner = inner.saturating_add((years as u32).saturating_mul(31_536_000));
+		inner = inner.saturating_add((months as u32).saturating_mul(2_678_400));
+		inner = inner.saturating_add((weeks as u32).saturating_mul(604_800));
+		inner = inner.saturating_add((days as u32).saturating_mul(86_400));
+		inner = inner.saturating_add(hours.saturating_mul(3_600));
+		inner = inner.saturating_add(minutes.saturating_mul(60));
+		inner = inner.saturating_add(seconds);
+
+		Self::new(inner)
+	}
+
 	/// Returns the internal structure.
 	///
 	/// A tuple is returned mirroring the internal structure of [`TimeUnit`], going from left-to-right:
@@ -364,7 +511,7 @@ impl TimeUnit {
 	/// - [`u8`] - [`TimeUnit::minutes()`]
 	/// - [`u8`] - [`TimeUnit::seconds()`]
 	///
-	/// ## Example
+	/// # Example
 	/// ```rust
 	/// # use readable::*;
 	/// let (
@@ -441,7 +588,7 @@ impl TimeUnit {
 	/// ```
 	pub const fn is_unknown(&self) -> bool { self.unknown }
 	#[inline]
-	/// Returns the remaining amount of seconds this [`TimeUnit`] represents.
+	/// Returns the _total_ amount of seconds this [`TimeUnit`] represents.
 	///
 	/// ```rust
 	/// # use readable::*;

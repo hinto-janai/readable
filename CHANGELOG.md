@@ -18,6 +18,9 @@ Types of changes:
 ## Added
 * `TimeUnit` type for remainder time measuring (`61` == `1 minute, 1 second`)
 
+## Removed
+* Feature-flags (except for `serde` & `bincode`)
+
 ---
 
 # readable v0.11.0 - 2023-10-15
