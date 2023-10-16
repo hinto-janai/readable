@@ -47,8 +47,9 @@ assert_eq!(RuntimeMilli::from(311.123), "00:05:11.123");
 #### Time
 ```rust
 use readable::*;
-assert_eq!(Time::from(86399_u32), "23h, 59m, 59s");
-assert_eq!(TimeFull::from(86399_u32), "23 hours, 59 minutes, 59 seconds");
+assert_eq!(Time::from(172799_u32),     "1d, 23h, 59m, 59s");
+assert_eq!(TimeFull::from(172799_u32), "1 day, 23 hours, 59 minutes, 59 seconds");
+assert_eq!(Htop::from(172799_u32),     "1 day, 23:59:59");
 ```
 #### Date
 ```rust
@@ -137,8 +138,10 @@ use readable::num::{ // Number formatting
 ```
 
 All major types are exported to the root, so they can be imported without specifying the full path:
-```rust,ignore
-use readable::HeadTail; // shorter, preferred.
+```rust
+// shorter
+use readable::HeadTail;
 
-use readable::str::HeadTail; // longer
+// longer
+// use readable::str::HeadTail;
 ```
