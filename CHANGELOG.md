@@ -15,6 +15,8 @@ Types of changes:
 ---
 
 # readable Unreleased
+## Added
+* `TimeUnit` type for remainder time measuring (`61` == `1 minute, 1 second`)
 
 ---
 

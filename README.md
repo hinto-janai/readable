@@ -108,7 +108,7 @@ let u100 = Unsigned::from(100_u64);
 let u10  = Unsigned::from(10_u64);
 assert_eq!(u100 / u10, 10);
 ```
-#### `*` Muliplication
+#### `*` Multiplication
 ```rust
 use readable::*;
 let u10 = Unsigned::from(10_u64);

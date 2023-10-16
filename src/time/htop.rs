@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------------------------------- Use
-use crate::time::{Time,TimeFull};
+use crate::time::{Time,TimeFull,TimeUnit};
 use crate::run::RuntimePad;
 use crate::str::Str;
 use crate::macros::{
@@ -305,7 +305,7 @@ macro_rules! impl_from_time {
 				if from.is_unknown() {
 					Self::unknown()
 				} else {
-					Self::from_priv(from.0)
+					Self::from_priv(from.inner())
 				}
 			}
 		}
@@ -315,13 +315,13 @@ macro_rules! impl_from_time {
 				if from.is_unknown() {
 					Self::unknown()
 				} else {
-					Self::from_priv(from.0)
+					Self::from_priv(from.inner())
 				}
 			}
 		}
 	)*}
 }
-impl_from_time!(Htop => Time, TimeFull);
+impl_from_time!(Htop => Time, TimeFull, TimeUnit);
 
 //---------------------------------------------------------------------------------------------------- "u*" impl
 // Implementation Macro.

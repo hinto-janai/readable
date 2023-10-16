@@ -69,7 +69,7 @@ pub use run::{
 #[cfg(feature = "time")]
 pub mod time;
 pub use time::{
-	Time,TimeFull,Uptime,Htop,
+	Time,TimeFull,Uptime,Htop,TimeUnit,
 };
 
 #[cfg(feature = "date")]

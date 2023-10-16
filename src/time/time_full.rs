@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------------------------------- Use
-use crate::time::{Time,Htop};
+use crate::time::{Time,Htop,TimeUnit};
 use crate::str::Str;
 use crate::macros::{
 	return_bad_float,impl_common,
@@ -9,9 +9,9 @@ use crate::macros::{
 use crate::itoa;
 
 //---------------------------------------------------------------------------------------------------- TimeFull
-/// [`TimeFull`] but with full specified words
+/// [`Time`] but with full specified words
 ///
-/// This is the same type as [`TimeFull`], except, the
+/// This is the same type as [`Time`], except, the
 /// words specifying the time will not be abbreviated
 /// and will be pluralized, e.g:
 /// ```rust
@@ -460,7 +460,7 @@ macro_rules! impl_from_time {
 				if from.is_unknown() {
 					Self::unknown()
 				} else {
-					Self::from_priv(from.0)
+					Self::from_priv(from.inner())
 				}
 			}
 		}
@@ -470,13 +470,13 @@ macro_rules! impl_from_time {
 				if from.is_unknown() {
 					Self::unknown()
 				} else {
-					Self::from_priv(from.0)
+					Self::from_priv(from.inner())
 				}
 			}
 		}
 	)*}
 }
-impl_from_time!(TimeFull => Time, Htop);
+impl_from_time!(TimeFull => Time, Htop, TimeUnit);
 
 //---------------------------------------------------------------------------------------------------- Trait Impl
 impl From<std::time::Duration> for TimeFull {

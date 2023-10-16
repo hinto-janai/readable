@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------------------------------- Use
-use crate::time::{Htop,TimeFull};
+use crate::time::{Htop,TimeFull,TimeUnit};
 use crate::str::Str;
 use crate::macros::{
 	return_bad_float,impl_common,
@@ -467,7 +467,7 @@ macro_rules! impl_from_time {
 				if from.is_unknown() {
 					Self::unknown()
 				} else {
-					Self::from_priv(from.0)
+					Self::from_priv(from.inner())
 				}
 			}
 		}
@@ -477,16 +477,17 @@ macro_rules! impl_from_time {
 				if from.is_unknown() {
 					Self::unknown()
 				} else {
-					Self::from_priv(from.0)
+					Self::from_priv(from.inner())
 				}
 			}
 		}
 	)*}
 }
-impl_from_time!(Time => TimeFull, Htop);
+impl_from_time!(Time => TimeFull, Htop, TimeUnit);
 
 //---------------------------------------------------------------------------------------------------- Trait Impl
 impl From<std::time::Duration> for Time {
+	#[inline]
 	fn from(duration: std::time::Duration) -> Self {
 		let u = duration.as_secs();
 		handle_over_u32!(u, u64);
@@ -495,6 +496,7 @@ impl From<std::time::Duration> for Time {
 }
 
 impl From<&std::time::Duration> for Time {
+	#[inline]
 	fn from(duration: &std::time::Duration) -> Self {
 		let u = duration.as_secs();
 		handle_over_u32!(u, u64);
@@ -503,6 +505,7 @@ impl From<&std::time::Duration> for Time {
 }
 
 impl From<std::time::Instant> for Time {
+	#[inline]
 	fn from(instant: std::time::Instant) -> Self {
 		let u = instant.elapsed().as_secs();
 		handle_over_u32!(u, u64);
@@ -511,6 +514,7 @@ impl From<std::time::Instant> for Time {
 }
 
 impl From<&std::time::Instant> for Time {
+	#[inline]
 	fn from(instant: &std::time::Instant) -> Self {
 		let u = instant.elapsed().as_secs();
 		handle_over_u32!(u, u64);

@@ -677,7 +677,7 @@ macro_rules! impl_head_tail {
 				/// If this is [`Some`] that means the input string was cut.
 				/// If it is [`None`] that means the input string was not cut
 				/// and the entire input resides inside the `head` portion.
-				/// 
+				///
 				/// ```rust
 				/// # use readable::HeadTail;
 				/// let string = "hello world";
