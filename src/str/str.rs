@@ -959,31 +959,44 @@ impl_from_str! {
 
 //---------------------------------------------------------------------------------------------------- Traits
 impl<const N: usize> PartialEq<str> for Str<N> {
+	#[inline]
 	fn eq(&self, other: &str) -> bool {
 		self.as_str() == other
 	}
 }
 impl<const N: usize> PartialEq<&str> for Str<N> {
+	#[inline]
 	fn eq(&self, other: &&str) -> bool {
 		self.as_str() == *other
 	}
 }
 
 impl<const N: usize> std::fmt::Display for Str<N> {
+	#[inline]
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		write!(f, "{}", self.as_str())
 	}
 }
 
 impl<const N: usize> std::convert::AsRef<str> for Str<N> {
+	#[inline]
 	fn as_ref(&self) -> &str {
 		self.as_str()
 	}
 }
 
 impl<const N: usize> std::borrow::Borrow<str> for Str<N> {
+	#[inline]
 	fn borrow(&self) -> &str {
 		self.as_str()
+	}
+}
+
+impl<const N: usize> std::default::Default for Str<N> {
+	#[inline]
+	/// Calls [`Self::new`]
+	fn default() -> Self {
+		Self::new()
 	}
 }
 

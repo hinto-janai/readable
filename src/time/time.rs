@@ -522,6 +522,20 @@ impl From<&std::time::Instant> for Time {
 	}
 }
 
+impl From<Time> for std::time::Duration {
+	#[inline]
+	fn from(value: Time) -> Self {
+		std::time::Duration::from_secs(value.inner() as u64)
+	}
+}
+
+impl From<&Time> for std::time::Duration {
+	#[inline]
+	fn from(value: &Time) -> Self {
+		std::time::Duration::from_secs(value.inner() as u64)
+	}
+}
+
 //---------------------------------------------------------------------------------------------------- TESTS
 #[cfg(test)]
 mod tests {

@@ -501,6 +501,24 @@ macro_rules! impl_runtime {
 			}
 		}
 
+		impl From<$self> for std::time::Duration {
+			#[inline]
+			/// # Panics
+			/// This constructor will panic if `runtime` is negative or not finite.
+			fn from(runtime: $self) -> Self {
+				std::time::Duration::from_secs_f32(runtime.inner())
+			}
+		}
+
+		impl From<&$self> for std::time::Duration {
+			#[inline]
+			/// # Panics
+			/// This constructor will panic if `runtime` is negative or not finite.
+			fn from(runtime: &$self) -> Self {
+				std::time::Duration::from_secs_f32(runtime.inner())
+			}
+		}
+
 		//---------------------------------------------------------------------------------------------------- Instant
 		impl From<std::time::Instant> for $self {
 			#[inline]
@@ -538,6 +556,7 @@ macro_rules! impl_runtime {
 		macro_rules! impl_f {
 			($from:ty) => {
 				impl From<$from> for $self {
+					#[inline]
 					fn from(f: $from) -> Self {
 						$crate::macros::return_bad_float!(f, Self::unknown, Self::unknown);
 
@@ -545,6 +564,7 @@ macro_rules! impl_runtime {
 					}
 				}
 				impl From<&$from> for $self {
+					#[inline]
 					fn from(f: &$from) -> Self {
 						$crate::macros::return_bad_float!(f, Self::unknown, Self::unknown);
 
@@ -560,11 +580,13 @@ macro_rules! impl_runtime {
 		macro_rules! impl_u {
 			($from:ty) => {
 				impl From<$from> for $self {
+					#[inline]
 					fn from(runtime: $from) -> Self {
 						Self::priv_from(runtime as f32)
 					}
 				}
 				impl From<&$from> for $self {
+					#[inline]
 					fn from(runtime: &$from) -> Self {
 						Self::priv_from(*runtime as f32)
 					}
@@ -582,6 +604,7 @@ macro_rules! impl_runtime {
 		macro_rules! impl_i {
 			($from:ty) => {
 				impl From<$from> for $self {
+					#[inline]
 					fn from(runtime: $from) -> Self {
 						if runtime.is_negative() {
 							return Self::unknown();
@@ -590,6 +613,7 @@ macro_rules! impl_runtime {
 					}
 				}
 				impl From<&$from> for $self {
+					#[inline]
 					fn from(runtime: &$from) -> Self {
 						if runtime.is_negative() {
 							return Self::unknown();

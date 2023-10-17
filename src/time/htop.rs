@@ -258,6 +258,7 @@ impl Htop {
 
 //---------------------------------------------------------------------------------------------------- Private impl
 impl Htop {
+	#[inline]
 	fn from_priv(secs: u32) -> Self {
 		if secs == 0 {
 			return Self::zero();
@@ -455,6 +456,7 @@ impl_f!(f64);
 
 //---------------------------------------------------------------------------------------------------- Trait Impl
 impl From<std::time::Duration> for Htop {
+	#[inline]
 	fn from(duration: std::time::Duration) -> Self {
 		let u = duration.as_secs();
 		handle_over_u32!(u, u64);
@@ -463,6 +465,7 @@ impl From<std::time::Duration> for Htop {
 }
 
 impl From<&std::time::Duration> for Htop {
+	#[inline]
 	fn from(duration: &std::time::Duration) -> Self {
 		let u = duration.as_secs();
 		handle_over_u32!(u, u64);
@@ -471,6 +474,7 @@ impl From<&std::time::Duration> for Htop {
 }
 
 impl From<std::time::Instant> for Htop {
+	#[inline]
 	fn from(instant: std::time::Instant) -> Self {
 		let u = instant.elapsed().as_secs();
 		handle_over_u32!(u, u64);
@@ -479,10 +483,25 @@ impl From<std::time::Instant> for Htop {
 }
 
 impl From<&std::time::Instant> for Htop {
+	#[inline]
 	fn from(instant: &std::time::Instant) -> Self {
 		let u = instant.elapsed().as_secs();
 		handle_over_u32!(u, u64);
 		Self::from_priv(u as u32)
+	}
+}
+
+impl From<Htop> for std::time::Duration {
+	#[inline]
+	fn from(value: Htop) -> Self {
+		std::time::Duration::from_secs(value.inner() as u64)
+	}
+}
+
+impl From<&Htop> for std::time::Duration {
+	#[inline]
+	fn from(value: &Htop) -> Self {
+		std::time::Duration::from_secs(value.inner() as u64)
 	}
 }
 

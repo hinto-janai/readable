@@ -540,6 +540,7 @@ impl_u!(usize);
 /// in [`Result::Err`] if the conversion fails.
 impl TryFrom<u128> for Unsigned {
 	type Error = Self;
+	#[inline]
 	fn try_from(num: u128) -> Result<Self, Self> {
 		match u64::try_from(num) {
 			Ok(u) => Ok(Self::from_priv(u)),
@@ -551,6 +552,7 @@ impl TryFrom<u128> for Unsigned {
 /// in [`Result::Err`] if the conversion fails.
 impl TryFrom<&u128> for Unsigned {
 	type Error = Self;
+	#[inline]
 	fn try_from(num: &u128) -> Result<Self, Self> {
 		match u64::try_from(*num) {
 			Ok(u) => Ok(Self::from_priv(u)),
@@ -564,6 +566,7 @@ macro_rules! impl_nonu {
 	($( $from:ty ),* $(,)?) => {
 		$(
 			impl From<$from> for Unsigned {
+				#[inline]
 				fn from(uint: $from) -> Self {
 					let u = uint.get() as u64;
 					Self::from_priv(u)
@@ -588,6 +591,7 @@ macro_rules! impl_i {
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<$from> for Unsigned {
 				type Error = Self;
+				#[inline]
 				fn try_from(num: $from) -> Result<Self, Self> {
 					match u64::try_from(num) {
 						Ok(u) => Ok(Self::from_priv(u)),
@@ -599,6 +603,7 @@ macro_rules! impl_i {
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<&$from> for Unsigned {
 				type Error = Self;
+				#[inline]
 				fn try_from(num: &$from) -> Result<Self, Self> {
 					match u64::try_from(*num) {
 						Ok(u) => Ok(Self::from_priv(u)),
@@ -619,6 +624,7 @@ macro_rules! impl_int {
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<$from> for Unsigned {
 				type Error = Self;
+				#[inline]
 				fn try_from(int: $from) -> Result<Self, Self> {
 					match u64::try_from(int.inner()) {
 						Ok(u) => Ok(Self::from_priv(u)),
@@ -639,6 +645,7 @@ macro_rules! impl_noni {
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<$from> for Unsigned {
 				type Error = Self;
+				#[inline]
 				fn try_from(num: $from) -> Result<Self, Self> {
 					match u64::try_from(num.get()) {
 						Ok(u) => Ok(Self::from_priv(u)),
@@ -664,6 +671,7 @@ macro_rules! impl_f {
 		/// `NAN`, `INFINITY`, negative, or higher than [`u64::MAX`].
 		impl TryFrom<$from> for Unsigned {
 			type Error = Self;
+			#[inline]
 			fn try_from(float: $from) -> Result<Self, Self> {
 				match float.classify() {
 					std::num::FpCategory::Normal   => (),

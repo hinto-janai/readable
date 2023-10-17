@@ -17,6 +17,8 @@ Types of changes:
 # readable Unreleased
 ## Added
 * `TimeUnit` type for remainder time measuring (`61` == `1 minute, 1 second`)
+* `From` impl for `std::time::Duration` from all `readable::time` and `readable::run` types
+* `Default` impl for `Str`
 
 ## Removed
 * Feature-flags (except for `serde` & `bincode`)

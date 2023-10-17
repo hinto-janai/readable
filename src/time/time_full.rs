@@ -77,7 +77,6 @@ pub struct TimeFull(pub(super) u32, pub(super) Str<{ TimeFull::MAX_LEN }>);
 impl_math!(TimeFull, u32);
 impl_traits!(TimeFull, u32);
 
-
 //---------------------------------------------------------------------------------------------------- Constants
 impl TimeFull {
 	/// ```rust
@@ -480,6 +479,7 @@ impl_from_time!(TimeFull => Time, Htop, TimeUnit);
 
 //---------------------------------------------------------------------------------------------------- Trait Impl
 impl From<std::time::Duration> for TimeFull {
+	#[inline]
 	fn from(duration: std::time::Duration) -> Self {
 		let u = duration.as_secs();
 		handle_over_u32!(u, u64);
@@ -488,6 +488,7 @@ impl From<std::time::Duration> for TimeFull {
 }
 
 impl From<&std::time::Duration> for TimeFull {
+	#[inline]
 	fn from(duration: &std::time::Duration) -> Self {
 		let u = duration.as_secs();
 		handle_over_u32!(u, u64);
@@ -496,6 +497,7 @@ impl From<&std::time::Duration> for TimeFull {
 }
 
 impl From<std::time::Instant> for TimeFull {
+	#[inline]
 	fn from(instant: std::time::Instant) -> Self {
 		let u = instant.elapsed().as_secs();
 		handle_over_u32!(u, u64);
@@ -504,10 +506,25 @@ impl From<std::time::Instant> for TimeFull {
 }
 
 impl From<&std::time::Instant> for TimeFull {
+	#[inline]
 	fn from(instant: &std::time::Instant) -> Self {
 		let u = instant.elapsed().as_secs();
 		handle_over_u32!(u, u64);
 		Self::from_priv(u as u32)
+	}
+}
+
+impl From<TimeFull> for std::time::Duration {
+	#[inline]
+	fn from(value: TimeFull) -> Self {
+		std::time::Duration::from_secs(value.inner() as u64)
+	}
+}
+
+impl From<&TimeFull> for std::time::Duration {
+	#[inline]
+	fn from(value: &TimeFull) -> Self {
+		std::time::Duration::from_secs(value.inner() as u64)
 	}
 }
 

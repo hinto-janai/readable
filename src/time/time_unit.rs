@@ -429,6 +429,7 @@ impl TimeUnit {
 	/// The maximum input is `136` years before this function saturates.
 	pub const fn from_years(years: u8) -> Self { Self::new((years as u32).saturating_mul(31_536_000)) }
 
+	#[inline]
 	/// Create a new [`TimeUnit`] from a variety of input
 	///
 	/// This multiplies and combines all the input.
@@ -498,6 +499,7 @@ impl TimeUnit {
 		Self::new(inner)
 	}
 
+	#[inline]
 	/// Returns the internal structure.
 	///
 	/// A tuple is returned mirroring the internal structure of [`TimeUnit`], going from left-to-right:
@@ -550,6 +552,7 @@ impl TimeUnit {
 		)
 	}
 
+	#[inline]
 	/// Same as [`TimeUnit::into_raw()`] but does not destruct `self`
 	pub const fn to_raw(&self) -> (bool, u32, u8, u8, u8, u8, u8, u8, u8) {
 		(
@@ -872,5 +875,27 @@ impl From<&std::time::Instant> for TimeUnit {
 		let u = instant.elapsed().as_secs();
 		handle_over_u32!(u, u64);
 		Self::new(u as u32)
+	}
+}
+
+impl From<TimeUnit> for std::time::Duration {
+	#[inline]
+	fn from(value: TimeUnit) -> Self {
+		std::time::Duration::from_secs(value.inner() as u64)
+	}
+}
+
+impl From<&TimeUnit> for std::time::Duration {
+	#[inline]
+	fn from(value: &TimeUnit) -> Self {
+		std::time::Duration::from_secs(value.inner() as u64)
+	}
+}
+
+impl std::default::Default for TimeUnit {
+	#[inline]
+	/// Calls [`Self::zero`]
+	fn default() -> Self {
+		Self::zero()
 	}
 }

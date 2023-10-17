@@ -544,6 +544,7 @@ macro_rules! impl_noni {
 	($( $from:ty ),* $(,)?) => {
 		$(
 			impl From<$from> for Int {
+				#[inline]
 				fn from(int: $from) -> Self {
 					let u = int.get() as i64;
 					Self::from_priv(u)
@@ -571,6 +572,7 @@ macro_rules! impl_try {
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<$from> for Int {
 				type Error = Self;
+				#[inline]
 				fn try_from(num: $from) -> Result<Self, Self> {
 					match i64::try_from(num) {
 						Ok(i) => Ok(Self::from_priv(i)),
@@ -593,6 +595,7 @@ macro_rules! impl_unsigned {
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<$from> for Int {
 				type Error = Self;
+				#[inline]
 				fn try_from(num: $from) -> Result<Self, Self> {
 					match i64::try_from(num.inner()) {
 						Ok(u) => Ok(Self::from_priv(u)),
@@ -613,6 +616,7 @@ macro_rules! impl_nonu {
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<$from> for Int {
 				type Error = Self;
+				#[inline]
 				fn try_from(num: $from) -> Result<Self, Self> {
 					match i64::try_from(num.get()) {
 						Ok(u) => Ok(Self::from_priv(u)),
@@ -636,6 +640,7 @@ macro_rules! impl_f {
 		/// if the input float is `NAN`, `INFINITY`, or negative.
 		impl TryFrom<$from> for Int {
 			type Error = Self;
+			#[inline]
 			fn try_from(float: $from) -> Result<Self, Self> {
 				match float.classify() {
 					std::num::FpCategory::Normal   => (),
