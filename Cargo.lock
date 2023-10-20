@@ -105,9 +105,9 @@ checksum = "f665ee40bc4a3c5590afb1e9677db74a508659dfd71e126420da8274909a0167"
 
 [[package]]
 name = "nichi"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f461528f1ad81a02be4bdf470aa4c75cc877a7428c6410341a044d15659a709"
+checksum = "e501c8806bb4cd7fccf15bd193527c24afdfda1aa295ebdeb85d7bce214e2601"
 dependencies = [
  "bincode",
  "derive_more",

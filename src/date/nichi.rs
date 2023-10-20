@@ -122,14 +122,14 @@ impl Nichi {
 	/// );
 	/// ```
 	pub const fn weekday(&self) -> nichi::Weekday {
-		nichi::Date::weekday_raw(self.year(), self.month(), self.day())
+		nichi::Date::weekday_raw(self.year() as i16, self.month(), self.day())
 	}
 
 	#[inline]
 	/// Create a [`Self`] using [`nichi`]'s date type
 	pub fn from_nichi(nichi: nichi::Date) -> Self {
 		let (y,m,d) = nichi.inner();
-		Self::priv_from(y,m,d)
+		Self::priv_from(y as u16,m,d)
 	}
 
 	#[inline]
@@ -149,7 +149,7 @@ impl Nichi {
 	}
 
 	#[inline]
-	/// Same as [`Self::from_ymd`] but silently errors
+	/// Same as [`Self::new`] but silently errors
 	///
 	/// ## Errors
 	/// - The year must be in-between `1000-9999`
@@ -157,7 +157,7 @@ impl Nichi {
 	/// - The day must be in-between `1-31` or [`Err`] is returned.
 	///
 	/// [`Self::UNKNOWN`] will be returned silently if an error occurs.
-	pub fn from_ymd_silent(year: u16, month: u8, day: u8) -> Self {
+	pub fn new_silent(year: u16, month: u8, day: u8) -> Self {
 		if ok(year, month, day) {
 			Self::priv_from(year, month, day)
 		} else {
@@ -270,7 +270,7 @@ impl Nichi {
 		match nichi::Date::from_str(s) {
 			Some(nichi) => {
 				let (y, m, d) = nichi.inner();
-				Ok(Self::priv_from(y, m, d))
+				Ok(Self::priv_from(y as u16, m, d))
 			},
 			None => Err(Self::unknown()),
 		}
@@ -293,10 +293,10 @@ impl Nichi {
 impl Nichi {
 	// INVARIANT: inputs must be valid.
 	#[inline]
-	fn priv_from(y: u16, m: u8, d: u8) -> Self {
+	pub(super) fn priv_from(y: u16, m: u8, d: u8) -> Self {
 		let mut buf = [0_u8; Self::MAX_LEN];
 
-		let nichi = nichi::Date::new(y,m,d);
+		let nichi = nichi::Date::new(y as i16,m,d);
 
 		// Mon, Fri, Sat, etc
 		let weekday = nichi.weekday().as_str_short().as_bytes();

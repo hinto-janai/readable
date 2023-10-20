@@ -70,7 +70,7 @@ pub use time::{
 
 pub mod date;
 pub use date::{
-	Date,Nichi,NichiFull,
+	Date,Nichi,NichiFull,SysDate,
 };
 
 pub mod toa;

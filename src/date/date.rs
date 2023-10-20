@@ -482,11 +482,11 @@ impl Date {
 	/// this function will return `None` as all values are required
 	/// for calcualtion.
 	///
-	/// /// ```rust
+	/// ```rust
 	/// # use readable::*;
 	/// // Christmas in 1999 was on a Saturday.
 	/// assert_eq!(
-	/// 	Date::from_ymd(1999, 12, 25).unwrap().weekday().as_str(),
+	/// 	Date::from_ymd(1999, 12, 25).unwrap().weekday().unwrap().as_str(),
 	/// 	"Saturday"
 	/// );
 	///
@@ -495,9 +495,74 @@ impl Date {
 	/// ```
 	pub const fn weekday(&self) -> Option<nichi::Weekday> {
 		if self.ok() {
-			Some(nichi::Date::weekday_raw(self.year(), self.month(), self.day()))
+			Some(nichi::Date::weekday_raw(self.year() as i16, self.month(), self.day()))
 		} else {
 			None
+		}
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::*;
+	/// let date = Date::from_ymd(2012, 10, 25).unwrap();
+	/// assert_eq!(date.as_str_year(), "2012");
+	/// ```
+	pub const fn as_str_year(&self) -> &str {
+		// SAFETY: indexing is not const, we must use pointers.
+		unsafe {
+			let slice = std::slice::from_raw_parts(
+				self.1.as_ptr(),
+				4,
+			);
+			std::str::from_utf8_unchecked(slice)
+		}
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::*;
+	/// let date = Date::from_ymd(2012, 10, 25).unwrap();
+	/// assert_eq!(date.as_str_month(), "10");
+	///
+	/// let date = Date::from_y(2012).unwrap();
+	/// assert_eq!(date.as_str_month(), "0");
+	/// ```
+	pub const fn as_str_month(&self) -> &str {
+		if self.month() == 0 {
+			return "0"
+		}
+
+		// SAFETY: indexing is not const, we must use pointers.
+		unsafe {
+			let slice = std::slice::from_raw_parts(
+				self.1.as_ptr().offset(5),
+				2,
+			);
+			std::str::from_utf8_unchecked(slice)
+		}
+	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::*;
+	/// let date = Date::from_ymd(2012, 10, 25).unwrap();
+	/// assert_eq!(date.as_str_day(), "25");
+	///
+	/// let date = Date::from_ym(2012, 10).unwrap();
+	/// assert_eq!(date.as_str_day(), "0");
+	/// ```
+	pub const fn as_str_day(&self) -> &str {
+		if self.day() == 0 {
+			return "0"
+		}
+
+		// SAFETY: indexing is not const, we must use pointers.
+		unsafe {
+			let slice = std::slice::from_raw_parts(
+				self.1.as_ptr().offset(8),
+				2,
+			);
+			std::str::from_utf8_unchecked(slice)
 		}
 	}
 
@@ -535,7 +600,6 @@ impl Date {
 	/// # use readable::Date;
 	/// let a = Date::from_str("2022-3-31").unwrap();
 	/// assert!(a == "2022-03-31");
-	///
 	/// ```
 	pub fn from_str(string: &str) -> Result<Self, Self> {
 		Self::priv_from_str(string)
@@ -931,7 +995,7 @@ impl Date {
 	}
 
 	#[inline]
-	fn priv_ymd_num(y: u16, m: u8, d: u8) -> Self {
+	pub(super) fn priv_ymd_num(y: u16, m: u8, d: u8) -> Self {
 		let mut buf = [0_u8; Self::MAX_LEN];
 		let b = &mut buf;
 
@@ -1057,7 +1121,7 @@ impl Date {
 impl From<nichi::Date> for Date {
 	fn from(value: nichi::Date) -> Self {
 		let (y,m,d) = value.inner();
-		Self::priv_ymd_num(y,m,d)
+		Self::priv_ymd_num(y as u16,m,d)
 	}
 }
 

@@ -54,42 +54,21 @@ pub trait Uptime: private::Sealed {
 	fn uptime_mut(&mut self) -> &mut Self;
 }
 
-//---------------------------------------------------------------------------------------------------- Uptime Impl
-mod private {
-	use super::*;
-
-	pub trait Sealed {}
-	impl Sealed for Time {}
-	impl Sealed for TimeFull {}
-	impl Sealed for Htop {}
-	impl Sealed for TimeUnit {}
-}
-
-macro_rules! impl_uptime {
-	($($time:ty),*) => {
-		$(
-			impl Uptime for $time {
-				#[inline]
-				fn uptime() -> Self {
-					Self::from(uptime_inner())
-				}
-				fn uptime_mut(&mut self) -> &mut Self {
-					let inner = uptime_inner();
-					if inner != self.inner() {
-						*self = Self::from(inner);
-					}
-					self
-				}
-			}
-		)*
-	};
-}
-impl_uptime!(Time, TimeFull, Htop, TimeUnit);
 
 //---------------------------------------------------------------------------------------------------- Uptime Function
 #[inline]
-// SAFETY: we're calling C.
-fn uptime_inner() -> u32 {
+/// Get the current system uptime in seconds
+///
+/// This function can be used on:
+/// - Windows
+/// - macOS
+/// - BSDs
+/// - Linux
+///
+/// This will return `0` if the underlying system call fails.
+pub fn uptime() -> u32 {
+	// SAFETY: we're calling C.
+
 	#[cfg(target_os = "windows")]
 	{
 		let milliseconds = unsafe { windows::Win32::System::SystemInformation::GetTickCount64() };
@@ -143,3 +122,35 @@ fn uptime_inner() -> u32 {
 
 	0
 }
+
+//---------------------------------------------------------------------------------------------------- Uptime Impl
+mod private {
+	use super::*;
+
+	pub trait Sealed {}
+	impl Sealed for Time {}
+	impl Sealed for TimeFull {}
+	impl Sealed for Htop {}
+	impl Sealed for TimeUnit {}
+}
+
+macro_rules! impl_uptime {
+	($($time:ty),*) => {
+		$(
+			impl Uptime for $time {
+				#[inline]
+				fn uptime() -> Self {
+					Self::from(uptime())
+				}
+				fn uptime_mut(&mut self) -> &mut Self {
+					let inner = uptime();
+					if inner != self.inner() {
+						*self = Self::from(inner);
+					}
+					self
+				}
+			}
+		)*
+	};
+}
+impl_uptime!(Time, TimeFull, Htop, TimeUnit);

@@ -138,7 +138,7 @@ impl Byte {
 	/// assert_eq!(Byte::zero(), 0_u64);
 	/// assert_eq!(Byte::zero(), Byte::from(0_u64));
 	/// ```
-	pub const ZERO: Byte = Byte(0, Str::from_static_str("0 B"));
+	pub const ZERO: Byte = Byte(ZERO, Str::from_static_str("0 B"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -146,7 +146,7 @@ impl Byte {
 	/// assert_eq!(Byte::byte(), 1_u64);
 	/// assert_eq!(Byte::byte(), Byte::from(1_u64));
 	/// ```
-	pub const BYTE: Byte = Byte(1, Str::from_static_str("1 B"));
+	pub const BYTE: Byte = Byte(BYTE, Str::from_static_str("1 B"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -154,7 +154,7 @@ impl Byte {
 	/// assert_eq!(Byte::kilobyte(), 1_000_u64);
 	/// assert_eq!(Byte::kilobyte(), Byte::from(1_000_u64));
 	/// ```
-	pub const KILOBYTE: Byte = Byte(1_000, Str::from_static_str("1.000 KB"));
+	pub const KILOBYTE: Byte = Byte(KILOBYTE, Str::from_static_str("1.000 KB"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -162,7 +162,7 @@ impl Byte {
 	/// assert_eq!(Byte::megabyte(), 1_000_000_u64);
 	/// assert_eq!(Byte::megabyte(), Byte::from(1_000_000_u64));
 	/// ```
-	pub const MEGABYTE: Byte = Byte(1_000_000, Str::from_static_str("1.000 MB"));
+	pub const MEGABYTE: Byte = Byte(MEGABYTE, Str::from_static_str("1.000 MB"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -170,7 +170,7 @@ impl Byte {
 	/// assert_eq!(Byte::gigabyte(), 1_000_000_000_u64);
 	/// assert_eq!(Byte::gigabyte(), Byte::from(1_000_000_000_u64));
 	/// ```
-	pub const GIGABYTE: Byte = Byte(1_000_000_000, Str::from_static_str("1.000 GB"));
+	pub const GIGABYTE: Byte = Byte(GIGABYTE, Str::from_static_str("1.000 GB"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -178,7 +178,7 @@ impl Byte {
 	/// assert_eq!(Byte::terabyte(), 1_000_000_000_000_u64);
 	/// assert_eq!(Byte::terabyte(), Byte::from(1_000_000_000_000_u64));
 	/// ```
-	pub const TERABYTE: Byte = Byte(1_000_000_000_000, Str::from_static_str("1.000 TB"));
+	pub const TERABYTE: Byte = Byte(TERABYTE, Str::from_static_str("1.000 TB"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -186,7 +186,7 @@ impl Byte {
 	/// assert_eq!(Byte::petabyte(), 1_000_000_000_000_000_u64);
 	/// assert_eq!(Byte::petabyte(), Byte::from(1_000_000_000_000_000_u64));
 	/// ```
-	pub const PETABYTE: Byte = Byte(1_000_000_000_000_000, Str::from_static_str("1.000 PB"));
+	pub const PETABYTE: Byte = Byte(PETABYTE, Str::from_static_str("1.000 PB"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -194,7 +194,7 @@ impl Byte {
 	/// assert_eq!(Byte::exabyte(), 1_000_000_000_000_000_000_u64);
 	/// assert_eq!(Byte::exabyte(), Byte::from(1_000_000_000_000_000_000_u64));
 	/// ```
-	pub const EXABYTE: Byte = Byte(1_000_000_000_000_000_000, Str::from_static_str("1.000 EB"));
+	pub const EXABYTE: Byte = Byte(EXABYTE, Str::from_static_str("1.000 EB"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -210,7 +210,7 @@ impl Byte {
 	/// assert_eq!(Byte::unknown(), Byte::from(-1));
 	/// assert_eq!(Byte::unknown(), "???.??? B");
 	/// ```
-	pub const UNKNOWN: Byte = Byte(0, Str::from_static_str("???.??? B"));
+	pub const UNKNOWN: Byte = Byte(ZERO, Str::from_static_str("???.??? B"));
 }
 
 //---------------------------------------------------------------------------------------------------- Byte Impl
@@ -328,6 +328,7 @@ impl Byte {
 	fn from_priv(bytes: u64) -> Self {
 		// If bytes is a perfect multiple, return literals.
 		match bytes {
+			ZERO     => return Self::zero(),
 			BYTE     => return Self::byte(),
 			KILOBYTE => return Self::kilobyte(),
 			MEGABYTE => return Self::megabyte(),
@@ -340,7 +341,7 @@ impl Byte {
 
 		const UNITS: [u8; 6] = [b'K', b'M', b'G', b'T', b'P', b'E'];
 		const LN_KILOBYTE: f64 = 6.931471806; // ln 1024
-		const ZERO:  u8 = b'0';
+		const Z:     u8 = b'0';
 		const SPACE: u8 = b' ';
 		const B:     u8 = b'B';
 		const DOT:   u8 = b'.';
@@ -401,11 +402,11 @@ impl Byte {
 			let mut itoa = crate::ItoaTmp::new();
 			let itoa = itoa.format(fract).as_bytes();
 			if fract < 10 {
-				b[idx + 0] = ZERO;
-				b[idx + 1] = ZERO;
+				b[idx + 0] = Z;
+				b[idx + 1] = Z;
 				b[idx + 2] = itoa[0];
 			} else if fract < 100 {
-				b[idx + 0] = ZERO;
+				b[idx + 0] = Z;
 				b[idx + 1] = itoa[0];
 				b[idx + 2] = itoa[1];
 			} else {
