@@ -68,10 +68,9 @@ pub use time::{
 	Time,TimeFull,Uptime,Htop,TimeUnit,
 };
 
-/// Human-readable date formatting
 pub mod date;
 pub use date::{
-	Date,
+	Date,Nichi,NichiFull,
 };
 
 pub mod toa;

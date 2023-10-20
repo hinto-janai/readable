@@ -1,6 +1,6 @@
 [package]
 name = "readable"
-version = "0.11.0"
+version = "0.12.0"
 edition = "2021"
 authors = ["hinto.janai <hinto.janai@protonmail.com>"]
 description = "Human readable strings"
@@ -36,6 +36,7 @@ seq-macro   = { version = "0.3.5" }
 # Date
 regex       = { version = "1.9.5" }
 once_cell   = { version = "1.18.0" }
+nichi       = { version = "0.3.0" }
 
 # Uptime
 [target.'cfg(not(windows))'.dependencies]

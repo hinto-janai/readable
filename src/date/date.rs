@@ -8,6 +8,9 @@ use crate::macros::{
 	impl_traits,impl_common,
 	impl_const,
 };
+use crate::date::free::{
+	ok_year,ok_month,ok_day,ok,
+};
 
 //---------------------------------------------------------------------------------------------------- Regexes
 // Length of the input string
@@ -35,74 +38,53 @@ use crate::macros::{
 // 10 == Y.MM.DD || MM.DD.Y || DD.MM.Y
 
 // Number (+space) checker.
-static NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\d{4}|[0-9][0-9][0-9][0-9]+)$").unwrap());
+pub(super) static NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(\d{4}|[0-9][0-9][0-9][0-9]+)$").unwrap());
 
 // First `4` characters are a valid year.
-static YEAR: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}.*$").unwrap());
+pub(super) static YEAR: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}.*$").unwrap());
 
 // Number only - `YearMonthDay`
-static YM_NUM:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}[1-9].*$").unwrap());
-static YMM_NUM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}([0][1-9]|1[012]).*$").unwrap());
-static YMD_NUM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}[1-9][1-9].*$").unwrap());
-static YMMD_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}(0[1-9]|1[012])[1-9].*$").unwrap());
-static YMDD_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}[1-9](0[1-9]|[12][0-9]|30|31).*$").unwrap());
-static YMMDD_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}(0[1-9]|1[012])(0[1-9]|[12][0-9]|30|31).*$").unwrap());
+pub(super) static YM_NUM:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}[1-9].*$").unwrap());
+pub(super) static YMM_NUM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}([0][1-9]|1[012]).*$").unwrap());
+pub(super) static YMD_NUM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}[1-9][1-9].*$").unwrap());
+pub(super) static YMMD_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}(0[1-9]|1[012])[1-9].*$").unwrap());
+pub(super) static YMDD_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}[1-9](0[1-9]|[12][0-9]|30|31).*$").unwrap());
+pub(super) static YMMDD_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}(0[1-9]|1[012])(0[1-9]|[12][0-9]|30|31).*$").unwrap());
 
 // Number only - `MonthDayYear`
-static MY_NUM:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9][1-9]\d{3}.*$").unwrap());
-static MDY_NUM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9][1-9][1-9]\d{3}.*$").unwrap());
-static MMDY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])[1-9][1-9]\d{3}.*$").unwrap());
-static MDDY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9](0[1-9]|[12][0-9]|30|31)[1-9]\d{3}.*$").unwrap());
-static MMDDY_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])(0[1-9]|[12][0-9]|30|31)[1-9]\d{3}.*$").unwrap());
+pub(super) static MY_NUM:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9][1-9]\d{3}.*$").unwrap());
+pub(super) static MDY_NUM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9][1-9][1-9]\d{3}.*$").unwrap());
+pub(super) static MMDY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])[1-9][1-9]\d{3}.*$").unwrap());
+pub(super) static MDDY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9](0[1-9]|[12][0-9]|30|31)[1-9]\d{3}.*$").unwrap());
+pub(super) static MMDDY_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])(0[1-9]|[12][0-9]|30|31)[1-9]\d{3}.*$").unwrap());
 
 // Number only - `DayMonthYear`
-static DMY_NUM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9][1-9][1-9]\d{3}.*$").unwrap());
-static DDMY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|3[01])[1-9][1-9]\d{3}.*$").unwrap());
-static DMMY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9](0[1-9]|1[012])[1-9]\d{3}.*$").unwrap());
-static DDMMY_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|30|31)(0[1-9]|1[012])[1-9]\d{3}.*$").unwrap());
+pub(super) static DMY_NUM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9][1-9][1-9]\d{3}.*$").unwrap());
+pub(super) static DDMY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|3[01])[1-9][1-9]\d{3}.*$").unwrap());
+pub(super) static DMMY_NUM:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9](0[1-9]|1[012])[1-9]\d{3}.*$").unwrap());
+pub(super) static DDMMY_NUM: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|30|31)(0[1-9]|1[012])[1-9]\d{3}.*$").unwrap());
 
 // Separated - `YEAR MONTH DAY`
-static YM:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D[1-9].*$").unwrap());
-static YMM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D(0[1-9]|1[012]).*$").unwrap());
-static YMD:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D[1-9]\D[1-9].*$").unwrap());
-static YMMD:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D(0[1-9]|1[012])\D[1-9].*$").unwrap());
-static YMDD:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D[1-9]\D(0[1-9]|[12][0-9]|30|31).*$").unwrap());
-static YMMDD: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D(0[1-9]|1[012])\D(0[1-9]|[12][0-9]|30|31).*$").unwrap());
+pub(super) static YM:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D[1-9].*$").unwrap());
+pub(super) static YMM:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D(0[1-9]|1[012]).*$").unwrap());
+pub(super) static YMD:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D[1-9]\D[1-9].*$").unwrap());
+pub(super) static YMMD:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D(0[1-9]|1[012])\D[1-9].*$").unwrap());
+pub(super) static YMDD:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D[1-9]\D(0[1-9]|[12][0-9]|30|31).*$").unwrap());
+pub(super) static YMMDD: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\d{3}\D(0[1-9]|1[012])\D(0[1-9]|[12][0-9]|30|31).*$").unwrap());
 
 // Separated - `MONTH DAY YEAR`
-static MY:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D[1-9]\d{3}.*$").unwrap());
-static MMY:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^([0][1-9]|1[012])\D[1-9]\d{3}.*$").unwrap());
-static MDY:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D[1-9]\D[1-9]\d{3}.*$").unwrap());
-static MMDY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])\D[1-9]\D[1-9]\d{3}.*$").unwrap());
-static MDDY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D(0[1-9]|[12][0-9]|30|31)\D[1-9]\d{3}.*$").unwrap());
-static MMDDY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])\D(0[1-9]|[12][0-9]|30|31)\D[1-9]\d{3}.*$").unwrap());
+pub(super) static MY:    Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D[1-9]\d{3}.*$").unwrap());
+pub(super) static MMY:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^([0][1-9]|1[012])\D[1-9]\d{3}.*$").unwrap());
+pub(super) static MDY:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D[1-9]\D[1-9]\d{3}.*$").unwrap());
+pub(super) static MMDY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])\D[1-9]\D[1-9]\d{3}.*$").unwrap());
+pub(super) static MDDY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D(0[1-9]|[12][0-9]|30|31)\D[1-9]\d{3}.*$").unwrap());
+pub(super) static MMDDY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|1[012])\D(0[1-9]|[12][0-9]|30|31)\D[1-9]\d{3}.*$").unwrap());
 
 // Separated - `DAY MONTH YEAR`
-static DMY:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D[1-9]\D[1-9]\d{3}.*$").unwrap());
-static DDMY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|3[01])\D[1-9]\D[1-9]\d{3}.*$").unwrap());
-static DMMY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D(0[1-9]|1[012])\D[1-9]\d{3}.*$").unwrap());
-static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|30|31)\D(0[1-9]|1[012])\D[1-9]\d{3}.*$").unwrap());
-
-//---------------------------------------------------------------------------------------------------- Functions.
-#[inline(always)]
-const fn ok_year(y: u16) -> bool {
-	y >= 1000 && y <= 9999
-}
-
-#[inline(always)]
-const fn ok_month(m: u8) -> bool {
-	m >= 1 && m <= 12
-}
-
-#[inline(always)]
-const fn ok_day(d: u8) -> bool {
-	d >= 1 && d <= 31
-}
-
-#[inline(always)]
-const fn ok(y:u16, m: u8, d: u8) -> bool {
-	ok_year(y) && ok_month(m) && ok_day(d)
-}
+pub(super) static DMY:   Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D[1-9]\D[1-9]\d{3}.*$").unwrap());
+pub(super) static DDMY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|3[01])\D[1-9]\D[1-9]\d{3}.*$").unwrap());
+pub(super) static DMMY:  Lazy<Regex> = Lazy::new(|| Regex::new(r"^[1-9]\D(0[1-9]|1[012])\D[1-9]\d{3}.*$").unwrap());
+pub(super) static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0-9]|30|31)\D(0[1-9]|1[012])\D[1-9]\d{3}.*$").unwrap());
 
 //---------------------------------------------------------------------------------------------------- `Date`
 /// A _recent_ date that is in `YEAR-MONTH-DAY` format, similar to [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)
@@ -112,8 +94,6 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// - It allows months and days to be truncated (e.g `2010` is a valid [`Date`])
 /// - It is _very_ lenient when parsing strings
 ///
-/// The inner "integer" type is a tuple of: `(u16, u8, u8)` representing the `(Year, Month, Day)`
-///
 /// Any value being `0` means it is invalid, akin to a [`None`]:
 /// ```rust
 /// # use readable::Date;
@@ -122,10 +102,6 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// assert_eq!(a, "2020-12");
 /// assert_eq!(a, (2020, 12, 0));
 /// ```
-///
-/// - The year must be `1000-9999`
-/// - The month must be `1-12`
-/// - The day must be `1-31`
 ///
 /// Example:
 /// ```
@@ -271,28 +247,6 @@ const fn ok(y:u16, m: u8, d: u8) -> bool {
 /// ```rust
 /// # use readable::*;
 /// assert_eq!(std::mem::size_of::<Date>(), 16);
-/// ```
-///
-/// ## Copy
-/// [`Copy`] is available.
-///
-/// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
-/// but a 10 byte array buffer, literally: [`Str<10>`].
-///
-/// Since the max valid date is: `9999-12-31` (10 characters), a 10 byte
-/// buffer is used and enables this type to have [`Copy`].
-///
-/// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
-/// ```rust
-/// # use readable::Date;
-/// let a = Date::from_str("2014-04-22").unwrap();
-///
-/// // Copy 'a', use 'b'.
-/// let b = a;
-/// assert_eq!(b, "2014-04-22");
-///
-/// // We can still use 'a'
-/// assert_eq!(a, "2014-04-22");
 /// ```
 #[cfg_attr(feature = "serde",derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode",derive(bincode::Encode, bincode::Decode))]
@@ -518,6 +472,32 @@ impl Date {
 			Self::priv_ymd_num(year, month, day)
 		} else {
 			Self::unknown()
+		}
+	}
+
+	#[inline]
+	/// Calculate the weekday
+	///
+	/// If [`Date`]'s `year`, `month` and `day` are not fully specified,
+	/// this function will return `None` as all values are required
+	/// for calcualtion.
+	///
+	/// /// ```rust
+	/// # use readable::*;
+	/// // Christmas in 1999 was on a Saturday.
+	/// assert_eq!(
+	/// 	Date::from_ymd(1999, 12, 25).unwrap().weekday().as_str(),
+	/// 	"Saturday"
+	/// );
+	///
+	/// // Missing data returns `None`.
+	/// assert_eq!(Date::from_ym(1999, 12).unwrap().weekday(), None);
+	/// ```
+	pub const fn weekday(&self) -> Option<nichi::Weekday> {
+		if self.ok() {
+			Some(nichi::Date::weekday_raw(self.year(), self.month(), self.day()))
+		} else {
+			None
 		}
 	}
 
@@ -869,6 +849,18 @@ impl Date {
 		// Give up.
 		Err(Date::unknown())
 	}
+
+	#[inline]
+	/// ```rust
+	/// # use readable::*;
+	/// assert!(Date::UNKNOWN.is_unknown());
+	/// ```
+	pub const fn is_unknown(&self) -> bool {
+		match *self {
+			Self::UNKNOWN => true,
+			_ => false,
+		}
+	}
 }
 
 //---------------------------------------------------------------------------------------------------- Date impl (private)
@@ -1057,6 +1049,36 @@ impl Date {
 			30 => "30",
 			31 => "31",
 			_ => unreachable!(),
+		}
+	}
+}
+
+//---------------------------------------------------------------------------------------------------- TESTS
+impl From<nichi::Date> for Date {
+	fn from(value: nichi::Date) -> Self {
+		let (y,m,d) = value.inner();
+		Self::priv_ymd_num(y,m,d)
+	}
+}
+
+impl From<crate::Nichi> for Date {
+	fn from(value: crate::Nichi) -> Self {
+		if !value.is_unknown() {
+			let (y,m,d) = value.inner();
+			Self::priv_ymd_num(y,m,d)
+		} else {
+			Self::unknown()
+		}
+	}
+}
+
+impl From<crate::NichiFull> for Date {
+	fn from(value: crate::NichiFull) -> Self {
+		if !value.is_unknown() {
+			let (y,m,d) = value.inner();
+			Self::priv_ymd_num(y,m,d)
+		} else {
+			Self::unknown()
 		}
 	}
 }

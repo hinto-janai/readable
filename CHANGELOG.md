@@ -15,7 +15,13 @@ Types of changes:
 ---
 
 # readable Unreleased
+
+---
+
+# readable v0.12.0 - 2023-10-19
 ## Added
+* `Nichi` type for calendar date formatting (`Fri, Dec 25, 2020`)
+* `NichiFull` type for calendar date formatting (`Friday, December 25th, 2020`)
 * `TimeUnit` type for remainder time measuring (`61` == `1 minute, 1 second`)
 * `From` impl for `std::time::Duration` from all `readable::time` and `readable::run` types
 * `Default` impl for `Str`

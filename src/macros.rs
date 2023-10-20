@@ -355,14 +355,11 @@ pub(crate) use impl_math;
 //---------------------------------------------------------------------------------------------------- Handle bad floats
 macro_rules! return_bad_float {
 	($float:ident, $nan:expr, $infinite:expr) => {
-		#[cfg(not(feature = "ignore_nan_inf"))]
-		{
-			match $float.classify() {
-				std::num::FpCategory::Normal   => (),
-				std::num::FpCategory::Nan      => return $nan(),
-				std::num::FpCategory::Infinite => return $infinite(),
-				_ => (),
-			}
+		match $float.classify() {
+			std::num::FpCategory::Normal   => (),
+			std::num::FpCategory::Nan      => return $nan(),
+			std::num::FpCategory::Infinite => return $infinite(),
+			_ => (),
 		}
 	}
 }
