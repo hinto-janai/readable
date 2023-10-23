@@ -1,17 +1,12 @@
 //---------------------------------------------------------------------------------------------------- Use
-use compact_str::format_compact;
-use regex::Regex;
-use once_cell::sync::Lazy;
 use crate::str::Str;
-use crate::itoa;
 use crate::macros::{
 	impl_traits,impl_common,
 	impl_const,
 };
 use crate::date::free::{
-	ok_year,ok_month,ok_day,ok,
+	ok_year,ok,
 };
-use crate::date::Date;
 
 //---------------------------------------------------------------------------------------------------- `Nichi`
 /// A date that is in `Weekday, Month Day, Year` format
@@ -163,6 +158,73 @@ impl Nichi {
 		} else {
 			Self::unknown()
 		}
+	}
+
+	#[inline]
+	/// Create a [`Self`] from a UNIX timestamp
+	///
+	/// This creates a [`Self`] by taking UNIX timestamp as input.
+	///
+	/// (Seconds after `January 1st, 1970 UTC`).
+	//
+	/// ```rust
+	/// # use readable::*;
+	/// let nichi = Nichi::from_unix(1698019200).unwrap();
+	/// assert_eq!(nichi, "Mon, Oct 23, 2023");
+	/// assert_eq!(nichi, (2023, 10, 23));
+	/// ```
+	///
+	/// ## Errors
+	/// This returns a [`Self::UNKNOWN`] wrapped in an [`Err`] if the given
+	/// `unix_timestamp` is a date with a year larger than `9999` or less than `1000`.
+	///
+	/// ```rust,should_panic
+	/// # use readable::*;
+	/// // Would be `12732-1-28`.
+	/// Nichi::from_unix(339618217000).unwrap();
+	/// ```
+	pub fn from_unix(unix_timestamp: u64) -> Result<Self, Self> {
+		let nichi = nichi::Date::from_unix(unix_timestamp as i128);
+		let year = nichi.year().inner() as u16;
+		if !ok_year(year) {
+			Err(Self::unknown())
+		} else {
+			Ok(Self::priv_from(
+				year,
+				nichi.month().inner(),
+				nichi.day().inner(),
+			))
+		}
+	}
+
+	#[inline]
+	/// Same as [`Self::from_unix`] but silently returns a [`Self::UNKNOWN`]
+	/// on error that isn't wrapped in a [`Result::Err`].
+	pub fn from_unix_silent(unix_timestamp: u64) -> Self {
+		match Self::from_unix(unix_timestamp) {
+			Ok(s) => s,
+			Err(s) => s,
+		}
+	}
+
+	#[inline]
+	/// Get the corresponding UNIX timestamp of [`Self`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let nichi = Nichi::from_unix(1698019200).unwrap();
+	/// println!("{nichi}");
+	/// assert_eq!(nichi, "Mon, Oct 23, 2023");
+	/// assert_eq!(nichi, (2023, 10, 23));
+	///
+	/// assert_eq!(nichi.as_unix(), 1698019200);
+	/// ```
+	pub const fn as_unix(&self) -> u64 {
+		nichi::Date::new(
+			self.year() as i16,
+			self.month(),
+			self.day(),
+		).as_unix() as u64
 	}
 
 	#[inline]
@@ -372,7 +434,6 @@ impl From<crate::NichiFull> for Nichi {
 #[cfg(test)]
 mod tests {
 	use super::*;
-	use std::cmp::Ordering;
 
 	//-------------------------------------------------------------------------------- Nichi tests.
 	const EXPECTED: (u16, u8, u8) = (2020, 12, 25);

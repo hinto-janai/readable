@@ -1,3 +1,5 @@
+//! Number formatting
+
 mod int;
 pub use int::*;
 

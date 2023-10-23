@@ -15,7 +15,6 @@ use crate::toa::udiv128;
 use core::mem::{self, MaybeUninit};
 use core::{ptr, slice, str};
 use std::borrow::Borrow;
-use std::fmt::write;
 
 //---------------------------------------------------------------------------------------------------- Itoa
 /// Fast integer to string conversion
@@ -485,8 +484,6 @@ use std::num::{
 	NonZeroU16,
 	NonZeroI32,
 	NonZeroU32,
-	NonZeroI64,
-	NonZeroU64,
 	NonZeroI128,
 	NonZeroU128,
 	NonZeroIsize,

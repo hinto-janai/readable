@@ -177,7 +177,7 @@ impl<const N: usize> Str<N> {
 			panic!("byte length is longer than N");
 		}
 
-		if std::str::from_utf8(&bytes).is_err() {
+		if std::str::from_utf8(bytes).is_err() {
 			panic!("bytes are not valid UTF-8");
 		}
 
@@ -244,7 +244,7 @@ impl<const N: usize> Str<N> {
 	/// assert_eq!(string.as_bytes_all().len(), 10);
 	/// ```
 	pub const fn as_bytes_all(&self) -> &[u8] {
-		&self.buf.as_slice()
+		self.buf.as_slice()
 	}
 
 	#[inline]
@@ -465,11 +465,9 @@ impl<const N: usize> Str<N> {
 		let len     = self.len as usize;
 		let buf_len = self.buf.len();
 
-		if {
-			len > buf_len ||
-			buf_len > 255 ||
-			std::str::from_utf8(&self.buf[..len]).is_err()
-		} {
+		if len > buf_len ||
+  			buf_len > 255 ||
+  			std::str::from_utf8(&self.buf[..len]).is_err() {
 			return true;
 		}
 
@@ -893,7 +891,7 @@ impl<const N: usize> Str<N> {
 	/// ```
 	pub fn from_bytes_exact(bytes: &[u8]) -> Self {
 		let mut buf = [0; N];
-		buf.copy_from_slice(&bytes);
+		buf.copy_from_slice(bytes);
 		Self {
 			len: N as u8,
 			buf,

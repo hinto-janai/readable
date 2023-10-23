@@ -1,4 +1,4 @@
-//! Human-readable runtime formatting
+//! Runtime formatting
 //!
 //! This module includes various [`Runtime`] types meant for audio/video style formatting (`HH:MM:SS`).
 //!

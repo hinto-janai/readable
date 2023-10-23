@@ -1,41 +1,41 @@
+
 //---------------------------------------------------------------------------------------------------- Use
 
 //---------------------------------------------------------------------------------------------------- Uptime Trait
-/// Current system date
+/// Current system clock time
 ///
-/// This trait represents structures that are viable containers for holding and
-/// displaying the current system date, notably, everything in the `readable::date` module.
+/// This trait represents structures that are viable containers
+/// for holding and displaying the current system clock time.
 ///
 /// This trait is sealed and can only be implemented internally on `readable` types.
-pub trait SysDate {
+pub trait SysTime {
 	/// This function creates a `Self` from the live system date
 	///
 	/// ## Example
 	/// ```rust
-	/// # use readable::date::*;
+	/// # use readable::time::*;
 	/// // Introduce trait into scope.
-	/// use readable::SysDate;
+	/// use readable::SysTime;
 	///
 	/// // Capture the _current_ system date,
 	/// // and format it into a `Date`.
-	/// let date: Date = Date::sysdate();
+	/// let time: Time = Time::sys_time();
 	/// ```
-	fn sysdate() -> Self;
+	fn sys_time() -> Self;
 }
 
 //---------------------------------------------------------------------------------------------------- Uptime Function
 mod private {
-	use crate::date::{Date,Nichi,NichiFull};
-
+	use crate::time::{
+		Time,Military,TimeUnit,
+	};
 	trait Sealed {}
-
 	macro_rules! impl_sealed {
 		($($n:ty => $fn:ident),* $(,)?) => {
 			$(
-				impl super::SysDate for $n {
-					fn sysdate() -> Self {
-						let (y,m,d) = crate::date::free::date();
-						Self::$fn(y as u16, m, d)
+				impl super::SysTime for $n {
+					fn sys_time() -> Self {
+						Self::$fn(crate::time::free::time())
 					}
 				}
 				impl Sealed for $n {}
@@ -43,8 +43,8 @@ mod private {
 		};
 	}
 	impl_sealed! {
-		Date      => priv_ymd_num,
-		Nichi     => priv_from,
-		NichiFull => priv_from
+		Time => priv_from,
+		Military => priv_from,
+		TimeUnit => new,
 	}
 }

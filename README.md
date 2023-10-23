@@ -44,17 +44,25 @@ assert_eq!(Runtime::from(311.123),      "5:11");
 assert_eq!(RuntimePad::from(311.123),   "00:05:11");
 assert_eq!(RuntimeMilli::from(311.123), "00:05:11.123");
 ```
-#### Time
+#### Uptime
 ```rust
 use readable::*;
-assert_eq!(Time::from(172799_u32),     "1d, 23h, 59m, 59s");
-assert_eq!(TimeFull::from(172799_u32), "1 day, 23 hours, 59 minutes, 59 seconds");
-assert_eq!(Htop::from(172799_u32),     "1 day, 23:59:59");
+assert_eq!(Uptime::from(172799_u32),     "1d, 23h, 59m, 59s");
+assert_eq!(UptimeFull::from(172799_u32), "1 day, 23 hours, 59 minutes, 59 seconds");
+assert_eq!(Htop::from(172799_u32),       "1 day, 23:59:59");
 ```
 #### Date
 ```rust
 use readable::*;
 assert_eq!(Date::from_ymd(2014, 12, 31).unwrap(), "2014-12-31");
+assert_eq!(Nichi::new(2014, 12, 31).unwrap(),     "Wed, Dec 31, 2014");
+assert_eq!(NichiFull::new(2014, 12, 31).unwrap(), "Wednesday, December 31st, 2014");
+```
+#### Time
+```rust
+use readable::*;
+assert_eq!(Time::new(86399),     "11:59:59 PM");
+assert_eq!(Military::new(86399), "23:59:59");
 ```
 #### Byte
 ```rust
@@ -69,7 +77,7 @@ This is comparing `b`'s inner `String`:
 ```rust
 use readable::*;
 let a = std::time::Duration::from_secs(86399);
-let b = TimeFull::from(a);
+let b = UptimeFull::from(a);
 assert_eq!(b, "23 hours, 59 minutes, 59 seconds");
 ```
 This is comparing `a`'s inner `i64`:

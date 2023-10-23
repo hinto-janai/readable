@@ -1,6 +1,6 @@
 [package]
 name = "readable"
-version = "0.12.0"
+version = "0.13.0"
 edition = "2021"
 authors = ["hinto.janai <hinto.janai@protonmail.com>"]
 description = "Human readable strings"
@@ -26,7 +26,7 @@ default = ["serde", "bincode"]
 paste = "1.0.14"
 
 # (De)serialization
-serde       = { version = "1.0.188", features = ["derive"], optional = true }
+serde       = { version = "1.0.189", features = ["derive"], optional = true }
 bincode     = { version = "2.0.0-rc.3", features = ["serde", "derive"], optional = true }
 
 # Num
@@ -34,9 +34,10 @@ compact_str = { version = "0.7.1", features = ["bytes", "serde"] }
 seq-macro   = { version = "0.3.5" }
 
 # Date
-regex       = { version = "1.9.5" }
+regex       = { version = "1.10.2" }
 once_cell   = { version = "1.18.0" }
 nichi       = { version = "0.4.0" }
+chrono = "0.4.31"
 
 # Uptime
 [target.'cfg(not(windows))'.dependencies]

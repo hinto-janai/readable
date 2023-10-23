@@ -1,5 +1,4 @@
 use std::fmt;
-use std::fmt::Display;
 use std::borrow::{Cow, Borrow};
 
 //---------------------------------------------------------------------------------------------------- Impl
@@ -114,7 +113,7 @@ pub trait HeadTail {
 		if let Some((index, _)) = s.char_indices().nth(head) {
 			Head { string: &s[..index], cut: true }
 		} else {
-			Head { string: &s, cut: false }
+			Head { string: s, cut: false }
 		}
 	}
 
@@ -245,9 +244,9 @@ pub trait HeadTail {
 		let tail = s.char_indices().nth(end - tail);
 
 		if let (Some((head, _)), Some((tail, _))) = (head, tail) {
-			return HeadTailStr { head: &s[..head], tail: Some(&s[tail..]) }
+			HeadTailStr { head: &s[..head], tail: Some(&s[tail..]) }
 		} else {
-			return HeadTailStr { head: s, tail: None }
+			HeadTailStr { head: s, tail: None }
 		}
 	}
 
@@ -290,9 +289,9 @@ pub trait HeadTail {
 		let tail = s.char_indices().nth(end - tail);
 
 		if let (Some((head, _)), Some((tail, _))) = (head, tail) {
-			return HeadTailDot { head: &s[..head], tail: Some(&s[tail..]) }
+			HeadTailDot { head: &s[..head], tail: Some(&s[tail..]) }
 		} else {
-			return HeadTailDot { head: s, tail: None }
+			HeadTailDot { head: s, tail: None }
 		}
 	}
 }

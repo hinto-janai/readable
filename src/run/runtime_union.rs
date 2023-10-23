@@ -2,9 +2,7 @@
 use crate::str::Str;
 use crate::run::{Runtime,RuntimePad,RuntimeMilli};
 use crate::macros::{
-	impl_common,impl_const,
-	impl_traits,return_bad_float,
-	impl_usize,impl_math,impl_impl_math,
+	impl_math,impl_impl_math,
 };
 
 //---------------------------------------------------------------------------------------------------- RuntimeUnion

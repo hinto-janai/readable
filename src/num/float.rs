@@ -1,11 +1,6 @@
 //---------------------------------------------------------------------------------------------------- Use
 use compact_str::{format_compact,CompactString};
-use crate::num::{
-	Unsigned,Int,
-	constants::{
-		NAN,INFINITY,
-	},
-};
+use crate::num::constants::{NAN,INFINITY};
 use crate::macros::{
 	return_bad_float,str_u64,str_i64,
 	impl_common,impl_not_const,

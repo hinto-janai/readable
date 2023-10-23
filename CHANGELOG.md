@@ -11,10 +11,23 @@ Types of changes:
 - `Fixed` for any bug fixes
 - `Security` in case of vulnerabilities
 
-
 ---
 
 # readable Unreleased
+
+---
+
+# readable v0.13.0 - 2023-10-23
+## Added
+* `Time` type for clock time - `11:59:59 PM`
+* `Military` type for military-style clock time - `23:59:59`
+* `readable::time` free functions (`unix()`, `unix_clock()`, `secs_to_hms()`, etc)
+* `readable::date` free functions (`from_unix()`, `as_unix()`, etc)
+* `SysUptime`, `SysTime`, `SysDate` traits for getting live-system info
+
+## Changed
+* Uptime modules renamed for clarity `readable::time` -> `readable::up`
+* Time-like types from `readable::date` into `time` module
 
 ---
 

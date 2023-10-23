@@ -1,24 +1,25 @@
 //---------------------------------------------------------------------------------------------------- Use
-use crate::time::{Time,Htop,TimeUnit};
+use crate::up::{Uptime,Htop};
+use crate::time::TimeUnit;
 use crate::str::Str;
 use crate::macros::{
 	return_bad_float,impl_common,
 	impl_const,impl_impl_math,impl_math,
-	impl_usize,impl_traits,
+	impl_usize,impl_traits,handle_over_u32,
 };
 use crate::itoa;
 
-//---------------------------------------------------------------------------------------------------- TimeFull
-/// [`Time`] but with full specified words
+//---------------------------------------------------------------------------------------------------- UptimeFull
+/// [`Uptime`] but with full specified words
 ///
-/// This is the same type as [`Time`], except, the
+/// This is the same type as [`Uptime`], except, the
 /// words specifying the time will not be abbreviated
 /// and will be pluralized, e.g:
 /// ```rust
-/// # use readable::time::*;
-/// assert_eq!(TimeFull::from(0), "0 seconds");
-/// assert_eq!(TimeFull::from(1), "1 second");
-/// assert_eq!(TimeFull::from(2), "2 seconds");
+/// # use readable::*;
+/// assert_eq!(UptimeFull::from(0), "0 seconds");
+/// assert_eq!(UptimeFull::from(1), "1 second");
+/// assert_eq!(UptimeFull::from(2), "2 seconds");
 /// ```
 ///
 /// ## Size
@@ -26,132 +27,132 @@ use crate::itoa;
 ///
 /// ```rust
 /// # use readable::*;
-/// assert_eq!(std::mem::size_of::<TimeFull>(), 68);
+/// assert_eq!(std::mem::size_of::<UptimeFull>(), 68);
 /// ```
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::TimeFull;
-/// assert_eq!(TimeFull::from(0_u32),        "0 seconds");
-/// assert_eq!(TimeFull::from(1_u32),        "1 second");
-/// assert_eq!(TimeFull::from(2_u32),        "2 seconds");
-/// assert_eq!(TimeFull::from(59_u32),       "59 seconds");
-/// assert_eq!(TimeFull::from(60_u32),       "1 minute");
-/// assert_eq!(TimeFull::from(61_u32),       "1 minute, 1 second");
-/// assert_eq!(TimeFull::from(62_u32),       "1 minute, 2 seconds");
-/// assert_eq!(TimeFull::from(120_u32),      "2 minutes");
-/// assert_eq!(TimeFull::from(121_u32),      "2 minutes, 1 second");
-/// assert_eq!(TimeFull::from(122_u32),      "2 minutes, 2 seconds");
-/// assert_eq!(TimeFull::from(179_u32),      "2 minutes, 59 seconds");
-/// assert_eq!(TimeFull::from(3599_u32),     "59 minutes, 59 seconds");
-/// assert_eq!(TimeFull::from(3600_u32),     "1 hour");
-/// assert_eq!(TimeFull::from(3601_u32),     "1 hour, 1 second");
-/// assert_eq!(TimeFull::from(3602_u32),     "1 hour, 2 seconds");
-/// assert_eq!(TimeFull::from(3660_u32),     "1 hour, 1 minute");
-/// assert_eq!(TimeFull::from(3720_u32),     "1 hour, 2 minutes");
-/// assert_eq!(TimeFull::from(86399_u32),    "23 hours, 59 minutes, 59 seconds");
-/// assert_eq!(TimeFull::from(86400_u32),    "1 day");
-/// assert_eq!(TimeFull::from(86401_u32),    "1 day, 1 second");
-/// assert_eq!(TimeFull::from(86402_u32),    "1 day, 2 seconds");
-/// assert_eq!(TimeFull::from(86460_u32),    "1 day, 1 minute");
-/// assert_eq!(TimeFull::from(86520_u32),    "1 day, 2 minutes");
-/// assert_eq!(TimeFull::from(90000_u32),    "1 day, 1 hour");
-/// assert_eq!(TimeFull::from(93600_u32),    "1 day, 2 hours");
-/// assert_eq!(TimeFull::from(604799_u32),   "6 days, 23 hours, 59 minutes, 59 seconds");
-/// assert_eq!(TimeFull::from(604800_u32),   "7 days");
-/// assert_eq!(TimeFull::from(2678400_u32),  "1 month");
-/// assert_eq!(TimeFull::from(3283199_u32),  "1 month, 6 days, 23 hours, 59 minutes, 59 seconds");
-/// assert_eq!(TimeFull::from(5356800_u32),  "2 months");
-/// assert_eq!(TimeFull::from(31536000_u32), "1 year");
-/// assert_eq!(TimeFull::from(63072000_u32), "2 years");
+/// # use readable::*;
+/// assert_eq!(UptimeFull::from(0_u32),        "0 seconds");
+/// assert_eq!(UptimeFull::from(1_u32),        "1 second");
+/// assert_eq!(UptimeFull::from(2_u32),        "2 seconds");
+/// assert_eq!(UptimeFull::from(59_u32),       "59 seconds");
+/// assert_eq!(UptimeFull::from(60_u32),       "1 minute");
+/// assert_eq!(UptimeFull::from(61_u32),       "1 minute, 1 second");
+/// assert_eq!(UptimeFull::from(62_u32),       "1 minute, 2 seconds");
+/// assert_eq!(UptimeFull::from(120_u32),      "2 minutes");
+/// assert_eq!(UptimeFull::from(121_u32),      "2 minutes, 1 second");
+/// assert_eq!(UptimeFull::from(122_u32),      "2 minutes, 2 seconds");
+/// assert_eq!(UptimeFull::from(179_u32),      "2 minutes, 59 seconds");
+/// assert_eq!(UptimeFull::from(3599_u32),     "59 minutes, 59 seconds");
+/// assert_eq!(UptimeFull::from(3600_u32),     "1 hour");
+/// assert_eq!(UptimeFull::from(3601_u32),     "1 hour, 1 second");
+/// assert_eq!(UptimeFull::from(3602_u32),     "1 hour, 2 seconds");
+/// assert_eq!(UptimeFull::from(3660_u32),     "1 hour, 1 minute");
+/// assert_eq!(UptimeFull::from(3720_u32),     "1 hour, 2 minutes");
+/// assert_eq!(UptimeFull::from(86399_u32),    "23 hours, 59 minutes, 59 seconds");
+/// assert_eq!(UptimeFull::from(86400_u32),    "1 day");
+/// assert_eq!(UptimeFull::from(86401_u32),    "1 day, 1 second");
+/// assert_eq!(UptimeFull::from(86402_u32),    "1 day, 2 seconds");
+/// assert_eq!(UptimeFull::from(86460_u32),    "1 day, 1 minute");
+/// assert_eq!(UptimeFull::from(86520_u32),    "1 day, 2 minutes");
+/// assert_eq!(UptimeFull::from(90000_u32),    "1 day, 1 hour");
+/// assert_eq!(UptimeFull::from(93600_u32),    "1 day, 2 hours");
+/// assert_eq!(UptimeFull::from(604799_u32),   "6 days, 23 hours, 59 minutes, 59 seconds");
+/// assert_eq!(UptimeFull::from(604800_u32),   "7 days");
+/// assert_eq!(UptimeFull::from(2678400_u32),  "1 month");
+/// assert_eq!(UptimeFull::from(3283199_u32),  "1 month, 6 days, 23 hours, 59 minutes, 59 seconds");
+/// assert_eq!(UptimeFull::from(5356800_u32),  "2 months");
+/// assert_eq!(UptimeFull::from(31536000_u32), "1 year");
+/// assert_eq!(UptimeFull::from(63072000_u32), "2 years");
 /// assert_eq!(
-///     TimeFull::from(u32::MAX),
+///     UptimeFull::from(u32::MAX),
 ///     "136 years, 2 months, 8 days, 6 hours, 28 minutes, 15 seconds",
 /// );
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct TimeFull(pub(super) u32, pub(super) Str<{ TimeFull::MAX_LEN }>);
+pub struct UptimeFull(pub(super) u32, pub(super) Str<{ UptimeFull::MAX_LEN }>);
 
-impl_math!(TimeFull, u32);
-impl_traits!(TimeFull, u32);
+impl_math!(UptimeFull, u32);
+impl_traits!(UptimeFull, u32);
 
 //---------------------------------------------------------------------------------------------------- Constants
-impl TimeFull {
+impl UptimeFull {
 	/// ```rust
 	/// # use readable::*;
 	/// let time = "--- years, -- months, -- days, -- hours, -- minutes, -- seconds";
-	/// assert_eq!(time.len(), TimeFull::MAX_LEN);
+	/// assert_eq!(time.len(), UptimeFull::MAX_LEN);
 	/// ```
 	pub const MAX_LEN: usize = 63;
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(TimeFull::UNKNOWN, 0);
-	/// assert_eq!(TimeFull::UNKNOWN, "(unknown)");
+	/// assert_eq!(UptimeFull::UNKNOWN, 0);
+	/// assert_eq!(UptimeFull::UNKNOWN, "(unknown)");
 	/// ```
 	pub const UNKNOWN: Self = Self(0, Str::from_static_str("(unknown)"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(TimeFull::ZERO, 0);
-	/// assert_eq!(TimeFull::ZERO, "0 seconds");
+	/// assert_eq!(UptimeFull::ZERO, 0);
+	/// assert_eq!(UptimeFull::ZERO, "0 seconds");
 	/// ```
 	pub const ZERO: Self = Self(0, Str::from_static_str("0 seconds"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(TimeFull::SECOND, 1);
-	/// assert_eq!(TimeFull::SECOND, "1 second");
+	/// assert_eq!(UptimeFull::SECOND, 1);
+	/// assert_eq!(UptimeFull::SECOND, "1 second");
 	/// ```
 	pub const SECOND: Self = Self(1, Str::from_static_str("1 second"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(TimeFull::MINUTE, 60);
-	/// assert_eq!(TimeFull::MINUTE, "1 minute");
+	/// assert_eq!(UptimeFull::MINUTE, 60);
+	/// assert_eq!(UptimeFull::MINUTE, "1 minute");
 	/// ```
 	pub const MINUTE: Self = Self(60, Str::from_static_str("1 minute"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(TimeFull::HOUR, 3600);
-	/// assert_eq!(TimeFull::HOUR, "1 hour");
+	/// assert_eq!(UptimeFull::HOUR, 3600);
+	/// assert_eq!(UptimeFull::HOUR, "1 hour");
 	/// ```
 	pub const HOUR: Self = Self(3600, Str::from_static_str("1 hour"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(TimeFull::DAY, 86400);
-	/// assert_eq!(TimeFull::DAY, "1 day");
+	/// assert_eq!(UptimeFull::DAY, 86400);
+	/// assert_eq!(UptimeFull::DAY, "1 day");
 	/// ```
 	pub const DAY: Self = Self(86400, Str::from_static_str("1 day"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(TimeFull::MONTH, 86400);
-	/// assert_eq!(TimeFull::MONTH, "1 month");
+	/// assert_eq!(UptimeFull::MONTH, 86400);
+	/// assert_eq!(UptimeFull::MONTH, "1 month");
 	/// ```
 	pub const MONTH: Self = Self(86400, Str::from_static_str("1 month"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(TimeFull::YEAR, 31_536_000);
-	/// assert_eq!(TimeFull::YEAR, "1 year");
+	/// assert_eq!(UptimeFull::YEAR, 31_536_000);
+	/// assert_eq!(UptimeFull::YEAR, "1 year");
 	/// ```
 	pub const YEAR: Self = Self(31_536_000, Str::from_static_str("1 year"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(TimeFull::MAX, u32::MAX);
-	/// assert_eq!(TimeFull::MAX, "136 years, 2 months, 8 days, 6 hours, 28 minutes, 15 seconds");
+	/// assert_eq!(UptimeFull::MAX, u32::MAX);
+	/// assert_eq!(UptimeFull::MAX, "136 years, 2 months, 8 days, 6 hours, 28 minutes, 15 seconds");
 	/// ```
 	pub const MAX: Self = Self(u32::MAX, Str::from_static_str("136 years, 2 months, 8 days, 6 hours, 28 minutes, 15 seconds"));
 }
 
 //---------------------------------------------------------------------------------------------------- Pub Impl
-impl TimeFull {
+impl UptimeFull {
 	impl_common!(u32);
 	impl_const!();
 	impl_usize!();
@@ -159,7 +160,7 @@ impl TimeFull {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Time::zero(), Time::ZERO);
+	/// assert_eq!(Uptime::zero(), Uptime::ZERO);
 	/// ```
 	pub const fn zero() -> Self {
 		Self::ZERO
@@ -168,7 +169,7 @@ impl TimeFull {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Time::second(), Time::SECOND);
+	/// assert_eq!(Uptime::second(), Uptime::SECOND);
 	/// ```
 	pub const fn second() -> Self {
 		Self::SECOND
@@ -177,7 +178,7 @@ impl TimeFull {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Time::minute(), Time::MINUTE);
+	/// assert_eq!(Uptime::minute(), Uptime::MINUTE);
 	/// ```
 	pub const fn minute() -> Self {
 		Self::MINUTE
@@ -186,7 +187,7 @@ impl TimeFull {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Time::hour(), Time::HOUR);
+	/// assert_eq!(Uptime::hour(), Uptime::HOUR);
 	/// ```
 	pub const fn hour() -> Self {
 		Self::HOUR
@@ -195,7 +196,7 @@ impl TimeFull {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Time::day(), Time::DAY);
+	/// assert_eq!(Uptime::day(), Uptime::DAY);
 	/// ```
 	pub const fn day() -> Self {
 		Self::DAY
@@ -204,7 +205,7 @@ impl TimeFull {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Time::month(), Time::MONTH);
+	/// assert_eq!(Uptime::month(), Uptime::MONTH);
 	/// ```
 	pub const fn month() -> Self {
 		Self::MONTH
@@ -213,7 +214,7 @@ impl TimeFull {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Time::year(), Time::YEAR);
+	/// assert_eq!(Uptime::year(), Uptime::YEAR);
 	/// ```
 	pub const fn year() -> Self {
 		Self::YEAR
@@ -222,7 +223,7 @@ impl TimeFull {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Time::max(), Time::MAX);
+	/// assert_eq!(Uptime::max(), Uptime::MAX);
 	/// ```
 	pub const fn max() -> Self {
 		Self::MAX
@@ -232,7 +233,7 @@ impl TimeFull {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Time::unknown(), Time::UNKNOWN);
+	/// assert_eq!(Uptime::unknown(), Uptime::UNKNOWN);
 	/// ```
 	pub const fn unknown() -> Self {
 		Self::UNKNOWN
@@ -241,8 +242,8 @@ impl TimeFull {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert!(TimeFull::UNKNOWN.is_unknown());
-	/// assert!(!TimeFull::ZERO.is_unknown());
+	/// assert!(UptimeFull::UNKNOWN.is_unknown());
+	/// assert!(!UptimeFull::ZERO.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
 		match *self {
@@ -253,10 +254,10 @@ impl TimeFull {
 }
 
 //---------------------------------------------------------------------------------------------------- Private impl
-impl TimeFull {
+impl UptimeFull {
 	#[inline]
 	fn plural(
-		s: &mut Str<{ TimeFull::MAX_LEN }>,
+		s: &mut Str<{ UptimeFull::MAX_LEN }>,
 		name: &'static str,
 		value: u32,
 		started: &mut bool,
@@ -312,25 +313,16 @@ impl TimeFull {
 }
 
 //---------------------------------------------------------------------------------------------------- "u*" impl
-macro_rules! handle_over_u32 {
-	($value:expr, $type:ty) => {
-		if $value > (u32::MAX as $type) {
-			return Self::unknown();
-		}
-	};
-}
-
-//---------------------------------------------------------------------------------------------------- "u*" impl
 // Implementation Macro.
 macro_rules! impl_u {
 	($($u:ty),* $(,)?) => { $(
-		impl From<$u> for TimeFull {
+		impl From<$u> for UptimeFull {
 			#[inline]
 			fn from(u: $u) -> Self {
 				Self::from_priv(u as u32)
 			}
 		}
-		impl From<&$u> for TimeFull {
+		impl From<&$u> for UptimeFull {
 			#[inline]
 			fn from(u: &$u) -> Self {
 				Self::from_priv(*u as u32)
@@ -344,14 +336,14 @@ impl_u!(usize);
 
 macro_rules! impl_u_over {
 	($($u:ty),* $(,)?) => { $(
-		impl From<$u> for TimeFull {
+		impl From<$u> for UptimeFull {
 			#[inline]
 			fn from(u: $u) -> Self {
 				handle_over_u32!(u, $u);
 				Self::from_priv(u as u32)
 			}
 		}
-		impl From<&$u> for TimeFull {
+		impl From<&$u> for UptimeFull {
 			#[inline]
 			fn from(u: &$u) -> Self {
 				handle_over_u32!(*u, $u);
@@ -368,7 +360,7 @@ impl_u_over!(usize);
 //---------------------------------------------------------------------------------------------------- i* impl
 macro_rules! impl_int {
 	($($int:ty),* $(,)?) => { $(
-		impl From<$int> for TimeFull {
+		impl From<$int> for UptimeFull {
 			#[inline]
 			fn from(int: $int) -> Self {
 				if int.is_negative() {
@@ -377,7 +369,7 @@ macro_rules! impl_int {
 				Self::from_priv(int as u32)
 			}
 		}
-		impl From<&$int> for TimeFull {
+		impl From<&$int> for UptimeFull {
 			#[inline]
 			fn from(int: &$int) -> Self {
 				if int.is_negative() {
@@ -394,7 +386,7 @@ impl_u!(isize);
 
 macro_rules! impl_int_over {
 	($($int:ty),* $(,)?) => { $(
-		impl From<$int> for TimeFull {
+		impl From<$int> for UptimeFull {
 			#[inline]
 			fn from(int: $int) -> Self {
 				if int.is_negative() {
@@ -404,7 +396,7 @@ macro_rules! impl_int_over {
 				Self::from_priv(int as u32)
 			}
 		}
-		impl From<&$int> for TimeFull {
+		impl From<&$int> for UptimeFull {
 			#[inline]
 			fn from(int: &$int) -> Self {
 				if int.is_negative() {
@@ -423,7 +415,7 @@ impl_u_over!(isize);
 //---------------------------------------------------------------------------------------------------- "f" impl
 macro_rules! impl_f {
 	($float:ty) => {
-		impl From<$float> for TimeFull {
+		impl From<$float> for UptimeFull {
 			#[inline]
 			fn from(float: $float) -> Self {
 				return_bad_float!(float, Self::unknown, Self::unknown);
@@ -434,7 +426,7 @@ macro_rules! impl_f {
 				Self::from_priv(float as u32)
 			}
 		}
-		impl From<&$float> for TimeFull {
+		impl From<&$float> for UptimeFull {
 			#[inline]
 			fn from(float: &$float) -> Self {
 				return_bad_float!(float, Self::unknown, Self::unknown);
@@ -450,7 +442,7 @@ macro_rules! impl_f {
 impl_f!(f32);
 impl_f!(f64);
 
-//---------------------------------------------------------------------------------------------------- Other Time Impl.
+//---------------------------------------------------------------------------------------------------- Other Uptime Impl.
 macro_rules! impl_from_time {
 	($this:ty => $($other:ty),* $(,)?) => { $(
 		impl From<$other> for $this {
@@ -475,10 +467,10 @@ macro_rules! impl_from_time {
 		}
 	)*}
 }
-impl_from_time!(TimeFull => Time, Htop, TimeUnit);
+impl_from_time!(UptimeFull => Uptime, Htop, TimeUnit);
 
 //---------------------------------------------------------------------------------------------------- Trait Impl
-impl From<std::time::Duration> for TimeFull {
+impl From<std::time::Duration> for UptimeFull {
 	#[inline]
 	fn from(duration: std::time::Duration) -> Self {
 		let u = duration.as_secs();
@@ -487,7 +479,7 @@ impl From<std::time::Duration> for TimeFull {
 	}
 }
 
-impl From<&std::time::Duration> for TimeFull {
+impl From<&std::time::Duration> for UptimeFull {
 	#[inline]
 	fn from(duration: &std::time::Duration) -> Self {
 		let u = duration.as_secs();
@@ -496,7 +488,7 @@ impl From<&std::time::Duration> for TimeFull {
 	}
 }
 
-impl From<std::time::Instant> for TimeFull {
+impl From<std::time::Instant> for UptimeFull {
 	#[inline]
 	fn from(instant: std::time::Instant) -> Self {
 		let u = instant.elapsed().as_secs();
@@ -505,7 +497,7 @@ impl From<std::time::Instant> for TimeFull {
 	}
 }
 
-impl From<&std::time::Instant> for TimeFull {
+impl From<&std::time::Instant> for UptimeFull {
 	#[inline]
 	fn from(instant: &std::time::Instant) -> Self {
 		let u = instant.elapsed().as_secs();
@@ -514,16 +506,16 @@ impl From<&std::time::Instant> for TimeFull {
 	}
 }
 
-impl From<TimeFull> for std::time::Duration {
+impl From<UptimeFull> for std::time::Duration {
 	#[inline]
-	fn from(value: TimeFull) -> Self {
+	fn from(value: UptimeFull) -> Self {
 		std::time::Duration::from_secs(value.inner() as u64)
 	}
 }
 
-impl From<&TimeFull> for std::time::Duration {
+impl From<&UptimeFull> for std::time::Duration {
 	#[inline]
-	fn from(value: &TimeFull) -> Self {
+	fn from(value: &UptimeFull) -> Self {
 		std::time::Duration::from_secs(value.inner() as u64)
 	}
 }
@@ -536,8 +528,8 @@ mod tests {
 	#[test]
 	fn all_ints() {
 		let mut f = 1_u64;
-		while f < (TimeFull::MAX.0 as u64) {
-			let t = TimeFull::from(f);
+		while f < (UptimeFull::MAX.0 as u64) {
+			let t = UptimeFull::from(f);
 			println!("t: {t}, f: {f}");
 			assert_eq!(t, f as u32);
 			f *= 10;
@@ -546,20 +538,20 @@ mod tests {
 
 	#[test]
 	fn over() {
-		assert_ne!(TimeFull::from(u32::MAX),            TimeFull::unknown());
-		assert_eq!(TimeFull::from(u32::MAX as u64 + 1), TimeFull::unknown());
-		assert_eq!(TimeFull::from(u64::MAX),            TimeFull::unknown());
-		assert_eq!(TimeFull::from(f64::MAX),            TimeFull::unknown());
-		assert_eq!(TimeFull::from(f32::MAX),            TimeFull::unknown());
+		assert_ne!(UptimeFull::from(u32::MAX),            UptimeFull::unknown());
+		assert_eq!(UptimeFull::from(u32::MAX as u64 + 1), UptimeFull::unknown());
+		assert_eq!(UptimeFull::from(u64::MAX),            UptimeFull::unknown());
+		assert_eq!(UptimeFull::from(f64::MAX),            UptimeFull::unknown());
+		assert_eq!(UptimeFull::from(f32::MAX),            UptimeFull::unknown());
 	}
 
 	#[test]
 	fn special() {
-		assert_eq!(TimeFull::from(f32::NAN),          TimeFull::unknown());
-		assert_eq!(TimeFull::from(f32::INFINITY),     TimeFull::unknown());
-		assert_eq!(TimeFull::from(f32::NEG_INFINITY), TimeFull::unknown());
-		assert_eq!(TimeFull::from(f64::NAN),          TimeFull::unknown());
-		assert_eq!(TimeFull::from(f64::INFINITY),     TimeFull::unknown());
-		assert_eq!(TimeFull::from(f64::NEG_INFINITY), TimeFull::unknown());
+		assert_eq!(UptimeFull::from(f32::NAN),          UptimeFull::unknown());
+		assert_eq!(UptimeFull::from(f32::INFINITY),     UptimeFull::unknown());
+		assert_eq!(UptimeFull::from(f32::NEG_INFINITY), UptimeFull::unknown());
+		assert_eq!(UptimeFull::from(f64::NAN),          UptimeFull::unknown());
+		assert_eq!(UptimeFull::from(f64::INFINITY),     UptimeFull::unknown());
+		assert_eq!(UptimeFull::from(f64::NEG_INFINITY), UptimeFull::unknown());
 	}
 }

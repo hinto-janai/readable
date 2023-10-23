@@ -1,12 +1,12 @@
 //---------------------------------------------------------------------------------------------------- Use
-use crate::time::{
-	Time,
-	TimeFull,
+use crate::up::{
+	Uptime,
+	UptimeFull,
 	Htop,
-	TimeUnit,
 };
+use crate::time::TimeUnit;
 
-//---------------------------------------------------------------------------------------------------- Uptime Trait
+//---------------------------------------------------------------------------------------------------- SysUptime Trait
 /// System uptime
 ///
 /// This trait represents structures that are viable containers for holding and
@@ -16,46 +16,32 @@ use crate::time::{
 /// they have a relatively low upper limit of `99` hours.
 ///
 /// This trait is sealed and can only be implemented internally on `readable` types.
-pub trait Uptime: private::Sealed {
+pub trait SysUptime: private::Sealed {
 	/// This function creates a `Self` from the live system uptime and can be used on:
 	/// - Windows
 	/// - macOS
 	/// - BSDs
 	/// - Linux
 	///
-	/// If the underlying call fails (unlikely) this function will return an `unknown` variant.
-	///
 	/// ## Example
 	/// ```rust
-	/// # use readable::time::*;
+	/// # use readable::*;
 	/// // Introduce trait into scope.
-	/// use readable::Uptime;
+	/// use readable::SysUptime;
 	///
 	/// // Capture the _current_ system uptime,
-	/// // and format it into a `Time`.
+	/// // and format it into a `Uptime`.
 	/// std::thread::sleep(std::time::Duration::from_secs(1));
-	/// let mut time: Time = Time::uptime();
+	/// let mut uptime: Uptime = Uptime::sys_uptime();
 	/// # // Get around CI.
-	/// # let time = 1;
-	/// assert!(time >= 1);
+	/// # let uptime = 1;
+	/// assert!(uptime >= 1);
 	/// ```
-	fn uptime() -> Self;
-
-	/// This takes an existing instance of `Self` and mutates
-	/// it if the current system uptime is different than the `self` value.
-	///
-	/// E.g:
-	/// 1. `Self::uptime()` is called
-	/// 2. A few seconds passes
-	/// 3. `Self::uptime_mut()` is called
-	/// 4. The above will mutate `self` to reflect the new uptime
-	///
-	/// This returns the input `&mut self` for method chaining.
-	fn uptime_mut(&mut self) -> &mut Self;
+	fn sys_uptime() -> Self;
 }
 
 
-//---------------------------------------------------------------------------------------------------- Uptime Function
+//---------------------------------------------------------------------------------------------------- SysUptime Function
 #[inline]
 /// Get the current system uptime in seconds
 ///
@@ -115,7 +101,7 @@ pub fn uptime() -> u32 {
 		// Get time, ignore return error.
 		unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, ptr) };
 
-		// Time is set if no error, else
+		// Uptime is set if no error, else
 		// our default `0` is returned.
 		return timespec.tv_sec as u32;
 	}
@@ -123,13 +109,13 @@ pub fn uptime() -> u32 {
 	0
 }
 
-//---------------------------------------------------------------------------------------------------- Uptime Impl
+//---------------------------------------------------------------------------------------------------- SysUptime Impl
 mod private {
 	use super::*;
 
 	pub trait Sealed {}
-	impl Sealed for Time {}
-	impl Sealed for TimeFull {}
+	impl Sealed for Uptime {}
+	impl Sealed for UptimeFull {}
 	impl Sealed for Htop {}
 	impl Sealed for TimeUnit {}
 }
@@ -137,20 +123,13 @@ mod private {
 macro_rules! impl_uptime {
 	($($time:ty),*) => {
 		$(
-			impl Uptime for $time {
+			impl SysUptime for $time {
 				#[inline]
-				fn uptime() -> Self {
+				fn sys_uptime() -> Self {
 					Self::from(uptime())
-				}
-				fn uptime_mut(&mut self) -> &mut Self {
-					let inner = uptime();
-					if inner != self.inner() {
-						*self = Self::from(inner);
-					}
-					self
 				}
 			}
 		)*
 	};
 }
-impl_uptime!(Time, TimeFull, Htop, TimeUnit);
+impl_uptime!(Uptime, UptimeFull, Htop, TimeUnit);

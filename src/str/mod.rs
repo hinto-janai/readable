@@ -1,3 +1,5 @@
+//! General string utilities
+
 mod str;
 pub use str::Str;
 

@@ -3,7 +3,7 @@ use crate::str::Str;
 use crate::run::{Runtime,RuntimeMilli,RuntimeUnion};
 use crate::macros::{
 	impl_common,impl_const,
-	impl_traits,return_bad_float,
+	impl_traits,
 	impl_usize,impl_math,impl_impl_math,
 };
 
@@ -344,7 +344,7 @@ mod tests {
 	#[test]
 	fn _format_hms() {
 		fn s(b: &[u8]) -> &str {
-			std::str::from_utf8(&b).unwrap()
+			std::str::from_utf8(b).unwrap()
 		}
 
 		let mut buf = [0; RuntimePad::MAX_LEN];

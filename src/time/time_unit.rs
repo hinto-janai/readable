@@ -1,12 +1,10 @@
 //---------------------------------------------------------------------------------------------------- Use
-use crate::time::{Time,Htop,TimeFull,Uptime};
-use crate::str::Str;
+use crate::up::{Uptime,Htop,UptimeFull};
+use crate::time::{Time,Military};
 use crate::macros::{
-	return_bad_float,impl_common,
-	impl_const,impl_impl_math,impl_math,
-	impl_usize,impl_traits,
+	return_bad_float,impl_impl_math,impl_math,
 };
-use crate::itoa;
+use crate::Unsigned;
 
 //---------------------------------------------------------------------------------------------------- Use
 /// Unit of time
@@ -65,8 +63,8 @@ use crate::itoa;
 ///
 /// ```rust
 /// # use readable::*;
-/// // Time
-/// let time = Time::from(86461);
+/// // Uptime
+/// let time = Uptime::from(86461);
 /// assert_eq!(time, "1d, 1m, 1s");
 ///
 /// // TimeUnit
@@ -81,14 +79,14 @@ use crate::itoa;
 /// assert_eq!(unit.seconds(), 1);
 ///
 /// // Maintain the `unknown` variant.
-/// let time: Time     = Time::unknown();
+/// let time: Uptime     = Uptime::unknown();
 /// let unit: TimeUnit = TimeUnit::from(time);
 /// assert!(unit.is_unknown());
-/// let time: Time = Time::from(unit);
+/// let time: Uptime = Uptime::from(unit);
 /// assert!(time.is_unknown());
 /// ```
 ///
-/// ## Naive Time
+/// ## Naive time
 /// Like the othear `readable::time` types, [`TimeUnit`] naively assumes that:
 /// 1. Each day is `86400` seconds
 /// 2. Each month is `31` days
@@ -585,7 +583,7 @@ impl TimeUnit {
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(TimeUnit::UNKNOWN.is_unknown());
-	/// assert!(TimeUnit::from(Time::UNKNOWN).is_unknown());
+	/// assert!(TimeUnit::from(Uptime::UNKNOWN).is_unknown());
 	/// assert!(TimeUnit::from(f32::NAN).is_unknown());
 	/// assert!(TimeUnit::from(-1).is_unknown());
 	/// ```
@@ -814,7 +812,7 @@ macro_rules! impl_f {
 impl_f!(f32);
 impl_f!(f64);
 
-//---------------------------------------------------------------------------------------------------- Other Time Impl.
+//---------------------------------------------------------------------------------------------------- Other Uptime Impl.
 macro_rules! impl_from_time {
 	($this:ty => $($other:ty),* $(,)?) => { $(
 		impl From<$other> for $this {
@@ -823,7 +821,7 @@ macro_rules! impl_from_time {
 				if from.is_unknown() {
 					Self::unknown()
 				} else {
-					Self::new(from.0)
+					Self::new(from.inner() as u32)
 				}
 			}
 		}
@@ -833,13 +831,13 @@ macro_rules! impl_from_time {
 				if from.is_unknown() {
 					Self::unknown()
 				} else {
-					Self::new(from.0)
+					Self::new(from.inner() as u32)
 				}
 			}
 		}
 	)*}
 }
-impl_from_time!(TimeUnit => TimeFull, Htop, Time);
+impl_from_time!(TimeUnit => UptimeFull, Htop, Uptime, Time, Military, Unsigned);
 
 //---------------------------------------------------------------------------------------------------- Trait Impl
 impl From<std::time::Duration> for TimeUnit {

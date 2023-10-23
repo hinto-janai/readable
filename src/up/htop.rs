@@ -1,11 +1,12 @@
 //---------------------------------------------------------------------------------------------------- Use
-use crate::time::{Time,TimeFull,TimeUnit};
+use crate::up::{Uptime,UptimeFull};
+use crate::time::TimeUnit;
 use crate::run::RuntimePad;
 use crate::str::Str;
 use crate::macros::{
 	return_bad_float,impl_common,
 	impl_const,impl_impl_math,impl_math,
-	impl_usize,impl_traits,
+	impl_usize,impl_traits,handle_over_u32,
 };
 use crate::itoa;
 
@@ -282,22 +283,11 @@ impl Htop {
 		let runtime = RuntimePad::from(secs % 86400);
 		string.push_str_unchecked(runtime);
 
-		println!("{string}");
-
 		Self(secs, string)
 	}
 }
 
-//---------------------------------------------------------------------------------------------------- "u*" impl
-macro_rules! handle_over_u32 {
-	($value:expr, $type:ty) => {
-		if $value > (u32::MAX as $type) {
-			return Self::unknown();
-		}
-	};
-}
-
-//---------------------------------------------------------------------------------------------------- Other Time Impl.
+//---------------------------------------------------------------------------------------------------- Other Uptime Impl.
 macro_rules! impl_from_time {
 	($this:ty => $($other:ty),* $(,)?) => { $(
 		impl From<$other> for $this {
@@ -322,7 +312,7 @@ macro_rules! impl_from_time {
 		}
 	)*}
 }
-impl_from_time!(Htop => Time, TimeFull, TimeUnit);
+impl_from_time!(Htop => Uptime, UptimeFull, TimeUnit);
 
 //---------------------------------------------------------------------------------------------------- "u*" impl
 // Implementation Macro.

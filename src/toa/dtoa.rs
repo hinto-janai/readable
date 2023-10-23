@@ -615,7 +615,7 @@ impl Dtoa {
         if num.is_nonfinite() {
 			let mut bytes = [MaybeUninit::<u8>::uninit(); 25];
             let string = num.format_nonfinite();
-			for (i, byte) in string.as_bytes().into_iter().enumerate() {
+			for (i, byte) in string.as_bytes().iter().enumerate() {
 				bytes[i].write(*byte);
 			}
 			Self {
@@ -658,7 +658,7 @@ impl Dtoa {
 
 		let mut bytes = [MaybeUninit::<u8>::uninit(); 25];
 
-		for (i, byte) in string.as_bytes().into_iter().enumerate() {
+		for (i, byte) in string.as_bytes().iter().enumerate() {
 			bytes[i].write(*byte);
 		}
 

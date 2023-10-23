@@ -1,64 +1,44 @@
 //---------------------------------------------------------------------------------------------------- Ok
 #[inline(always)]
 /// If `year` is in-between `1000..=9999`
-///
-/// ```rust
-/// # use readable::date::*;
-/// assert!(ok_year(1000));
-/// assert!(ok_year(9999));
-/// assert!(!ok_year(999));
-/// assert!(!ok_year(10000));
-/// ```
-pub const fn ok_year(year: u16) -> bool {
+pub(crate) const fn ok_year(year: u16) -> bool {
 	year >= 1000 && year <= 9999
 }
 
 #[inline(always)]
 /// If `month` is in-between `1..=12`
-///
-/// ```rust
-/// # use readable::date::*;
-/// assert!(ok_month(1));
-/// assert!(ok_month(12));
-/// assert!(!ok_month(0));
-/// assert!(!ok_month(13));
-/// ```
-pub const fn ok_month(month: u8) -> bool {
+pub(crate) const fn ok_month(month: u8) -> bool {
 	month >= 1 && month <= 12
 }
 
 #[inline(always)]
 /// If `day` is in-between `1..=31`
-///
-/// ```rust
-/// # use readable::date::*;
-/// assert!(ok_day(1));
-/// assert!(ok_day(31));
-/// assert!(!ok_day(0));
-/// assert!(!ok_day(32));
-/// ```
-pub const fn ok_day(day: u8) -> bool {
+pub(crate) const fn ok_day(day: u8) -> bool {
 	day >= 1 && day <= 31
 }
 
 #[inline(always)]
 /// If `ok_year`, `ok_month`, and `ok_day` are all okay
-///
-/// This returns `true` if:
-/// - `year` is in-between `1000..=9999`
-/// - `month` is in-between `1..=12`
-/// - `day` is in-between `1..=31`
-///
-/// else if returns `false`.
-///
-/// ```rust
-/// # use readable::date::*;
-/// assert!(ok(2020, 12, 31));
-/// assert!(ok(1000, 1, 1));
-/// assert!(!ok(0, 0, 0));
-/// assert!(!ok(0, 12, 31));
-/// ```
-pub const fn ok(year: u16, month: u8, day: u8) -> bool {
+pub(crate) const fn ok(year: u16, month: u8, day: u8) -> bool {
 	ok_year(year) && ok_month(month) && ok_day(day)
 }
 
+//---------------------------------------------------------------------------------------------------- Date
+#[inline]
+/// Get the current system date in the system's timezone.
+///
+/// The returned value is `(year, month, day)`.
+pub fn date() -> (i16, u8, u8) {
+	use chrono::Datelike;
+	let now = chrono::offset::Local::now().date_naive();
+	(now.year() as i16, now.month() as u8, now.day() as u8)
+}
+
+#[inline]
+/// Get the current system date in UTC locale
+///
+/// The returned value is `(year, month, day)`.
+pub fn date_utc() -> (i16, u8, u8) {
+	let unix = chrono::offset::Local::now().timestamp() as i128;
+	nichi::Date::from_unix(unix).inner()
+}

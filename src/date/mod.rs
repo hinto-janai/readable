@@ -1,4 +1,4 @@
-//! Human-readable date formatting
+//! Date formatting
 //!
 //! This module includes various [`Date`] types meant for calendar day formatting:
 //! ```rust

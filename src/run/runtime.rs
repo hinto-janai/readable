@@ -3,8 +3,8 @@ use crate::str::Str;
 use crate::run::{RuntimePad,RuntimeMilli,RuntimeUnion};
 use crate::macros::{
 	impl_common,impl_const,
-	impl_traits,return_bad_float,
-	impl_usize,impl_math,impl_impl_math,
+	impl_traits,impl_usize,impl_math,
+	impl_impl_math,
 };
 
 //---------------------------------------------------------------------------------------------------- Runtime

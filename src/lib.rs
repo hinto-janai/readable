@@ -44,14 +44,11 @@
 //---------------------------------------------------------------------------------------------------- Hidden imports
 pub(crate) mod macros;
 
-/// General string utilities
 pub mod str;
 pub use str::{
 	Str,HeadTail,
 };
 
-
-/// Human-readable number formatting
 pub mod num;
 pub use num::{
 	Unsigned,Int,Float,Percent,
@@ -63,9 +60,14 @@ pub use run::{
 	Runtime,RuntimePad,RuntimeMilli,RuntimeUnion,
 };
 
+pub mod up;
+pub use up::{
+	Uptime,UptimeFull,Htop,SysUptime,
+};
+
 pub mod time;
 pub use time::{
-	Time,TimeFull,Uptime,Htop,TimeUnit,
+	SysTime,Time,TimeUnit,Military,
 };
 
 pub mod date;

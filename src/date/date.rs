@@ -1,5 +1,5 @@
 //---------------------------------------------------------------------------------------------------- Use
-use compact_str::format_compact;
+
 use regex::Regex;
 use once_cell::sync::Lazy;
 use crate::str::Str;
@@ -502,6 +502,78 @@ impl Date {
 	}
 
 	#[inline]
+	/// Create a [`Self`] from a UNIX timestamp
+	///
+	/// This creates a [`Self`] by taking UNIX timestamp as input.
+	///
+	/// (Seconds after `January 1st, 1970 UTC`).
+	//
+	/// ```rust
+	/// # use readable::*;
+	/// let date = Date::from_unix(1698019200).unwrap();
+	/// assert_eq!(date, "2023-10-23");
+	/// assert_eq!(date, (2023, 10, 23));
+	/// ```
+	///
+	/// ## Errors
+	/// This returns a [`Self::UNKNOWN`] wrapped in an [`Err`] if the given
+	/// `unix_timestamp` is a date with a year larger than `9999` or less than `1000`.
+	///
+	/// ```rust,should_panic
+	/// # use readable::*;
+	/// // Would be `12732-1-28`.
+	/// Date::from_unix(339618217000).unwrap();
+	/// ```
+	pub fn from_unix(unix_timestamp: u64) -> Result<Self, Self> {
+		let nichi = nichi::Date::from_unix(unix_timestamp as i128);
+		let year = nichi.year().inner() as u16;
+		if !ok_year(year) {
+			Err(Self::unknown())
+		} else {
+			Ok(Self::priv_ymd_num(
+				year,
+				nichi.month().inner(),
+				nichi.day().inner(),
+			))
+		}
+	}
+
+	#[inline]
+	/// Same as [`Self::from_unix`] but silently returns a [`Self::UNKNOWN`]
+	/// on error that isn't wrapped in a [`Result::Err`].
+	pub fn from_unix_silent(unix_timestamp: u64) -> Self {
+		match Self::from_unix(unix_timestamp) {
+			Ok(s) => s,
+			Err(s) => s,
+		}
+	}
+
+	#[inline]
+	/// Get the corresponding UNIX timestamp of [`Self`]
+	///
+	/// If either the `month` or `day` is missing from
+	/// this [`Date`], the 1st `month/day` will be chosen, e.g:
+	/// - `2023` would equal to `2023-01-01` (January 1st, 2023)
+	/// - `2023-04` would equal to `2023-04-01` (April 1st, 2023)
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let date = Date::from_ymd(2023, 10, 23).unwrap();
+	/// assert_eq!(date.as_unix(), 1698019200);
+	///
+	/// // Missing month and day, we will
+	/// // use the first second of the year
+	/// let date = Date::from_y(2023).unwrap();
+	/// assert_eq!(date.as_unix(), 1672531200);
+	/// ```
+	pub const fn as_unix(&self) -> u64 {
+		let (y,m,d) = self.inner();
+		let m = if m == 0 { 1 } else { m };
+		let d = if d == 0 { 1 } else { d };
+		nichi::Date::new(y as i16, m, d).as_unix() as u64
+	}
+
+	#[inline]
 	/// ```rust
 	/// # use readable::*;
 	/// let date = Date::from_ymd(2012, 10, 25).unwrap();
@@ -606,7 +678,7 @@ impl Date {
 	}
 
 	#[inline]
-	/// Same as [`Date::from_str`] but silently returns an [`Self::UNKNOWN`]
+	/// Same as [`Date::from_str`] but silently returns a [`Self::UNKNOWN`]
 	/// on error that isn't wrapped in a [`Result::Err`].
 	pub fn from_str_silent(string: &str) -> Self {
 		match Self::priv_from_str(string) {
@@ -1152,6 +1224,7 @@ impl From<crate::NichiFull> for Date {
 mod tests {
 	use super::*;
 	use std::cmp::Ordering;
+	use compact_str::format_compact;
 
 	//-------------------------------------------------------------------------------- Date tests.
 	const EXPECTED: (u16, u8, u8) = (2020, 12, 25);

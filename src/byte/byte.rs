@@ -1,12 +1,10 @@
-//! Human-readable byte formatting
-
 //---------------------------------------------------------------------------------------------------- Use
 use std::num::{
 	NonZeroU8,NonZeroU16,NonZeroU32,NonZeroU64,
 	NonZeroI8,NonZeroI16,NonZeroI32,NonZeroI64,
 	NonZeroUsize,NonZeroIsize,
 };
-use crate::itoa;
+
 use crate::str::Str;
 use crate::macros::{
 	impl_traits,impl_impl_math,impl_usize,
@@ -402,15 +400,15 @@ impl Byte {
 			let mut itoa = crate::ItoaTmp::new();
 			let itoa = itoa.format(fract).as_bytes();
 			if fract < 10 {
-				b[idx + 0] = Z;
+				b[idx    ] = Z;
 				b[idx + 1] = Z;
 				b[idx + 2] = itoa[0];
 			} else if fract < 100 {
-				b[idx + 0] = Z;
+				b[idx    ] = Z;
 				b[idx + 1] = itoa[0];
 				b[idx + 2] = itoa[1];
 			} else {
-				b[idx + 0] = itoa[0];
+				b[idx    ] = itoa[0];
 				b[idx + 1] = itoa[1];
 				b[idx + 2] = itoa[2];
 			}

@@ -380,3 +380,13 @@ macro_rules! str_i64 {
 	}}
 }
 pub(crate) use str_i64;
+
+//---------------------------------------------------------------------------------------------------- `u64/i64` -> `str`
+macro_rules! handle_over_u32 {
+	($value:expr, $type:ty) => {
+		if $value > (u32::MAX as $type) {
+			return Self::unknown();
+		}
+	};
+}
+pub(crate) use handle_over_u32;
