@@ -23,7 +23,7 @@ default = ["serde", "bincode"]
 #inline_percent = ["readable-inlined-percent"]
 
 [dependencies]
-paste = "1.0.14"
+paste = { version = "1.0.14" }
 
 # (De)serialization
 serde       = { version = "1.0.189", features = ["derive"], optional = true }
@@ -37,7 +37,7 @@ seq-macro   = { version = "0.3.5" }
 regex       = { version = "1.10.2" }
 once_cell   = { version = "1.18.0" }
 nichi       = { version = "0.4.0" }
-chrono = "0.4.31"
+chrono      = { version = "0.4.31" }
 
 # Uptime
 [target.'cfg(not(windows))'.dependencies]
