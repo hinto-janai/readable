@@ -1026,6 +1026,33 @@ impl<const N: usize> Str<N> {
 			unsafe { self.set_len(new_len); }
 		}
 	}
+
+	#[inline]
+	/// Removes the last character from the [`Str`] and returns it.
+	///
+	/// Returns `None` if this [`Str`] is empty.
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let mut s = Str::<3>::from_static_str("foo");
+	///
+	/// assert_eq!(s.len(), 3);
+	/// assert_eq!(s.pop(), Some('o'));
+	/// assert_eq!(s.len(), 2);
+	/// assert_eq!(s.pop(), Some('o'));
+	/// assert_eq!(s.len(), 1);
+	/// assert_eq!(s.pop(), Some('f'));
+	/// assert_eq!(s.len(), 0);
+	/// assert_eq!(s.pop(), None);
+	/// ```
+	pub fn pop(&mut self) -> Option<char> {
+		let ch = self.as_str().chars().rev().next()?;
+		let newlen = self.len() - ch.len_utf8();
+
+		// SAFETY: setting length.
+		unsafe { self.set_len(newlen); }
+		Some(ch)
+	}
 }
 
 //---------------------------------------------------------------------------------------------------- From
