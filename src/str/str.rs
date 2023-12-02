@@ -857,7 +857,7 @@ impl<const N: usize> Str<N> {
 		let remaining = self.remaining();
 
 		if s_len > remaining {
-			panic!("no more space - remaining: {remaining}, input length: {s_len}");
+			panic!("no more space - remaining: {remaining}, input length: {s_len}, capacity: {N}");
 		}
 
 		let self_len = self.len();
@@ -1187,6 +1187,61 @@ impl<const N: usize> std::default::Default for Str<N> {
 	/// Calls [`Self::new`]
 	fn default() -> Self {
 		Self::new()
+	}
+}
+
+impl<const N: usize, T: AsRef<str>> std::ops::Add<T> for Str<N> {
+	type Output = Str<N>;
+
+	/// Implements the `+` operator.
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let mut s = Str::<6>::from_static_str("foo");
+	///
+	/// assert_eq!(s + "bar", "foobar");
+	/// ```
+	///
+	/// ## Panics
+	/// This calls [`Str::push_str_unchecked`] and will panic in the same ways.
+	///
+	/// ```rust,should_panic
+	/// # use readable::*;
+	/// let mut s = Str::<3>::from_static_str("foo");
+	///
+	/// // This will panic, not enough capacity!
+	/// let _ = s + "bar";
+	/// ```
+	fn add(self, s: T) -> Self::Output {
+		let mut new = self.clone();
+		new.push_str_unchecked(s.as_ref());
+		new
+	}
+}
+
+impl<const N: usize, T: AsRef<str>> std::ops::AddAssign<T> for Str<N> {
+	/// Implements the `+=` operator.
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let mut s = Str::<6>::from_static_str("foo");
+	/// s += "bar";
+	///
+	/// assert_eq!(s, "foobar");
+	/// ```
+	///
+	/// ## Panics
+	/// This calls [`Str::push_str_unchecked`] and will panic in the same ways.
+	///
+	/// ```rust,should_panic
+	/// # use readable::*;
+	/// let mut s = Str::<3>::from_static_str("foo");
+	///
+	/// // This will panic, not enough capacity!
+	/// s += "bar";
+	/// ```
+	fn add_assign(&mut self, s: T) {
+		self.push_str_unchecked(s.as_ref());
 	}
 }
 
