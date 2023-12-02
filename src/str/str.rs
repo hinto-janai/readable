@@ -1168,6 +1168,24 @@ impl<const N: usize> std::fmt::Display for Str<N> {
 	}
 }
 
+impl<const N: usize> std::ops::Deref for Str<N> {
+	type Target = str;
+
+	#[inline]
+	/// Equivalent to [`Str::as_str()`].
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// use std::ops::Deref;
+	/// let mut s = Str::<3>::from_static_str("foo");
+	///
+	/// assert_eq!(s.deref(), "foo");
+	/// ```
+	fn deref(&self) -> &Self::Target {
+		self.as_str()
+	}
+}
+
 impl<const N: usize> std::convert::AsRef<str> for Str<N> {
 	#[inline]
 	fn as_ref(&self) -> &str {
@@ -1193,6 +1211,7 @@ impl<const N: usize> std::default::Default for Str<N> {
 impl<const N: usize, T: AsRef<str>> std::ops::Add<T> for Str<N> {
 	type Output = Str<N>;
 
+	#[inline]
 	/// Implements the `+` operator.
 	///
 	/// ```rust
@@ -1220,6 +1239,7 @@ impl<const N: usize, T: AsRef<str>> std::ops::Add<T> for Str<N> {
 }
 
 impl<const N: usize, T: AsRef<str>> std::ops::AddAssign<T> for Str<N> {
+	#[inline]
 	/// Implements the `+=` operator.
 	///
 	/// ```rust
@@ -1242,6 +1262,36 @@ impl<const N: usize, T: AsRef<str>> std::ops::AddAssign<T> for Str<N> {
 	/// ```
 	fn add_assign(&mut self, s: T) {
 		self.push_str_unchecked(s.as_ref());
+	}
+}
+
+impl<const N: usize> AsRef<[u8]> for Str<N> {
+	#[inline]
+	/// Calls [`Str::as_bytes()`], only including valid `UTF-8` bytes.
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// // 6 in capacity, but only 3 in length.
+	/// let mut s = Str::<6>::from_static_str("foo");
+	///
+	/// assert_eq!(AsRef::<[u8]>::as_ref(&s), "foo".as_bytes());
+	/// ```
+	fn as_ref(&self) -> &[u8] {
+		self.as_bytes()
+	}
+}
+
+impl<const N: usize> AsRef<std::path::Path> for Str<N> {
+	#[inline]
+	fn as_ref(&self) -> &std::path::Path {
+		std::path::Path::new(self.as_str())
+	}
+}
+
+impl<const N: usize> AsRef<std::ffi::OsStr> for Str<N> {
+	#[inline]
+	fn as_ref(&self) -> &std::ffi::OsStr {
+		std::ffi::OsStr::new(self.as_str())
 	}
 }
 
