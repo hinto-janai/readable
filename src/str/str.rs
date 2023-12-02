@@ -1028,6 +1028,40 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	/// Removes a [`char`] from this [`Str`] at a byte position and returns it.
+	///
+	/// This is an _O(n)_ operation, as it requires copying every element in the buffer.
+	///
+	/// ```
+	/// # use readable::*;
+	/// let mut s = Str::<3>::from_static_str("foo");
+	///
+	/// assert_eq!(s.remove(0), 'f');
+	/// assert_eq!(s.remove(1), 'o');
+	/// assert_eq!(s.remove(0), 'o');
+	/// ```
+	///
+	/// ## Panics
+	/// Panics if `idx` is larger than or equal to the [`Str`]’s length,
+	/// or if it does not lie on a [`char`] boundary.
+	pub fn remove(&mut self, idx: usize) -> char {
+		// https://doc.rust-lang.org/1.74.0/src/alloc/string.rs.html#1298
+
+		let ch = match self.as_str()[idx..].chars().next() {
+			Some(ch) => ch,
+			None => panic!("cannot remove a char from the end of a string"),
+		};
+
+		let next = idx + ch.len_utf8();
+		let len = self.len();
+		unsafe {
+			std::ptr::copy(self.as_ptr().add(next), self.as_mut_ptr().add(idx), len - next);
+			self.set_len(len - (next - idx));
+		}
+		ch
+	}
+
+	#[inline]
 	/// Removes the last character from the [`Str`] and returns it.
 	///
 	/// Returns `None` if this [`Str`] is empty.
@@ -1046,6 +1080,8 @@ impl<const N: usize> Str<N> {
 	/// assert_eq!(s.pop(), None);
 	/// ```
 	pub fn pop(&mut self) -> Option<char> {
+		// https://doc.rust-lang.org/1.74.0/src/alloc/string.rs.html#1268
+
 		let ch = self.as_str().chars().rev().next()?;
 		let newlen = self.len() - ch.len_utf8();
 
