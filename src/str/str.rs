@@ -418,9 +418,49 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	/// [`Self::as_bytes()`], but returns mutable bytes
+	///
+	/// ## Safety
+	/// The length must be set correctly if mutated.
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut s = Str::<10>::from_static_str("hello");
+	/// assert_eq!(s.as_bytes().len(), 5);
+	///
+	/// unsafe {
+	///
+	///     // Length not set yet.
+	///     s.as_bytes_mut().copy_from_slice(&[0; 5]);
+	///     assert_eq!(s.as_bytes_mut().len(), 5);
+	///
+	///     // Set.
+	///     s.set_len(0);
+	/// }
+	///
+	/// assert_eq!(s.as_str(),         "");
+	/// assert_eq!(s.as_bytes().len(), 0);
+	/// ```
+	pub fn as_bytes_mut(&mut self) -> &mut [u8] {
+		// SAFETY, we trust `.len()`.
+		unsafe {
+			std::slice::from_raw_parts_mut(
+				self.as_mut_ptr(),
+				self.len(),
+			)
+		}
+	}
+
+	#[inline]
 	/// Returns a pointer to the first byte in the string array.
 	pub const fn as_ptr(&self) -> *const u8 {
 		self.buf.as_ptr()
+	}
+
+	#[inline]
+	/// Returns a mutable pointer to the first byte in the string array.
+	pub fn as_mut_ptr(&mut self) -> *mut u8 {
+		self.buf.as_mut_ptr()
 	}
 
 	#[inline]
@@ -571,6 +611,29 @@ impl<const N: usize> Str<N> {
 		unsafe { std::str::from_utf8_unchecked(self.as_bytes()) }
 	}
 
+	#[inline]
+	/// This [`Str`], as a valid, mutable, UTF-8 [`str`].
+	///
+	/// ## Safety
+	/// The length must be set correctly if mutated.
+	///
+	/// ``` rust
+	/// # use readable::Str;
+	/// let mut s = Str::<5>::from_static_str("hello");
+	/// assert_eq!(s.as_str(), "hello");
+	///
+	/// unsafe {
+	///     s.as_str_mut().make_ascii_uppercase();
+	/// }
+	///
+	/// assert_eq!(s.as_str(), "HELLO");
+	/// ```
+	pub unsafe fn as_str_mut(&mut self) -> &mut str {
+		// SAFETY: `.as_valid_slice()` must be correctly implemented.
+		// The internal state must be correct.
+		unsafe { std::str::from_utf8_unchecked_mut(self.as_bytes_mut()) }
+	}
+
 	/// Consumes `self` into a [`String`]
 	///
 	/// ``` rust
@@ -608,6 +671,9 @@ impl<const N: usize> Str<N> {
 	/// // Input string is 2 in length, not exactly 3.
 	/// // `Err(0)` will be returned to indicate this.
 	/// assert_eq!(string.copy_str("ab"), Err(0));
+	///
+	/// // This fits.
+	/// assert_eq!(string.copy_str("abc"), Ok(3));
 	/// ```
 	pub fn copy_str(&mut self, s: impl AsRef<str>) -> Result<usize, usize> {
 		let s       = s.as_ref();
@@ -623,7 +689,7 @@ impl<const N: usize> Str<N> {
 		// SAFETY: We are directly mutating the bytes and length.
 		// We know the correct values.
 		unsafe {
-			self.as_bytes_all_mut().copy_from_slice(&s_bytes[..s_len]);
+			self.as_bytes_all_mut().copy_from_slice(&s_bytes);
 			self.set_len(s_len);
 		}
 
@@ -680,7 +746,7 @@ impl<const N: usize> Str<N> {
 		// SAFETY: We are directly mutating the bytes and length.
 		// We know the correct values.
 		unsafe {
-			self.as_bytes_all_mut().copy_from_slice(&s_bytes[..s_len]);
+			self.as_bytes_all_mut().copy_from_slice(&s_bytes);
 			self.set_len(s_len);
 		}
 
