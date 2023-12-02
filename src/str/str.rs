@@ -963,6 +963,36 @@ impl<const N: usize> Str<N> {
 			buf,
 		}
 	}
+
+	#[inline]
+	/// Calls [`std::str::make_ascii_uppercase`].
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let mut s = Str::<5>::from_static_str("hello");
+	///
+	/// s.make_ascii_uppercase();
+	/// assert_eq!(s, "HELLO");
+	/// ```
+	pub fn make_ascii_uppercase(&mut self) {
+		// SAFETY: we aren't changing the length, safe to call.
+		unsafe { self.as_str_mut().make_ascii_uppercase(); }
+	}
+
+	#[inline]
+	/// Calls [`std::str::make_ascii_lowercase`].
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let mut s = Str::<5>::from_static_str("HELLO");
+	///
+	/// s.make_ascii_lowercase();
+	/// assert_eq!(s, "hello");
+	/// ```
+	pub fn make_ascii_lowercase(&mut self) {
+		// SAFETY: we aren't changing the length, safe to call.
+		unsafe { self.as_str_mut().make_ascii_lowercase(); }
+	}
 }
 
 //---------------------------------------------------------------------------------------------------- From
