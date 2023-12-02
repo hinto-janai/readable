@@ -993,6 +993,39 @@ impl<const N: usize> Str<N> {
 		// SAFETY: we aren't changing the length, safe to call.
 		unsafe { self.as_str_mut().make_ascii_lowercase(); }
 	}
+
+	#[inline]
+	/// Shortens this [`Str`] to the specified length.
+	///
+	/// If new_len is greater than the string’s current length, this has no effect.
+	///
+	/// Note that this method has no effect on the allocated capacity of the string
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let mut s = Str::<4>::from_static_str("asdf");
+	///
+	/// s.truncate(1);
+	/// assert_eq!(s, "a");
+	/// ```
+	///
+	/// ## Panics
+	/// Panics if `new_len` does not lie on a [`char`] boundary.
+	///
+	/// ```rust,should_panic
+	/// # use readable::*;
+	/// let mut s = Str::<6>::from_static_str("です");
+	///
+	/// // This does not lie on a full char, it will panic.
+	/// s.truncate(4);
+	/// ```
+	pub fn truncate(&mut self, new_len: usize) {
+		if new_len <= self.len() {
+			assert!(self.as_str().is_char_boundary(new_len));
+			// SAFETY: bytes are valid.
+			unsafe { self.set_len(new_len); }
+		}
+	}
 }
 
 //---------------------------------------------------------------------------------------------------- From
