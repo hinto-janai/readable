@@ -377,6 +377,31 @@ impl<const N: usize> Str<N> {
 	///
 	/// This will usually be used when manually mutating [`Str`] with [`Str::as_bytes_all_mut()`].
 	///
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut s = Str::<3>::new();
+	/// assert_eq!(s.len(), 0);
+	///
+	/// unsafe { s.set_len_u8(3); } // <- Using the `Str`
+	/// assert_eq!(s.len(), 3);     //    beyond this point
+	///                             //    is a bad idea.
+	///
+	/// // This wouldn't be undefined behavior,
+	/// // but the inner buffer is all zeros.
+	/// assert_eq!(s.as_str(), "\0\0\0");
+	///
+	/// // Overwrite the bytes.
+	/// unsafe {
+	/// 	let mut_ref = s.as_bytes_all_mut();
+	/// 	mut_ref[0] = b'a';
+	/// 	mut_ref[1] = b'b';
+	/// 	mut_ref[2] = b'c';
+	/// }
+	/// // Should be safe from this point.
+	/// assert_eq!(s.as_str(), "abc");
+	/// assert_eq!(s.len(),    3);
+	/// ```
+	///
 	/// ## Safety
 	/// Other functions will rely on the internal length
 	/// to be correct, so the caller must ensure this length
@@ -453,12 +478,37 @@ impl<const N: usize> Str<N> {
 
 	#[inline]
 	/// Returns a pointer to the first byte in the string array.
+	/// ```rust
+	/// # use readable::Str;
+	/// let s = Str::<5>::from_static_str("hello");
+	///
+	/// let ptr = s.as_ptr();
+	/// unsafe {
+	///     // The first byte is the char `h`.
+	///     assert_eq!(*ptr, b'h');
+	/// }
+	/// ```
 	pub const fn as_ptr(&self) -> *const u8 {
 		self.buf.as_ptr()
 	}
 
 	#[inline]
 	/// Returns a mutable pointer to the first byte in the string array.
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut s = Str::<5>::from_static_str("hello");
+	///
+	/// let ptr = s.as_mut_ptr();
+	/// unsafe {
+	///     // The first byte is the char `h`.
+	///     assert_eq!(*ptr, b'h');
+	///     // Let's change it.
+	///     *ptr = b'e';
+	/// }
+	///
+	/// assert_eq!(s, "eello");
+	/// ```
 	pub fn as_mut_ptr(&mut self) -> *mut u8 {
 		self.buf.as_mut_ptr()
 	}
