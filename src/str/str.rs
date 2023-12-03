@@ -1017,6 +1017,132 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	/// [`Str::push_str`], but with a `char`
+	///
+	/// This acts in the same way as [`Str::push_str`], but the input is a single [`char`].
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut string = Str::<3>::new();
+	///
+	/// // Input char is 4 in length.
+	/// // We can't push it.
+	/// let err = string.push_char('🦀');
+	/// assert_eq!(err, Err(1));
+	///
+	/// // The string is still empty.
+	/// assert!(string.is_empty());
+	///
+	/// // This 3 length char will fit.
+	/// assert_eq!(string.push_char('で'), Ok(3));
+	/// assert_eq!(string, "で");
+	/// ```
+	pub fn push_char(&mut self, c: char) -> Result<usize, usize> {
+		if self.remaining() == 0 {
+			return Err(0);
+		}
+
+		match c.len_utf8() {
+			1 => self.push_str(c.encode_utf8(&mut [0; 1])),
+			2 => self.push_str(c.encode_utf8(&mut [0; 2])),
+			3 => self.push_str(c.encode_utf8(&mut [0; 3])),
+			_ => self.push_str(c.encode_utf8(&mut [0; 4])),
+		}
+	}
+
+	#[inline]
+	/// [`Str::push_str_unchecked`], but with a `char`
+	///
+	/// This acts in the same way as [`Str::push_str_unchecked`], but the input is a single [`char`].
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut s = Str::<5>::new();
+	/// assert_eq!(s.push_char_unchecked('す'), 3);
+	/// ```
+	///
+	/// ## Panics
+	/// If the push failed, this function panics.
+	///
+	/// Input `char` is `>` than capacity:
+	/// ```rust,should_panic
+	/// # use readable::Str;
+	/// let mut s = Str::<3>::new();
+	/// s.push_char_unchecked('🦀');
+	/// ```
+	///
+	/// [`Str`] has no more remaining capacity:
+	/// ```rust,should_panic
+	/// # use readable::Str;
+	/// let mut s = Str::<4>::from_static_str("wow");
+	/// assert_eq!(s.len(),       3);
+	/// assert_eq!(s.remaining(), 1);
+	///
+	/// // This won't fit, will panic.
+	/// s.push_char_unchecked('🦀');
+	/// ```
+	pub fn push_char_unchecked(&mut self, c: char) -> usize {
+		match c.len_utf8() {
+			1 => self.push_str_unchecked(c.encode_utf8(&mut [0; 1])),
+			2 => self.push_str_unchecked(c.encode_utf8(&mut [0; 2])),
+			3 => self.push_str_unchecked(c.encode_utf8(&mut [0; 3])),
+			_ => self.push_str_unchecked(c.encode_utf8(&mut [0; 4])),
+		}
+	}
+
+	/// [`Str::push_str_saturating`], but with a `char`
+	///
+	/// This acts in the same way as [`Str::push_str_saturating`], but the input is a single [`char`].
+	///
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut s = Str::<7>::new();
+	///
+	/// // Crab is 4 bytes.
+	/// assert_eq!(4, "🦀".len());
+	///
+	/// // Our capacity is only 7, so we can only fit 1.
+	/// assert_eq!(4, s.push_char_saturating('🦀'));
+	/// assert_eq!(0, s.push_char_saturating('🦀'));
+	/// assert_eq!(s, "🦀");
+	/// assert_eq!(4, s.len());
+	/// assert_eq!(3, s.remaining());
+	/// ```
+	///
+	/// ## Examples
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut s = Str::<3>::new();
+	///
+	/// assert_eq!(1, s.push_char_saturating('w'));
+	/// assert_eq!(1, s.push_char_saturating('o'));
+	/// assert_eq!(1, s.push_char_saturating('w'));
+	/// assert_eq!(s, "wow");
+	///
+	/// // No matter how many times we push now, nothing will be added.
+	/// assert_eq!(0, s.push_char_saturating('!'));
+	/// assert_eq!(s, "wow");
+	/// assert_eq!(0, s.push_char_saturating('へ'));
+	/// assert_eq!(s, "wow");
+	/// assert_eq!(0, s.push_char_saturating('枕'));
+	/// assert_eq!(s, "wow");
+	/// assert_eq!(0, s.push_char_saturating('🦀'));
+	/// assert_eq!(s, "wow");
+	/// ```
+	pub fn push_char_saturating(&mut self, c: char) -> usize {
+		if self.remaining() == 0 {
+			return 0;
+		}
+
+		match c.len_utf8() {
+			1 => self.push_str_saturating(c.encode_utf8(&mut [0; 1])),
+			2 => self.push_str_saturating(c.encode_utf8(&mut [0; 2])),
+			3 => self.push_str_saturating(c.encode_utf8(&mut [0; 3])),
+			_ => self.push_str_saturating(c.encode_utf8(&mut [0; 4])),
+		}
+	}
+
+	#[inline]
 	/// Decomposes a [`Str`] into its raw components
 	///
 	/// Returns the byte array buffer and the valid UTF-8 length of the [`Str`].
