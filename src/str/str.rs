@@ -923,6 +923,100 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	/// Appends `self` with the [`str`] `s`, saturating if there is no [`Self::CAPACITY`] left
+	///
+	/// This function returns a `usize`, representing how many _bytes_ were written.
+	///
+	/// If there is no _byte_ capacity left, this function will return `0`.
+	///
+	/// UTF-8 strings are accounted for, and are split on `char` basis, for example:
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut s = Str::<7>::new();
+	///
+	/// // Crab is 4 bytes.
+	/// assert_eq!(4, "🦀".len());
+	///
+	/// // Our capacity is only 7, so we can only fit 1.
+	/// assert_eq!(4, s.push_str_saturating("🦀"));
+	/// assert_eq!(s, "🦀");
+	/// assert_eq!(4, s.len());
+	/// assert_eq!(3, s.remaining());
+	/// ```
+	///
+	/// ## Examples
+	/// ```rust
+	/// # use readable::Str;
+	/// let mut s = Str::<3>::new();
+	///
+	/// // Only 1 char, 3 bytes can fit.
+	/// assert_eq!(3, s.push_str_saturating("です"));
+	/// assert_eq!(s, "で");
+	/// s.clear();
+	///
+	/// // Only 3 ASCII characters can fit.
+	/// assert_eq!(3, s.push_str_saturating("hello"));
+	/// assert_eq!(s, "hel");
+	/// s.clear();
+	///
+	/// // Here, we push 3 characters with 1 capacity left.
+	/// s.push_str("wo").unwrap();
+	/// assert_eq!(1, s.push_str_saturating("rld"));
+	/// // And only 1 character was pushed.
+	/// assert_eq!(s, "wor");
+	///
+	/// // No matter how many times we push now, nothing will be added.
+	/// assert_eq!(0, s.push_str_saturating("!"));
+	/// assert_eq!(s, "wor");
+	/// assert_eq!(0, s.push_str_saturating("へええ"));
+	/// assert_eq!(s, "wor");
+	/// assert_eq!(0, s.push_str_saturating("枕"));
+	/// assert_eq!(s, "wor");
+	/// assert_eq!(0, s.push_str_saturating("🦀"));
+	/// assert_eq!(s, "wor");
+	/// ```
+	pub fn push_str_saturating(&mut self, s: impl AsRef<str>) -> usize {
+		let s       = s.as_ref();
+		let s_len   = s.len();
+
+		let remaining = self.remaining();
+
+		// If byte length is the same or less, we can just copy.
+		if s_len <= remaining {
+			self.push_str_unchecked(s);
+			return s_len;
+		}
+
+		// Figure out what `char` index we can stop at.
+		let index = if s.is_ascii() {
+			remaining
+		} else {
+			// Handle UTF-8 correctly.
+			// We use `.rev()` because we assume the string
+			// is only slightly longer, so starting linear
+			// search from the end is faster.
+			let mut chars = s.char_indices().rev();
+			let mut index = 0;
+			while let Some((i, _)) = chars.next() {
+				index = i;
+
+				if i <= remaining {
+					break;
+				}
+			}
+			if index == 0 {
+				// We didn't find a good index, push nothing.
+				return 0;
+			} else {
+				index
+			}
+		};
+
+		self.push_str_unchecked(&s[..index]);
+		index
+	}
+
+	#[inline]
 	/// Decomposes a [`Str`] into its raw components
 	///
 	/// Returns the byte array buffer and the valid UTF-8 length of the [`Str`].
