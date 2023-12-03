@@ -1565,6 +1565,40 @@ impl<const N: usize> AsRef<std::ffi::OsStr> for Str<N> {
 	}
 }
 
+impl<const N: usize> Extend<char> for Str<N> {
+	/// Calls [`Str::push_char_panic`] for each `char`.
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let mut s = Str::<3>::new();
+	///
+	/// s.extend(['a', 'b', 'c']);
+	/// assert_eq!(s, "abc");
+	/// ```
+	fn extend<T: IntoIterator<Item = char>>(&mut self, iter: T) {
+		iter
+			.into_iter()
+			.for_each(|c| { self.push_char_panic(c); });
+	}
+}
+
+impl<'a, const N: usize> Extend<&'a str> for Str<N> {
+	/// Calls [`Str::push_str_panic`] for each `str`.
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let mut s = Str::<12>::new();
+	///
+	/// s.extend(["hello", " ", "world", "!"]);
+	/// assert_eq!(s, "hello world!");
+	/// ```
+	fn extend<T: IntoIterator<Item = &'a str>>(&mut self, iter: T) {
+		iter
+			.into_iter()
+			.for_each(|c|{ self.push_str_panic(c); });
+	}
+}
+
 //---------------------------------------------------------------------------------------------------- Serde
 #[cfg(feature="serde")]
 impl<const N: usize> serde::Serialize for Str<N>
