@@ -1599,6 +1599,35 @@ impl<'a, const N: usize> Extend<&'a str> for Str<N> {
 	}
 }
 
+macro_rules! impl_index {
+	($($range:ident),* $(,)?) => {
+		$(
+			impl<const N: usize> std::ops::Index<std::ops::$range<usize>> for Str<N> {
+				type Output = str;
+				fn index(&self, index: std::ops::$range<usize>) -> &Self::Output {
+					self.as_str().index(index)
+				}
+			}
+		)*
+	};
+}
+
+impl<const N: usize> std::ops::Index<std::ops::RangeFull> for Str<N> {
+	type Output = str;
+	#[inline]
+	fn index(&self, index: std::ops::RangeFull) -> &Self::Output {
+		self.as_str().index(index)
+	}
+}
+
+impl_index! {
+	Range,
+	RangeFrom,
+	RangeInclusive,
+	RangeTo,
+	RangeToInclusive,
+}
+
 //---------------------------------------------------------------------------------------------------- Serde
 #[cfg(feature="serde")]
 impl<const N: usize> serde::Serialize for Str<N>
