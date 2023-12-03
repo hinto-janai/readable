@@ -7,6 +7,8 @@ use crate::macros::{
 use crate::date::free::{
 	ok_year,ok,
 };
+#[allow(unused_imports)]
+use crate::date::Nichi; // docs
 
 //---------------------------------------------------------------------------------------------------- `NichiFull`
 /// Same as [`Nichi`] but with fully specified words

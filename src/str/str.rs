@@ -1235,7 +1235,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
-	/// Calls [`std::str::make_ascii_uppercase`].
+	/// Calls [`str::make_ascii_uppercase`].
 	///
 	/// ```rust
 	/// # use readable::*;
@@ -1250,7 +1250,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
-	/// Calls [`std::str::make_ascii_lowercase`].
+	/// Calls [`str::make_ascii_lowercase`].
 	///
 	/// ```rust
 	/// # use readable::*;

@@ -87,7 +87,7 @@
 //! This is incorrect as not all months are 31 days long and leap years exist.
 //!
 //! ## Formatting
-//! The formatting for [`Uptime`] & [`TimeFull`] is:
+//! The formatting for [`Uptime`] & [`UptimeFull`] is:
 //! - The lowest unit is `second`
 //! - The highest is `year`
 //! - `week` is skipped in favor of `7 days`

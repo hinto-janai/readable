@@ -8,6 +8,8 @@ use crate::macros::{
 	impl_math,impl_traits,
 	impl_impl_math,
 };
+#[allow(unused_imports)]
+use crate::num::{Int,Unsigned}; // docs
 
 //---------------------------------------------------------------------------------------------------- Float
 /// Human readable float.

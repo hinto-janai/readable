@@ -7,6 +7,8 @@ use crate::macros::{
 use crate::date::free::{
 	ok_year,ok,
 };
+#[allow(unused_imports)]
+use crate::date::Date; // docs
 
 //---------------------------------------------------------------------------------------------------- `Nichi`
 /// A date that is in `Weekday, Month Day, Year` format
