@@ -1566,6 +1566,7 @@ impl<const N: usize> AsRef<std::ffi::OsStr> for Str<N> {
 }
 
 impl<const N: usize> Extend<char> for Str<N> {
+	#[inline]
 	/// Calls [`Str::push_char_panic`] for each `char`.
 	///
 	/// ```rust
@@ -1583,6 +1584,7 @@ impl<const N: usize> Extend<char> for Str<N> {
 }
 
 impl<'a, const N: usize> Extend<&'a str> for Str<N> {
+	#[inline]
 	/// Calls [`Str::push_str_panic`] for each `str`.
 	///
 	/// ```rust
@@ -1604,6 +1606,7 @@ macro_rules! impl_index {
 		$(
 			impl<const N: usize> std::ops::Index<std::ops::$range<usize>> for Str<N> {
 				type Output = str;
+				#[inline]
 				fn index(&self, index: std::ops::$range<usize>) -> &Self::Output {
 					self.as_str().index(index)
 				}
@@ -1626,6 +1629,41 @@ impl_index! {
 	RangeInclusive,
 	RangeTo,
 	RangeToInclusive,
+}
+
+impl<const N: usize> std::fmt::Write for Str<N> {
+	#[inline]
+	/// Calls [`Str::push_str()`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let mut s = Str::<12>::new();
+	///
+	/// std::fmt::Write::write_str(&mut s, "hello world!").unwrap();
+	/// assert_eq!(s, "hello world!");
+	/// ```
+	fn write_str(&mut self, s: &str) -> std::fmt::Result {
+		match self.push_str(s) {
+			Ok(_) => Ok(()),
+			Err(_) => Err(std::fmt::Error),
+		}
+	}
+	#[inline]
+	/// Calls [`Str::push_char()`]
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// let mut s = Str::<3>::new();
+	///
+	/// std::fmt::Write::write_char(&mut s, 'で').unwrap();
+	/// assert_eq!(s, "で");
+	/// ```
+	fn write_char(&mut self, c: char) -> std::fmt::Result {
+		match self.push_char(c) {
+			Ok(_) => Ok(()),
+			Err(_) => Err(std::fmt::Error),
+		}
+	}
 }
 
 //---------------------------------------------------------------------------------------------------- Serde
