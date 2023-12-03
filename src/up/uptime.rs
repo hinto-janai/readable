@@ -276,10 +276,10 @@ impl Uptime {
 	) {
 		if value > 0 {
 			if *started {
-				s.push_str_unchecked(", ");
+				s.push_str_panic(", ");
 			}
-			s.push_str_unchecked(itoa!(value));
-			s.push_str_unchecked(name);
+			s.push_str_panic(itoa!(value));
+			s.push_str_panic(name);
 			*started = true;
 		}
 	}

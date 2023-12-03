@@ -264,13 +264,13 @@ impl UptimeFull {
 	) {
 		if value > 0 {
 			if *started {
-				s.push_str_unchecked(", ");
+				s.push_str_panic(", ");
 			}
-			s.push_str_unchecked(itoa!(value));
-			s.push_str_unchecked(" ");
-			s.push_str_unchecked(name);
+			s.push_str_panic(itoa!(value));
+			s.push_str_panic(" ");
+			s.push_str_panic(name);
 			if value > 1 {
-				s.push_str_unchecked("s");
+				s.push_str_panic("s");
 			}
 			*started = true;
 		}

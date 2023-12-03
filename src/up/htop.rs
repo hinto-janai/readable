@@ -269,19 +269,19 @@ impl Htop {
 		let mut string = Str::new();
 
 		if days > 0 {
-			string.push_str_unchecked(itoa!(days));
+			string.push_str_panic(itoa!(days));
 
 			if days > 100 {
-				string.push_str_unchecked(" days(!), ");
+				string.push_str_panic(" days(!), ");
 			} else if days > 1 {
-				string.push_str_unchecked(" days, ");
+				string.push_str_panic(" days, ");
 			} else if days == 1 {
-				string.push_str_unchecked(" day, ");
+				string.push_str_panic(" day, ");
 			}
 		};
 
 		let runtime = RuntimePad::from(secs % 86400);
-		string.push_str_unchecked(runtime);
+		string.push_str_panic(runtime);
 
 		Self(secs, string)
 	}

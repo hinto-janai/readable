@@ -872,7 +872,7 @@ impl<const N: usize> Str<N> {
 	/// ```rust
 	/// # use readable::Str;
 	/// let mut s = Str::<5>::new();
-	/// assert_eq!(s.push_str_unchecked("wow"), 3);
+	/// assert_eq!(s.push_str_panic("wow"), 3);
 	/// ```
 	///
 	/// ## Panics
@@ -882,7 +882,7 @@ impl<const N: usize> Str<N> {
 	/// ```rust,should_panic
 	/// # use readable::Str;
 	/// let mut s = Str::<3>::new();
-	/// s.push_str_unchecked("abcd");
+	/// s.push_str_panic("abcd");
 	/// ```
 	///
 	/// [`Str`] has no more remaining capacity:
@@ -893,9 +893,9 @@ impl<const N: usize> Str<N> {
 	/// assert_eq!(s.remaining(), 1);
 	///
 	/// // This won't fit, will panic.
-	/// s.push_str_unchecked("wow");
+	/// s.push_str_panic("wow");
 	/// ```
-	pub fn push_str_unchecked(&mut self, s: impl AsRef<str>) -> usize {
+	pub fn push_str_panic(&mut self, s: impl AsRef<str>) -> usize {
 		let s       = s.as_ref();
 		let s_bytes = s.as_bytes();
 		let s_len   = s.len();
@@ -983,7 +983,7 @@ impl<const N: usize> Str<N> {
 
 		// If byte length is the same or less, we can just copy.
 		if s_len <= remaining {
-			self.push_str_unchecked(s);
+			self.push_str_panic(s);
 			return s_len;
 		}
 
@@ -1012,7 +1012,7 @@ impl<const N: usize> Str<N> {
 			}
 		};
 
-		self.push_str_unchecked(&s[..index]);
+		self.push_str_panic(&s[..index]);
 		index
 	}
 
@@ -1051,14 +1051,14 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
-	/// [`Str::push_str_unchecked`], but with a `char`
+	/// [`Str::push_str_panic`], but with a `char`
 	///
-	/// This acts in the same way as [`Str::push_str_unchecked`], but the input is a single [`char`].
+	/// This acts in the same way as [`Str::push_str_panic`], but the input is a single [`char`].
 	///
 	/// ```rust
 	/// # use readable::Str;
 	/// let mut s = Str::<5>::new();
-	/// assert_eq!(s.push_char_unchecked('す'), 3);
+	/// assert_eq!(s.push_char_panic('す'), 3);
 	/// ```
 	///
 	/// ## Panics
@@ -1068,7 +1068,7 @@ impl<const N: usize> Str<N> {
 	/// ```rust,should_panic
 	/// # use readable::Str;
 	/// let mut s = Str::<3>::new();
-	/// s.push_char_unchecked('🦀');
+	/// s.push_char_panic('🦀');
 	/// ```
 	///
 	/// [`Str`] has no more remaining capacity:
@@ -1079,14 +1079,14 @@ impl<const N: usize> Str<N> {
 	/// assert_eq!(s.remaining(), 1);
 	///
 	/// // This won't fit, will panic.
-	/// s.push_char_unchecked('🦀');
+	/// s.push_char_panic('🦀');
 	/// ```
-	pub fn push_char_unchecked(&mut self, c: char) -> usize {
+	pub fn push_char_panic(&mut self, c: char) -> usize {
 		match c.len_utf8() {
-			1 => self.push_str_unchecked(c.encode_utf8(&mut [0; 1])),
-			2 => self.push_str_unchecked(c.encode_utf8(&mut [0; 2])),
-			3 => self.push_str_unchecked(c.encode_utf8(&mut [0; 3])),
-			_ => self.push_str_unchecked(c.encode_utf8(&mut [0; 4])),
+			1 => self.push_str_panic(c.encode_utf8(&mut [0; 1])),
+			2 => self.push_str_panic(c.encode_utf8(&mut [0; 2])),
+			3 => self.push_str_panic(c.encode_utf8(&mut [0; 3])),
+			_ => self.push_str_panic(c.encode_utf8(&mut [0; 4])),
 		}
 	}
 
@@ -1395,7 +1395,7 @@ macro_rules! impl_from_str {
 						Ok(Self::new())
 					} else if len < N {
 						let mut this = Self::new();
-						this.push_str_unchecked(&string);
+						this.push_str_panic(&string);
 						Ok(this)
 					} else if len == N {
 						let this = Self::from_str_exact(&string);
@@ -1492,7 +1492,7 @@ impl<const N: usize, T: AsRef<str>> std::ops::Add<T> for Str<N> {
 	/// ```
 	///
 	/// ## Panics
-	/// This calls [`Str::push_str_unchecked`] and will panic in the same ways.
+	/// This calls [`Str::push_str_panic`] and will panic in the same ways.
 	///
 	/// ```rust,should_panic
 	/// # use readable::*;
@@ -1503,7 +1503,7 @@ impl<const N: usize, T: AsRef<str>> std::ops::Add<T> for Str<N> {
 	/// ```
 	fn add(self, s: T) -> Self::Output {
 		let mut new = self.clone();
-		new.push_str_unchecked(s.as_ref());
+		new.push_str_panic(s.as_ref());
 		new
 	}
 }
@@ -1521,7 +1521,7 @@ impl<const N: usize, T: AsRef<str>> std::ops::AddAssign<T> for Str<N> {
 	/// ```
 	///
 	/// ## Panics
-	/// This calls [`Str::push_str_unchecked`] and will panic in the same ways.
+	/// This calls [`Str::push_str_panic`] and will panic in the same ways.
 	///
 	/// ```rust,should_panic
 	/// # use readable::*;
@@ -1531,7 +1531,7 @@ impl<const N: usize, T: AsRef<str>> std::ops::AddAssign<T> for Str<N> {
 	/// s += "bar";
 	/// ```
 	fn add_assign(&mut self, s: T) {
-		self.push_str_unchecked(s.as_ref());
+		self.push_str_panic(s.as_ref());
 	}
 }
 
@@ -1602,7 +1602,7 @@ impl<'de, const N: usize> serde::Deserialize<'de> for Str<N>
 					return Err(E::invalid_length(v_len, &self));
 				}
 				let mut s = Str::new();
-				s.push_str_unchecked(v);
+				s.push_str_panic(v);
 				Ok(s)
             }
 
@@ -1619,7 +1619,7 @@ impl<'de, const N: usize> serde::Deserialize<'de> for Str<N>
 				}
 
 				let mut s = Str::new();
-				s.push_str_unchecked(v);
+				s.push_str_panic(v);
 				Ok(s)
             }
         }
