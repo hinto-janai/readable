@@ -1,0 +1,52 @@
+[package]
+name = "readable-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.readable]
+path = ".."
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "date"
+path = "fuzz_targets/date.rs"
+[[bin]]
+name = "byte"
+path = "fuzz_targets/byte.rs"
+[[bin]]
+name = "float"
+path = "fuzz_targets/float.rs"
+[[bin]]
+name = "unsigned"
+path = "fuzz_targets/unsigned.rs"
+[[bin]]
+name = "int"
+path = "fuzz_targets/int.rs"
+[[bin]]
+name = "run"
+path = "fuzz_targets/run.rs"
+[[bin]]
+name = "str"
+path = "fuzz_targets/str.rs"
+[[bin]]
+name = "time"
+path = "fuzz_targets/time.rs"
+[[bin]]
+name = "toa"
+path = "fuzz_targets/toa.rs"
+[[bin]]
+name = "up"
+path = "fuzz_targets/up.rs"

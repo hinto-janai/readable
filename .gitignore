@@ -4,3 +4,6 @@
 /runtime/target
 /percent/target
 /src/utf8.rs
+/fuzz/artifacts
+/fuzz/target
+/fuzz/corpus
