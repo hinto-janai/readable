@@ -17,6 +17,28 @@ Types of changes:
 
 ---
 
+
+# readable v0.14.0 - 2023-12-03
+## Added
+- `readable::str::Str`:
+	* impl `std::fmt::Write`
+	* impl `Index`
+	* impl `Extend<char>`, `Extend<&str>`
+	* impl `Deref` and `AsRef`
+	* impl `Add` and `AddAssign`
+	* `push_{str,char}_unchecked()` -> `push_{str,char}_panic()`
+	* add `push_char_*()` variants
+	* add `push_str_saturating()`
+	* add `remove()`
+	* add `pop()`
+	* add `truncate()`
+	* add `make_ascii_uppercase()`, `make_ascii_lowercase()`
+	* add `as_bytes_mut()`, `as_mut_ptr()`, `as_str_mut()`
+
+
+---
+
+
 # readable v0.13.0 - 2023-10-23
 ## Added
 * `Time` type for clock time - `11:59:59 PM`
