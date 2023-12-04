@@ -165,87 +165,6 @@ impl Htop {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Htop::zero(), Htop::ZERO);
-	/// ```
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Htop::second(), Htop::SECOND);
-	/// ```
-	pub const fn second() -> Self {
-		Self::SECOND
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Htop::minute(), Htop::MINUTE);
-	/// ```
-	pub const fn minute() -> Self {
-		Self::MINUTE
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Htop::hour(), Htop::HOUR);
-	/// ```
-	pub const fn hour() -> Self {
-		Self::HOUR
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Htop::day(), Htop::DAY);
-	/// ```
-	pub const fn day() -> Self {
-		Self::DAY
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Htop::month(), Htop::MONTH);
-	/// ```
-	pub const fn month() -> Self {
-		Self::MONTH
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Htop::year(), Htop::YEAR);
-	/// ```
-	pub const fn year() -> Self {
-		Self::YEAR
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Htop::max(), Htop::MAX);
-	/// ```
-	pub const fn max() -> Self {
-		Self::MAX
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Htop::unknown(), Htop::UNKNOWN);
-	/// ```
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
 	/// assert!(Htop::UNKNOWN.is_unknown());
 	/// assert!(!Htop::ZERO.is_unknown());
 	/// ```
@@ -262,7 +181,7 @@ impl Htop {
 	#[inline]
 	fn from_priv(secs: u32) -> Self {
 		if secs == 0 {
-			return Self::zero();
+			return Self::ZERO;
 		}
 
 		let days = secs / 86400;
@@ -294,7 +213,7 @@ macro_rules! impl_from_time {
 			#[inline]
 			fn from(from: $other) -> Self {
 				if from.is_unknown() {
-					Self::unknown()
+					Self::UNKNOWN
 				} else {
 					Self::from_priv(from.inner())
 				}
@@ -304,7 +223,7 @@ macro_rules! impl_from_time {
 			#[inline]
 			fn from(from: &$other) -> Self {
 				if from.is_unknown() {
-					Self::unknown()
+					Self::UNKNOWN
 				} else {
 					Self::from_priv(from.inner())
 				}
@@ -366,7 +285,7 @@ macro_rules! impl_int {
 			#[inline]
 			fn from(int: $int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				Self::from_priv(int as u32)
 			}
@@ -375,7 +294,7 @@ macro_rules! impl_int {
 			#[inline]
 			fn from(int: &$int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				Self::from_priv(*int as u32)
 			}
@@ -392,7 +311,7 @@ macro_rules! impl_int_over {
 			#[inline]
 			fn from(int: $int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(int, $int);
 				Self::from_priv(int as u32)
@@ -402,7 +321,7 @@ macro_rules! impl_int_over {
 			#[inline]
 			fn from(int: &$int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(*int, $int);
 				Self::from_priv(*int as u32)
@@ -420,9 +339,9 @@ macro_rules! impl_f {
 		impl From<$float> for Htop {
 			#[inline]
 			fn from(float: $float) -> Self {
-				return_bad_float!(float, Self::unknown, Self::unknown);
+				return_bad_float!(float, Self::UNKNOWN, Self::UNKNOWN);
 				if float.is_sign_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(float, $float);
 				Self::from_priv(float as u32)
@@ -431,9 +350,9 @@ macro_rules! impl_f {
 		impl From<&$float> for Htop {
 			#[inline]
 			fn from(float: &$float) -> Self {
-				return_bad_float!(float, Self::unknown, Self::unknown);
+				return_bad_float!(float, Self::UNKNOWN, Self::UNKNOWN);
 				if float.is_sign_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(*float, $float);
 				Self::from_priv(*float as u32)
@@ -513,20 +432,20 @@ mod tests {
 
 	#[test]
 	fn over() {
-		assert_ne!(Htop::from(u32::MAX),            Htop::unknown());
-		assert_eq!(Htop::from(u32::MAX as u64 + 1), Htop::unknown());
-		assert_eq!(Htop::from(u64::MAX),            Htop::unknown());
-		assert_eq!(Htop::from(f64::MAX),            Htop::unknown());
-		assert_eq!(Htop::from(f32::MAX),            Htop::unknown());
+		assert_ne!(Htop::from(u32::MAX),            Htop::UNKNOWN);
+		assert_eq!(Htop::from(u32::MAX as u64 + 1), Htop::UNKNOWN);
+		assert_eq!(Htop::from(u64::MAX),            Htop::UNKNOWN);
+		assert_eq!(Htop::from(f64::MAX),            Htop::UNKNOWN);
+		assert_eq!(Htop::from(f32::MAX),            Htop::UNKNOWN);
 	}
 
 	#[test]
 	fn special() {
-		assert_eq!(Htop::from(f32::NAN),          Htop::unknown());
-		assert_eq!(Htop::from(f32::INFINITY),     Htop::unknown());
-		assert_eq!(Htop::from(f32::NEG_INFINITY), Htop::unknown());
-		assert_eq!(Htop::from(f64::NAN),          Htop::unknown());
-		assert_eq!(Htop::from(f64::INFINITY),     Htop::unknown());
-		assert_eq!(Htop::from(f64::NEG_INFINITY), Htop::unknown());
+		assert_eq!(Htop::from(f32::NAN),          Htop::UNKNOWN);
+		assert_eq!(Htop::from(f32::INFINITY),     Htop::UNKNOWN);
+		assert_eq!(Htop::from(f32::NEG_INFINITY), Htop::UNKNOWN);
+		assert_eq!(Htop::from(f64::NAN),          Htop::UNKNOWN);
+		assert_eq!(Htop::from(f64::INFINITY),     Htop::UNKNOWN);
+		assert_eq!(Htop::from(f64::NEG_INFINITY), Htop::UNKNOWN);
 	}
 }

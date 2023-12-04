@@ -14,6 +14,9 @@ Types of changes:
 ---
 
 # readable Unreleased
+## Removed
+- Redundant function constructors for `const` types (e.g `Uptime::day()` -> `Uptime::DAY`)
+
 
 ---
 

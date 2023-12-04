@@ -101,8 +101,8 @@ use crate::macros::{
 /// ## Examples
 /// ```rust
 /// # use readable::Percent;
-/// assert_eq!(Percent::zero(),    "0.00%");
-/// assert_eq!(Percent::unknown(), "?.??%");
+/// assert_eq!(Percent::ZERO,    "0.00%");
+/// assert_eq!(Percent::UNKNOWN, "?.??%");
 ///
 /// assert_eq!(Percent::from(0.001),   "0.00%");
 /// assert_eq!(Percent::from(0.1),     "0.10%");
@@ -164,7 +164,7 @@ macro_rules! impl_new {
 		paste::item! {
 			#[doc = "Same as [`Percent::from`] but with `" $num "` floating point."]
 			pub fn [<new_ $num>](f: f64) -> Self {
-				return_bad_float!(f, Self::nan, Self::infinity);
+				return_bad_float!(f, Self::NAN, Self::INFINITY);
 
 				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
 				Self(f, format_compact!("{}.{}%", str_u64!(f as u64), fract))
@@ -193,29 +193,6 @@ impl Percent {
 	impl_usize!();
 	impl_isize!();
 
-	/// Returns [`Self::UNKNOWN`]
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
-
-	#[inline]
-	/// Returns [`Self::NAN`]
-	pub const fn nan() -> Self {
-		Self::NAN
-	}
-
-	#[inline]
-	/// Returns [`Self::INFINITY``]
-	pub const fn infinity() -> Self {
-		Self::INFINITY
-	}
-
-	#[inline]
-	/// Returns [`Self::ZERO`]
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
 	#[inline]
 	/// Calls [`f64::is_nan`].
 	pub fn is_nan(&self) -> bool {
@@ -242,7 +219,7 @@ impl Percent {
 	/// | 50.123 | `50%`
 	/// | 100.1  | `100%`
 	pub fn new_0(f: f64) -> Self {
-		return_bad_float!(f, Self::nan, Self::infinity);
+		return_bad_float!(f, Self::NAN, Self::INFINITY);
 		Self(f, format_compact!("{}%", str_u64!(f as u64)))
 	}
 
@@ -289,7 +266,7 @@ impl_i!(i8,i16,i32);
 impl From<f32> for Percent {
 	#[inline]
 	fn from(f: f32) -> Self {
-		return_bad_float!(f, Self::nan, Self::infinity);
+		return_bad_float!(f, Self::NAN, Self::INFINITY);
 		Self::from(f as f64)
 	}
 }
@@ -297,7 +274,7 @@ impl From<f32> for Percent {
 impl From<f64> for Percent {
 	#[inline]
 	fn from(f: f64) -> Self {
-		return_bad_float!(f, Self::nan, Self::infinity);
+		return_bad_float!(f, Self::NAN, Self::INFINITY);
 
 		let fract = &format_compact!("{:.2}", f.fract())[2..];
 
@@ -312,10 +289,10 @@ mod tests {
 
 	#[test]
 	fn special() {
-		assert_eq!(Percent::zero(),    "0.00%");
-		assert_eq!(Percent::unknown(), "?.??%");
-		assert_eq!(Percent::nan(),     NAN);
-		assert_eq!(Percent::infinity(),     INFINITY);
+		assert_eq!(Percent::ZERO,     "0.00%");
+		assert_eq!(Percent::UNKNOWN,  "?.??%");
+		assert_eq!(Percent::NAN,      NAN);
+		assert_eq!(Percent::INFINITY, INFINITY);
 
 		assert_eq!(Percent::from(0.0), "0.00%");
 		assert_eq!(Percent::from(f64::NAN), NAN);

@@ -89,8 +89,6 @@ impl Military {
 	/// ```
 	pub const MAX_LEN: usize = 8;
 
-	/// Returned when using [`Military::unknown`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Military::UNKNOWN, 0);
@@ -98,8 +96,6 @@ impl Military {
 	/// ```
 	pub const UNKNOWN: Self = Self(0, Str::from_static_str("??:??:??"));
 
-	/// Returned when using [`Military::zero`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Military::ZERO, 0);
@@ -107,8 +103,6 @@ impl Military {
 	/// ```
 	pub const ZERO: Self = Self(0, Str::from_static_str("00:00:00"));
 
-	/// Returned when using [`Military::max`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Military::MAX, 86399);
@@ -182,33 +176,6 @@ impl Military {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Military::unknown(), Military::UNKNOWN);
-	/// ```
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Military::zero(), Military::ZERO);
-	/// ```
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Military::max(), Military::MAX);
-	/// ```
-	pub const fn max() -> Self {
-		Self::MAX
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
 	/// assert!(Military::UNKNOWN.is_unknown());
 	/// assert!(!Military::ZERO.is_unknown());
 	/// ```
@@ -226,7 +193,7 @@ impl Military {
 		let total_seconds = total_seconds % 86400;
 
 		if total_seconds == 0 {
-			return Self::zero();
+			return Self::ZERO;
 		}
 
 		let (hours, minutes, seconds) = crate::time::secs_to_clock(total_seconds);
@@ -291,7 +258,7 @@ macro_rules! impl_f {
 		impl From<$from> for Military {
 			#[inline]
 			fn from(f: $from) -> Self {
-				$crate::macros::return_bad_float!(f, Self::unknown, Self::unknown);
+				$crate::macros::return_bad_float!(f, Self::UNKNOWN, Self::UNKNOWN);
 
 				Self::priv_from(f as u32)
 			}
@@ -299,7 +266,7 @@ macro_rules! impl_f {
 		impl From<&$from> for Military {
 			#[inline]
 			fn from(f: &$from) -> Self {
-				$crate::macros::return_bad_float!(f, Self::unknown, Self::unknown);
+				$crate::macros::return_bad_float!(f, Self::UNKNOWN, Self::UNKNOWN);
 
 				Self::priv_from(*f as u32)
 			}
@@ -340,7 +307,7 @@ macro_rules! impl_i {
 			#[inline]
 			fn from(seconds: $from) -> Self {
 				if seconds.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				Self::priv_from(seconds as u32)
 			}
@@ -349,7 +316,7 @@ macro_rules! impl_i {
 			#[inline]
 			fn from(seconds: &$from) -> Self {
 				if seconds.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				Self::priv_from(*seconds as u32)
 			}
@@ -371,7 +338,7 @@ macro_rules! impl_other {
 				#[inline]
 				fn from(other: $from) -> Self {
 					if other.is_unknown() {
-						return Self::unknown();
+						return Self::UNKNOWN;
 					}
 					Self::priv_from(other.inner() as u32)
 				}
@@ -380,7 +347,7 @@ macro_rules! impl_other {
 				#[inline]
 				fn from(other: &$from) -> Self {
 					if other.is_unknown() {
-						return Self::unknown();
+						return Self::UNKNOWN;
 					}
 					Self::priv_from(other.inner() as u32)
 				}

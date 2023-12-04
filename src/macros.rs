@@ -150,9 +150,9 @@ macro_rules! impl_traits {
 
 		impl std::default::Default for $s {
 			#[inline]
-			/// Calls [`Self::zero`]
+			/// Returns [`Self::ZERO`]
 			fn default() -> Self {
-				Self::zero()
+				Self::ZERO
 			}
 		}
 
@@ -357,8 +357,8 @@ macro_rules! return_bad_float {
 	($float:ident, $nan:expr, $infinite:expr) => {
 		match $float.classify() {
 			std::num::FpCategory::Normal   => (),
-			std::num::FpCategory::Nan      => return $nan(),
-			std::num::FpCategory::Infinite => return $infinite(),
+			std::num::FpCategory::Nan      => return $nan,
+			std::num::FpCategory::Infinite => return $infinite,
 			_ => (),
 		}
 	}
@@ -385,7 +385,7 @@ pub(crate) use str_i64;
 macro_rules! handle_over_u32 {
 	($value:expr, $type:ty) => {
 		if $value > (u32::MAX as $type) {
-			return Self::unknown();
+			return Self::UNKNOWN;
 		}
 	};
 }

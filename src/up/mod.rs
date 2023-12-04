@@ -24,7 +24,7 @@
 //! ## Errors
 //! The max input is [`u32::MAX`] seconds.
 //!
-//! A [`Uptime::unknown()`] (or a variant's version of it) will be returned if the input is:
+//! A [`Uptime::UNKNOWN`] (or a variant's version of it) will be returned if the input is:
 //! - A negative integer
 //! - Larger than [`Uptime::MAX`]
 //! - [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`] (or the [`f64`] versions)
@@ -73,7 +73,7 @@
 //! assert_eq!(uptime, uptime2);
 //!
 //! // Maintain the `unknown` variant.
-//! let unknown = Uptime::unknown();
+//! let unknown = Uptime::UNKNOWN;
 //! assert_eq!(unknown, Uptime::UNKNOWN);
 //! assert_eq!(Htop::from(unknown), Htop::UNKNOWN);
 //! ```

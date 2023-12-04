@@ -28,13 +28,13 @@ use std::num::{
 ///
 /// [`f32`] or [`f64`] inputs must use [`Unsigned::try_from`] and:
 /// - Fractional parts will be ignored
-/// - Under/overflows will return [`Int::unknown`]
-/// - Special floats like [`f64::NAN`] will return [`Int::unknown`]
+/// - Under/overflows will return [`Int::UNKNOWN`]
+/// - Special floats like [`f64::NAN`] will return [`Int::UNKNOWN`]
 ///
 /// For [`u8`] and other unsigned integers:
 /// - You can use [`Int::from`] for anything under [`u32`]
 /// - You need to use [`Int::try_from`] for anything above [`u32`]
-/// - [`Int::unknown`] will be returned on error
+/// - [`Int::UNKNOWN`] will be returned on error
 ///
 /// ## Size
 /// [`Str<26>`] is used internally to represent the string.
@@ -133,7 +133,7 @@ impl Int {
 	/// ```
 	pub const MAX: Self = Self(i64::MAX, Str::from_static_str("9,223,372,036,854,775,807"));
 
-	/// Returned when using [`Int::unknown()`] and error situations.
+	/// Returned on error situations.
 	///
 	/// ```rust
 	/// # use readable::num::*;
@@ -146,7 +146,7 @@ impl Int {
 	/// The maximum string length of an [`Int`].
 	///
 	/// ```rust
-	/// assert_eq!(readable::Int::min().len(), 26);
+	/// assert_eq!(readable::Int::MIN.len(), 26);
 	/// ```
 	pub const MAX_LEN: usize = LEN;
 }
@@ -156,45 +156,6 @@ impl Int {
 	impl_common!(i64);
 	impl_const!();
 	impl_isize!();
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Int::zero(), 0);
-	/// assert_eq!(Int::zero(), "0");
-	/// assert_eq!(Int::zero() + Int::zero(), 0);
-	/// ```
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::num::*;
-	/// assert_eq!(Int::min(), Int::MIN);
-	/// ```
-	pub const fn min() -> Self {
-		Self::MIN
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::num::*;
-	/// assert_eq!(Int::max(), Int::MAX);
-	/// ```
-	pub const fn max() -> Self {
-		Self::MAX
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// # use readable::num::*;
-	/// assert_eq!(Int::unknown(), Int::UNKNOWN);
-	/// ```
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
 
 	#[inline]
 	/// ```rust
@@ -568,7 +529,7 @@ impl_noni!(NonZeroUsize,&NonZeroUsize);
 macro_rules! impl_try {
 	($( $from:ty ),*) => {
 		$(
-			/// This will return [`Self::unknown`] wrapped
+			/// This will return [`Self::UNKNOWN`] wrapped
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<$from> for Int {
 				type Error = Self;
@@ -576,7 +537,7 @@ macro_rules! impl_try {
 				fn try_from(num: $from) -> Result<Self, Self> {
 					match i64::try_from(num) {
 						Ok(i) => Ok(Self::from_priv(i)),
-						_ => Err(Self::unknown()),
+						_ => Err(Self::UNKNOWN),
 					}
 				}
 			}
@@ -591,7 +552,7 @@ impl_try!(usize);
 macro_rules! impl_unsigned {
 	($( $from:ty ),*) => {
 		$(
-			/// This will return [`Self::unknown`] wrapped
+			/// This will return [`Self::UNKNOWN`] wrapped
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<$from> for Int {
 				type Error = Self;
@@ -599,7 +560,7 @@ macro_rules! impl_unsigned {
 				fn try_from(num: $from) -> Result<Self, Self> {
 					match i64::try_from(num.inner()) {
 						Ok(u) => Ok(Self::from_priv(u)),
-						_ => Err(Self::unknown()),
+						_ => Err(Self::UNKNOWN),
 					}
 				}
 			}
@@ -612,7 +573,7 @@ impl_unsigned!(Unsigned,&Unsigned);
 macro_rules! impl_nonu {
 	($( $from:ty ),* $(,)?) => {
 		$(
-			/// This will return [`Self::unknown`] wrapped
+			/// This will return [`Self::UNKNOWN`] wrapped
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<$from> for Int {
 				type Error = Self;
@@ -620,7 +581,7 @@ macro_rules! impl_nonu {
 				fn try_from(num: $from) -> Result<Self, Self> {
 					match i64::try_from(num.get()) {
 						Ok(u) => Ok(Self::from_priv(u)),
-						_ => Err(Self::unknown()),
+						_ => Err(Self::UNKNOWN),
 					}
 				}
 			}
@@ -636,7 +597,7 @@ impl_noni!(NonZeroUsize,&NonZeroUsize);
 //---------------------------------------------------------------------------------------------------- From `f32/f64`
 macro_rules! impl_f {
 	($from:ty) => {
-		/// This will return [`Self::unknown`]
+		/// This will return [`Self::UNKNOWN`]
 		/// if the input float is `NAN`, `INFINITY`, or negative.
 		impl TryFrom<$from> for Int {
 			type Error = Self;
@@ -644,8 +605,8 @@ macro_rules! impl_f {
 			fn try_from(float: $from) -> Result<Self, Self> {
 				match float.classify() {
 					std::num::FpCategory::Normal   => (),
-					std::num::FpCategory::Nan      => return Err(Self::unknown()),
-					std::num::FpCategory::Infinite => return Err(Self::unknown()),
+					std::num::FpCategory::Nan      => return Err(Self::UNKNOWN),
+					std::num::FpCategory::Infinite => return Err(Self::UNKNOWN),
 					_ => (),
 				}
 
@@ -731,8 +692,8 @@ mod tests {
 
 	#[test]
 	fn special() {
-		assert_eq!(Int::try_from(f64::NAN),          Err(Int::unknown()));
-		assert_eq!(Int::try_from(f64::INFINITY),     Err(Int::unknown()));
-		assert_eq!(Int::try_from(f64::NEG_INFINITY), Err(Int::unknown()));
+		assert_eq!(Int::try_from(f64::NAN),          Err(Int::UNKNOWN));
+		assert_eq!(Int::try_from(f64::INFINITY),     Err(Int::UNKNOWN));
+		assert_eq!(Int::try_from(f64::NEG_INFINITY), Err(Int::UNKNOWN));
 	}
 }

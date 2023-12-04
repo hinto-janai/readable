@@ -84,32 +84,30 @@ impl_math!(RuntimeUnion, f32);
 
 //---------------------------------------------------------------------------------------------------- RuntimeUnion Constants
 impl RuntimeUnion {
-	/// [`f32`] returned when calling [`RuntimeUnion::zero`]
+	/// [`f32`] inside of [`RuntimeUnion::ZERO`]
 	pub const ZERO_F32: f32 = 0.0;
 
-	/// [`f32`] returned when calling [`RuntimeUnion::second`]
+	/// [`f32`] inside of [`RuntimeUnion::SECOND`]
 	pub const SECOND_F32: f32 = 1.0;
 
-	/// [`f32`] returned when calling [`RuntimeUnion::minute`]
+	/// [`f32`] inside of [`RuntimeUnion::MINUTE`]
 	pub const MINUTE_F32: f32 = 60.0;
 
-	/// [`f32`] returned when calling [`RuntimeUnion::hour`]
+	/// [`f32`] inside of [`RuntimeUnion::HOUR`]
 	pub const HOUR_F32: f32 = 3600.0;
 
-	/// [`f32`] returned when calling [`RuntimeUnion::day`]
+	/// [`f32`] inside of [`RuntimeUnion::DAY`]
 	pub const DAY_F32: f32 = 86400.0;
 
 	/// Input greater to [`RuntimeUnion`] will make it return [`Self::MAX`]
 	pub const MAX_F32: f32 = 359999.0;
 
-	/// Returned when using [`RuntimeUnion::unknown`]
-	///
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::unknown(),                0.0);
-	/// assert_eq!(RuntimeUnion::unknown().as_str(),       "?:??");
-	/// assert_eq!(RuntimeUnion::unknown().as_str_pad(),   "??:??:??");
-	/// assert_eq!(RuntimeUnion::unknown().as_str_milli(), "??:??:??.???");
+	/// assert_eq!(RuntimeUnion::UNKNOWN,                0.0);
+	/// assert_eq!(RuntimeUnion::UNKNOWN.as_str(),       "?:??");
+	/// assert_eq!(RuntimeUnion::UNKNOWN.as_str_pad(),   "??:??:??");
+	/// assert_eq!(RuntimeUnion::UNKNOWN.as_str_milli(), "??:??:??.???");
 	/// ```
 	pub const UNKNOWN: Self = Self {
 		float: Runtime::ZERO_F32,
@@ -118,15 +116,13 @@ impl RuntimeUnion {
 		runtime_milli: RuntimeMilli::UNKNOWN.1,
 	};
 
-	/// Returned when using [`RuntimeUnion::zero`]
-	///
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::zero(),                0.0);
-	/// assert_eq!(RuntimeUnion::zero().as_str(),       "0:00");
-	/// assert_eq!(RuntimeUnion::zero().as_str_pad(),   "00:00:00");
-	/// assert_eq!(RuntimeUnion::zero().as_str_milli(), "00:00:00.000");
-	/// assert_eq!(RuntimeUnion::zero(), RuntimeUnion::from(0.0));
+	/// assert_eq!(RuntimeUnion::ZERO,                0.0);
+	/// assert_eq!(RuntimeUnion::ZERO.as_str(),       "0:00");
+	/// assert_eq!(RuntimeUnion::ZERO.as_str_pad(),   "00:00:00");
+	/// assert_eq!(RuntimeUnion::ZERO.as_str_milli(), "00:00:00.000");
+	/// assert_eq!(RuntimeUnion::ZERO, RuntimeUnion::from(0.0));
 	/// ```
 	pub const ZERO: Self = Self {
 		float: Runtime::ZERO_F32,
@@ -135,15 +131,13 @@ impl RuntimeUnion {
 		runtime_milli: RuntimeMilli::ZERO.1,
 	};
 
-	/// Returned when using [`RuntimeUnion::second`]
-	///
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::second(),                1.0);
-	/// assert_eq!(RuntimeUnion::second().as_str(),       "0:01");
-	/// assert_eq!(RuntimeUnion::second().as_str_pad(),   "00:00:01");
-	/// assert_eq!(RuntimeUnion::second().as_str_milli(), "00:00:01.000");
-	/// assert_eq!(RuntimeUnion::second(), RuntimeUnion::from(1.0));
+	/// assert_eq!(RuntimeUnion::SECOND,                1.0);
+	/// assert_eq!(RuntimeUnion::SECOND.as_str(),       "0:01");
+	/// assert_eq!(RuntimeUnion::SECOND.as_str_pad(),   "00:00:01");
+	/// assert_eq!(RuntimeUnion::SECOND.as_str_milli(), "00:00:01.000");
+	/// assert_eq!(RuntimeUnion::SECOND, RuntimeUnion::from(1.0));
 	/// ```
 	pub const SECOND: Self = Self {
 		float: Runtime::SECOND_F32,
@@ -152,15 +146,13 @@ impl RuntimeUnion {
 		runtime_milli: RuntimeMilli::SECOND.1,
 	};
 
-	/// Returned when using [`RuntimeUnion::minute`]
-	///
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::minute(),                60.0);
-	/// assert_eq!(RuntimeUnion::minute().as_str(),       "1:00");
-	/// assert_eq!(RuntimeUnion::minute().as_str_pad(),   "00:01:00");
-	/// assert_eq!(RuntimeUnion::minute().as_str_milli(), "00:01:00.000");
-	/// assert_eq!(RuntimeUnion::minute(), RuntimeUnion::from(60.0));
+	/// assert_eq!(RuntimeUnion::MINUTE,                60.0);
+	/// assert_eq!(RuntimeUnion::MINUTE.as_str(),       "1:00");
+	/// assert_eq!(RuntimeUnion::MINUTE.as_str_pad(),   "00:01:00");
+	/// assert_eq!(RuntimeUnion::MINUTE.as_str_milli(), "00:01:00.000");
+	/// assert_eq!(RuntimeUnion::MINUTE, RuntimeUnion::from(60.0));
 	/// ```
 	pub const MINUTE: Self = Self {
 		float: Runtime::MINUTE_F32,
@@ -169,15 +161,13 @@ impl RuntimeUnion {
 		runtime_milli: RuntimeMilli::MINUTE.1,
 	};
 
-	/// Returned when using [`RuntimeUnion::hour`]
-	///
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::hour(),                3600.0);
-	/// assert_eq!(RuntimeUnion::hour().as_str(),       "1:00:00");
-	/// assert_eq!(RuntimeUnion::hour().as_str_pad(),   "01:00:00");
-	/// assert_eq!(RuntimeUnion::hour().as_str_milli(), "01:00:00.000");
-	/// assert_eq!(RuntimeUnion::hour(), RuntimeUnion::from(3600.0));
+	/// assert_eq!(RuntimeUnion::HOUR,                3600.0);
+	/// assert_eq!(RuntimeUnion::HOUR.as_str(),       "1:00:00");
+	/// assert_eq!(RuntimeUnion::HOUR.as_str_pad(),   "01:00:00");
+	/// assert_eq!(RuntimeUnion::HOUR.as_str_milli(), "01:00:00.000");
+	/// assert_eq!(RuntimeUnion::HOUR, RuntimeUnion::from(3600.0));
 	/// ```
 	pub const HOUR: Self = Self {
 		float: Runtime::HOUR_F32,
@@ -186,15 +176,13 @@ impl RuntimeUnion {
 		runtime_milli: RuntimeMilli::HOUR.1,
 	};
 
-	/// Returned when using [`RuntimeUnion::day`]
-	///
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::day(),                86400.0);
-	/// assert_eq!(RuntimeUnion::day().as_str(),       "24:00:00");
-	/// assert_eq!(RuntimeUnion::day().as_str_pad(),   "24:00:00");
-	/// assert_eq!(RuntimeUnion::day().as_str_milli(), "24:00:00.000");
-	/// assert_eq!(RuntimeUnion::day(), RuntimeUnion::from(86400.0));
+	/// assert_eq!(RuntimeUnion::DAY,                86400.0);
+	/// assert_eq!(RuntimeUnion::DAY.as_str(),       "24:00:00");
+	/// assert_eq!(RuntimeUnion::DAY.as_str_pad(),   "24:00:00");
+	/// assert_eq!(RuntimeUnion::DAY.as_str_milli(), "24:00:00.000");
+	/// assert_eq!(RuntimeUnion::DAY, RuntimeUnion::from(86400.0));
 	/// ```
 	pub const DAY: Self = Self {
 		float: Runtime::DAY_F32,
@@ -203,15 +191,13 @@ impl RuntimeUnion {
 		runtime_milli: RuntimeMilli::DAY.1,
 	};
 
-	/// Returned when using [`RuntimeUnion::max`]
-	///
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::max(),                359999.0);
-	/// assert_eq!(RuntimeUnion::max().as_str(),       "99:59:59");
-	/// assert_eq!(RuntimeUnion::max().as_str_pad(),   "99:59:59");
-	/// assert_eq!(RuntimeUnion::max().as_str_milli(), "99:59:59.000");
-	/// assert_eq!(RuntimeUnion::max(), RuntimeUnion::from(359999.0));
+	/// assert_eq!(RuntimeUnion::MAX,                359999.0);
+	/// assert_eq!(RuntimeUnion::MAX.as_str(),       "99:59:59");
+	/// assert_eq!(RuntimeUnion::MAX.as_str_pad(),   "99:59:59");
+	/// assert_eq!(RuntimeUnion::MAX.as_str_milli(), "99:59:59.000");
+	/// assert_eq!(RuntimeUnion::MAX, RuntimeUnion::from(359999.0));
 	/// ```
 	pub const MAX: Self = Self {
 		float: Runtime::MAX_F32,
@@ -311,69 +297,6 @@ impl RuntimeUnion {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::unknown(), RuntimeUnion::UNKNOWN);
-	/// ```
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::zero(), RuntimeUnion::ZERO);
-	/// ```
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::second(), RuntimeUnion::SECOND);
-	/// ```
-	pub const fn second() -> Self {
-		Self::SECOND
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::minute(), RuntimeUnion::MINUTE);
-	/// ```
-	pub const fn minute() -> Self {
-		Self::MINUTE
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::hour(), RuntimeUnion::HOUR);
-	/// ```
-	pub const fn hour() -> Self {
-		Self::HOUR
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::day(), RuntimeUnion::DAY);
-	/// ```
-	pub const fn day() -> Self {
-		Self::DAY
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(RuntimeUnion::max(), RuntimeUnion::MAX);
-	/// ```
-	pub const fn max() -> Self {
-		Self::MAX
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
 	/// assert!(RuntimeUnion::UNKNOWN.is_unknown());
 	/// assert!(!RuntimeUnion::ZERO.is_unknown());
 	/// ```
@@ -398,17 +321,17 @@ impl RuntimeUnion {
 	fn priv_from(float: f32) -> Self {
 		let runtime = Runtime::priv_from(float);
 		if runtime == Runtime::UNKNOWN {
-			return Self::unknown();
+			return Self::UNKNOWN;
 		}
 
 		let runtime_pad = RuntimePad::priv_from(float);
 		if runtime_pad == RuntimePad::UNKNOWN {
-			return Self::unknown();
+			return Self::UNKNOWN;
 		}
 
 		let runtime_milli = RuntimeMilli::priv_from(float);
 		if runtime_milli == RuntimeMilli::UNKNOWN {
-			return Self::unknown();
+			return Self::UNKNOWN;
 		}
 
 		Self {

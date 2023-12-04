@@ -79,7 +79,7 @@ use crate::Unsigned;
 /// assert_eq!(unit.seconds(), 1);
 ///
 /// // Maintain the `unknown` variant.
-/// let time: Uptime     = Uptime::unknown();
+/// let time: Uptime     = Uptime::UNKNOWN;
 /// let unit: TimeUnit = TimeUnit::from(time);
 /// assert!(unit.is_unknown());
 /// let time: Uptime = Uptime::from(unit);
@@ -208,95 +208,6 @@ impl TimeUnit {
 
 //---------------------------------------------------------------------------------------------------- Pub Impl
 impl TimeUnit {
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(TimeUnit::unknown(), TimeUnit::UNKNOWN);
-	/// ```
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(TimeUnit::zero(), TimeUnit::ZERO);
-	/// ```
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(TimeUnit::second(), TimeUnit::SECOND);
-	/// ```
-	pub const fn second() -> Self {
-		Self::SECOND
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(TimeUnit::minute(), TimeUnit::MINUTE);
-	/// ```
-	pub const fn minute() -> Self {
-		Self::MINUTE
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(TimeUnit::hour(), TimeUnit::HOUR);
-	/// ```
-	pub const fn hour() -> Self {
-		Self::HOUR
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(TimeUnit::day(), TimeUnit::DAY);
-	/// ```
-	pub const fn day() -> Self {
-		Self::DAY
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(TimeUnit::week(), TimeUnit::WEEK);
-	/// ```
-	pub const fn week() -> Self {
-		Self::WEEK
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(TimeUnit::month(), TimeUnit::MONTH);
-	/// ```
-	pub const fn month() -> Self {
-		Self::MONTH
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(TimeUnit::year(), TimeUnit::YEAR);
-	/// ```
-	pub const fn year() -> Self {
-		Self::YEAR
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(TimeUnit::max(), TimeUnit::MAX);
-	/// ```
-	pub const fn max() -> Self {
-		Self::MAX
-	}
 }
 
 //---------------------------------------------------------------------------------------------------- Construction Impl
@@ -315,7 +226,7 @@ impl TimeUnit {
 	/// ```
 	pub const fn new(secs: u32) -> Self {
 		if secs == 0 {
-			return Self::zero();
+			return Self::ZERO;
 		}
 
 		let years     = secs / 31_536_000;  // 365 days
@@ -576,7 +487,7 @@ impl TimeUnit {
 	/// a flag is set internally such that:
 	/// ```rust
 	/// # use readable::*;
-	/// assert!(TimeUnit::zero() != TimeUnit::unknown());
+	/// assert!(TimeUnit::ZERO != TimeUnit::UNKNOWN);
 	/// ```
 	///
 	/// # Examples
@@ -677,7 +588,7 @@ impl TimeUnit {
 macro_rules! handle_over_u32 {
 	($value:expr, $type:ty) => {
 		if $value > (u32::MAX as $type) {
-			return Self::unknown();
+			return Self::UNKNOWN;
 		}
 	};
 }
@@ -734,7 +645,7 @@ macro_rules! impl_int {
 			#[inline]
 			fn from(int: $int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				Self::new(int as u32)
 			}
@@ -743,7 +654,7 @@ macro_rules! impl_int {
 			#[inline]
 			fn from(int: &$int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				Self::new(*int as u32)
 			}
@@ -760,7 +671,7 @@ macro_rules! impl_int_over {
 			#[inline]
 			fn from(int: $int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(int, $int);
 				Self::new(int as u32)
@@ -770,7 +681,7 @@ macro_rules! impl_int_over {
 			#[inline]
 			fn from(int: &$int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(*int, $int);
 				Self::new(*int as u32)
@@ -788,9 +699,9 @@ macro_rules! impl_f {
 		impl From<$float> for TimeUnit {
 			#[inline]
 			fn from(float: $float) -> Self {
-				return_bad_float!(float, Self::unknown, Self::unknown);
+				return_bad_float!(float, Self::UNKNOWN, Self::UNKNOWN);
 				if float.is_sign_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(float, $float);
 				Self::new(float as u32)
@@ -799,9 +710,9 @@ macro_rules! impl_f {
 		impl From<&$float> for TimeUnit {
 			#[inline]
 			fn from(float: &$float) -> Self {
-				return_bad_float!(float, Self::unknown, Self::unknown);
+				return_bad_float!(float, Self::UNKNOWN, Self::UNKNOWN);
 				if float.is_sign_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(*float, $float);
 				Self::new(*float as u32)
@@ -819,7 +730,7 @@ macro_rules! impl_from_time {
 			#[inline]
 			fn from(from: $other) -> Self {
 				if from.is_unknown() {
-					Self::unknown()
+					Self::UNKNOWN
 				} else {
 					Self::new(from.inner() as u32)
 				}
@@ -829,7 +740,7 @@ macro_rules! impl_from_time {
 			#[inline]
 			fn from(from: &$other) -> Self {
 				if from.is_unknown() {
-					Self::unknown()
+					Self::UNKNOWN
 				} else {
 					Self::new(from.inner() as u32)
 				}
@@ -892,8 +803,8 @@ impl From<&TimeUnit> for std::time::Duration {
 
 impl std::default::Default for TimeUnit {
 	#[inline]
-	/// Calls [`Self::zero`]
+	/// Calls [`Self::ZERO`]
 	fn default() -> Self {
-		Self::zero()
+		Self::ZERO
 	}
 }

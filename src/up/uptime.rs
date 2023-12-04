@@ -27,18 +27,18 @@ use crate::itoa;
 /// This stylizes both `minute` and `month` as `m`, thus:
 /// ```rust
 /// # use readable::*;
-/// assert_eq!(Uptime::minute(), "1m");
-/// assert_eq!(Uptime::month(),  "1m");
+/// assert_eq!(Uptime::MINUTE, "1m");
+/// assert_eq!(Uptime::MONTH,  "1m");
 /// ```
 ///
 /// Although, their inner number will be different and context may make it more clear:
 /// ```
 /// # use readable::*;
-/// assert_eq!(Uptime::minute().inner(), 60);
-/// assert_eq!(Uptime::month().inner(),  2678400);
+/// assert_eq!(Uptime::MINUTE.inner(), 60);
+/// assert_eq!(Uptime::MONTH.inner(),  2678400);
 ///
-/// assert_eq!(Uptime::minute() + 3601, "1h, 1m, 1s");
-/// assert_eq!(Uptime::month() + 3661,  "1m, 1h, 1m, 1s");
+/// assert_eq!(Uptime::MINUTE + 3601, "1h, 1m, 1s");
+/// assert_eq!(Uptime::MONTH + 3661,  "1m, 1h, 1m, 1s");
 /// ```
 ///
 /// ## Examples
@@ -172,88 +172,6 @@ impl Uptime {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Uptime::zero(), Uptime::ZERO);
-	/// ```
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::second(), Uptime::SECOND);
-	/// ```
-	pub const fn second() -> Self {
-		Self::SECOND
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::minute(), Uptime::MINUTE);
-	/// ```
-	pub const fn minute() -> Self {
-		Self::MINUTE
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::hour(), Uptime::HOUR);
-	/// ```
-	pub const fn hour() -> Self {
-		Self::HOUR
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::day(), Uptime::DAY);
-	/// ```
-	pub const fn day() -> Self {
-		Self::DAY
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::month(), Uptime::MONTH);
-	/// ```
-	pub const fn month() -> Self {
-		Self::MONTH
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::year(), Uptime::YEAR);
-	/// ```
-	pub const fn year() -> Self {
-		Self::YEAR
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::max(), Uptime::MAX);
-	/// ```
-	pub const fn max() -> Self {
-		Self::MAX
-	}
-
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::unknown(), Uptime::UNKNOWN);
-	/// ```
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
 	/// assert!(Uptime::UNKNOWN.is_unknown());
 	/// assert!(!Uptime::ZERO.is_unknown());
 	/// ```
@@ -293,7 +211,7 @@ impl Uptime {
 		// }
 
 		if secs == 0 {
-			return Self::zero();
+			return Self::ZERO;
 		}
 
 		let years    = secs / 31_536_000;  // 365 days
@@ -372,7 +290,7 @@ macro_rules! impl_int {
 			#[inline]
 			fn from(int: $int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				Self::from_priv(int as u32)
 			}
@@ -381,7 +299,7 @@ macro_rules! impl_int {
 			#[inline]
 			fn from(int: &$int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				Self::from_priv(*int as u32)
 			}
@@ -398,7 +316,7 @@ macro_rules! impl_int_over {
 			#[inline]
 			fn from(int: $int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(int, $int);
 				Self::from_priv(int as u32)
@@ -408,7 +326,7 @@ macro_rules! impl_int_over {
 			#[inline]
 			fn from(int: &$int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(*int, $int);
 				Self::from_priv(*int as u32)
@@ -426,9 +344,9 @@ macro_rules! impl_f {
 		impl From<$float> for Uptime {
 			#[inline]
 			fn from(float: $float) -> Self {
-				return_bad_float!(float, Self::unknown, Self::unknown);
+				return_bad_float!(float, Self::UNKNOWN, Self::UNKNOWN);
 				if float.is_sign_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(float, $float);
 				Self::from_priv(float as u32)
@@ -437,9 +355,9 @@ macro_rules! impl_f {
 		impl From<&$float> for Uptime {
 			#[inline]
 			fn from(float: &$float) -> Self {
-				return_bad_float!(float, Self::unknown, Self::unknown);
+				return_bad_float!(float, Self::UNKNOWN, Self::UNKNOWN);
 				if float.is_sign_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(*float, $float);
 				Self::from_priv(*float as u32)
@@ -457,7 +375,7 @@ macro_rules! impl_from_time {
 			#[inline]
 			fn from(from: $other) -> Self {
 				if from.is_unknown() {
-					Self::unknown()
+					Self::UNKNOWN
 				} else {
 					Self::from_priv(from.inner())
 				}
@@ -467,7 +385,7 @@ macro_rules! impl_from_time {
 			#[inline]
 			fn from(from: &$other) -> Self {
 				if from.is_unknown() {
-					Self::unknown()
+					Self::UNKNOWN
 				} else {
 					Self::from_priv(from.inner())
 				}
@@ -546,20 +464,20 @@ mod tests {
 
 	#[test]
 	fn over() {
-		assert_ne!(Uptime::from(u32::MAX),            Uptime::unknown());
-		assert_eq!(Uptime::from(u32::MAX as u64 + 1), Uptime::unknown());
-		assert_eq!(Uptime::from(u64::MAX),            Uptime::unknown());
-		assert_eq!(Uptime::from(f64::MAX),            Uptime::unknown());
-		assert_eq!(Uptime::from(f32::MAX),            Uptime::unknown());
+		assert_ne!(Uptime::from(u32::MAX),            Uptime::UNKNOWN);
+		assert_eq!(Uptime::from(u32::MAX as u64 + 1), Uptime::UNKNOWN);
+		assert_eq!(Uptime::from(u64::MAX),            Uptime::UNKNOWN);
+		assert_eq!(Uptime::from(f64::MAX),            Uptime::UNKNOWN);
+		assert_eq!(Uptime::from(f32::MAX),            Uptime::UNKNOWN);
 	}
 
 	#[test]
 	fn special() {
-		assert_eq!(Uptime::from(f32::NAN),          Uptime::unknown());
-		assert_eq!(Uptime::from(f32::INFINITY),     Uptime::unknown());
-		assert_eq!(Uptime::from(f32::NEG_INFINITY), Uptime::unknown());
-		assert_eq!(Uptime::from(f64::NAN),          Uptime::unknown());
-		assert_eq!(Uptime::from(f64::INFINITY),     Uptime::unknown());
-		assert_eq!(Uptime::from(f64::NEG_INFINITY), Uptime::unknown());
+		assert_eq!(Uptime::from(f32::NAN),          Uptime::UNKNOWN);
+		assert_eq!(Uptime::from(f32::INFINITY),     Uptime::UNKNOWN);
+		assert_eq!(Uptime::from(f32::NEG_INFINITY), Uptime::UNKNOWN);
+		assert_eq!(Uptime::from(f64::NAN),          Uptime::UNKNOWN);
+		assert_eq!(Uptime::from(f64::INFINITY),     Uptime::UNKNOWN);
+		assert_eq!(Uptime::from(f64::NEG_INFINITY), Uptime::UNKNOWN);
 	}
 }

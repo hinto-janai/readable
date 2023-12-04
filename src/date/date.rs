@@ -267,7 +267,19 @@ impl Date {
 	/// The separator character for [`Date`].
 	pub const DASH: u8 = b'-';
 
-	/// Returned when using [`Date::unknown`] or error situations.
+	/// Returns a [`Self`] with the date values set to `(0, 0, 0)`
+	///
+	/// This is the exact same as [`Self::UNKNOWN`].
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(Date::ZERO, (0, 0, 0));
+	/// assert_eq!(Date::ZERO, "????-??-??");
+	/// assert_eq!(Date::ZERO, Date::UNKNOWN);
+	/// ```
+	pub const ZERO: Self = Date::UNKNOWN;
+
+	/// Returned on error situations.
 	///
 	/// ```rust
 	/// # use readable::*;
@@ -283,24 +295,6 @@ impl Date {
 	impl_const!();
 
 	// Common functions.
-	#[inline]
-	/// Returns a [`Self`] with the date values set to `(0, 0, 0)`
-	///
-	/// The [`String`] is set to [`Self::UNKNOWN`].
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
-
-	#[inline]
-	/// Same as [`Self::unknown`]
-	///
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Date::zero(), Date::unknown());
-	/// ```
-	pub const fn zero() -> Self {
-		Self::unknown()
-	}
 
 	#[inline]
 	/// Return the inner year (1000-9999)
@@ -325,7 +319,7 @@ impl Date {
 	/// ```rust
 	/// # use readable::Date;
 	/// let a = Date::from_y(2022).unwrap();
-	/// let b = Date::unknown();
+	/// let b = Date::UNKNOWN;
 	///
 	/// assert!(a.ok_year());
 	/// assert!(!b.ok_year());
@@ -339,7 +333,7 @@ impl Date {
 	/// ```rust
 	/// # use readable::Date;
 	/// let a = Date::from_ym(2022, 12).unwrap();
-	/// let b = Date::unknown();
+	/// let b = Date::UNKNOWN;
 	///
 	/// assert!(a.ok_month());
 	/// assert!(!b.ok_month());
@@ -353,7 +347,7 @@ impl Date {
 	/// ```rust
 	/// # use readable::Date;
 	/// let a = Date::from_ymd(2022, 12, 31).unwrap();
-	/// let b = Date::unknown();
+	/// let b = Date::UNKNOWN;
 	///
 	/// assert!(a.ok_day());
 	/// assert!(!b.ok_day());
@@ -367,7 +361,7 @@ impl Date {
 	/// ```rust
 	/// # use readable::Date;
 	/// let a = Date::from_ymd(2022, 12, 31).unwrap();
-	/// let b = Date::unknown();
+	/// let b = Date::UNKNOWN;
 	///
 	/// assert!(a.ok());
 	/// assert!(!b.ok());
@@ -388,7 +382,7 @@ impl Date {
 		if ok_year(year) {
 			Ok(Self::priv_y_num(year))
 		} else {
-			Err(Self::unknown())
+			Err(Self::UNKNOWN)
 		}
 	}
 
@@ -405,7 +399,7 @@ impl Date {
 		if ok_year(year) && ok_month(month) {
 			Ok(Self::priv_ym_num(year, month))
 		} else {
-			Err(Self::unknown())
+			Err(Self::UNKNOWN)
 		}
 	}
 
@@ -423,7 +417,7 @@ impl Date {
 		if ok(year, month, day) {
 			Ok(Self::priv_ymd_num(year, month, day))
 		} else {
-			Err(Self::unknown())
+			Err(Self::UNKNOWN)
 		}
 	}
 
@@ -438,7 +432,7 @@ impl Date {
 		if ok_year(year) {
 			Self::priv_y_num(year)
 		} else {
-			Self::unknown()
+			Self::UNKNOWN
 		}
 	}
 
@@ -454,7 +448,7 @@ impl Date {
 		if ok_year(year) && ok_month(month) {
 			Self::priv_ym_num(year, month)
 		} else {
-			Self::unknown()
+			Self::UNKNOWN
 		}
 	}
 
@@ -471,7 +465,7 @@ impl Date {
 		if ok(year, month, day) {
 			Self::priv_ymd_num(year, month, day)
 		} else {
-			Self::unknown()
+			Self::UNKNOWN
 		}
 	}
 
@@ -528,7 +522,7 @@ impl Date {
 		let nichi = nichi::Date::from_unix(unix_timestamp as i128);
 		let year = nichi.year().inner() as u16;
 		if !ok_year(year) {
-			Err(Self::unknown())
+			Err(Self::UNKNOWN)
 		} else {
 			Ok(Self::priv_ymd_num(
 				year,
@@ -714,13 +708,13 @@ impl Date {
 				// If the string is 4 characters long, but is less than 1000,
 				// there must be leading zeros
 				Ok(y) if ok_year(y) => return Ok(Self::priv_y(s)),
-				_     => return Err(Self::unknown()),
+				_     => return Err(Self::UNKNOWN),
 			}
 		}
 
 		// Less than the minimum year (1000).
 		if len < 4 {
-			return Err(Self::unknown());
+			return Err(Self::UNKNOWN);
 		}
 
 		// SAFETY:
@@ -990,7 +984,7 @@ impl Date {
 		}
 
 		// Give up.
-		Err(Date::unknown())
+		Err(Date::UNKNOWN)
 	}
 
 	#[inline]
@@ -1235,7 +1229,7 @@ impl From<crate::Nichi> for Date {
 			let (y,m,d) = value.inner();
 			Self::priv_ymd_num(y,m,d)
 		} else {
-			Self::unknown()
+			Self::UNKNOWN
 		}
 	}
 }
@@ -1246,7 +1240,7 @@ impl From<crate::NichiFull> for Date {
 			let (y,m,d) = value.inner();
 			Self::priv_ymd_num(y,m,d)
 		} else {
-			Self::unknown()
+			Self::UNKNOWN
 		}
 	}
 }
@@ -1331,23 +1325,23 @@ mod tests {
 
 	#[test]
 	fn invalid_years() {
-		assert_eq!(Date::from_str_silent("0"),    Date::unknown());
-		assert_eq!(Date::from_str_silent("100"),  Date::unknown());
-		assert_eq!(Date::from_str_silent("010"),  Date::unknown());
-		assert_eq!(Date::from_str_silent("0010"), Date::unknown());
-		assert_eq!(Date::from_str_silent("0100"), Date::unknown());
-		assert_eq!(Date::from_str_silent("999"),  Date::unknown());
-		assert_eq!(Date::from_str_silent("0999"), Date::unknown());
+		assert_eq!(Date::from_str_silent("0"),    Date::UNKNOWN);
+		assert_eq!(Date::from_str_silent("100"),  Date::UNKNOWN);
+		assert_eq!(Date::from_str_silent("010"),  Date::UNKNOWN);
+		assert_eq!(Date::from_str_silent("0010"), Date::UNKNOWN);
+		assert_eq!(Date::from_str_silent("0100"), Date::UNKNOWN);
+		assert_eq!(Date::from_str_silent("999"),  Date::UNKNOWN);
+		assert_eq!(Date::from_str_silent("0999"), Date::UNKNOWN);
 	}
 
 	#[test]
 	fn invalid_dates() {
-		assert_eq!(Date::from_str_silent("12-25-0100"), Date::unknown());
-		assert_eq!(Date::from_str_silent("01001225") ,  Date::unknown());
-		assert_eq!(Date::from_str_silent("25-12-0100"), Date::unknown());
-		assert_eq!(Date::from_str_silent("01000"),      Date::unknown());
-		assert_eq!(Date::from_str_silent("010000"),     Date::unknown());
-		assert_eq!(Date::from_str_silent("0100000"),    Date::unknown());
+		assert_eq!(Date::from_str_silent("12-25-0100"), Date::UNKNOWN);
+		assert_eq!(Date::from_str_silent("01001225") ,  Date::UNKNOWN);
+		assert_eq!(Date::from_str_silent("25-12-0100"), Date::UNKNOWN);
+		assert_eq!(Date::from_str_silent("01000"),      Date::UNKNOWN);
+		assert_eq!(Date::from_str_silent("010000"),     Date::UNKNOWN);
+		assert_eq!(Date::from_str_silent("0100000"),    Date::UNKNOWN);
 	}
 
 	#[test]

@@ -65,26 +65,24 @@ impl Runtime {
 	/// The max length of [`Runtime`]'s string.
 	pub const MAX_LEN: usize = 8;
 
-	/// [`f32`] returned when calling [`Runtime::zero`]
+	/// [`f32`] inside of [`Runtime::ZERO`]
 	pub const ZERO_F32: f32 = 0.0;
 
-	/// [`f32`] returned when calling [`Runtime::second`]
+	/// [`f32`] inside of [`Runtime::SECOND`]
 	pub const SECOND_F32: f32 = 1.0;
 
-	/// [`f32`] returned when calling [`Runtime::minute`]
+	/// [`f32`] inside of [`Runtime::MINUTE`]
 	pub const MINUTE_F32: f32 = 60.0;
 
-	/// [`f32`] returned when calling [`Runtime::hour`]
+	/// [`f32`] inside of [`Runtime::HOUR`]
 	pub const HOUR_F32: f32 = 3600.0;
 
-	/// [`f32`] returned when calling [`Runtime::day`]
+	/// [`f32`] inside of [`Runtime::DAY`]
 	pub const DAY_F32: f32 = 86400.0;
 
 	/// Input greater to [`Runtime`] will make it return [`Self::MAX`]
 	pub const MAX_F32: f32 = 359999.0;
 
-	/// Returned when using [`Runtime::unknown`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Runtime::UNKNOWN, 0.0);
@@ -92,8 +90,6 @@ impl Runtime {
 	/// ```
 	pub const UNKNOWN: Self = Self(Self::ZERO_F32, Str::from_static_str("?:??"));
 
-	/// Returned when using [`Runtime::zero`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Runtime::ZERO, 0.0);
@@ -101,8 +97,6 @@ impl Runtime {
 	/// ```
 	pub const ZERO: Self = Self(Self::ZERO_F32, Str::from_static_str("0:00"));
 
-	/// Returned when using [`Runtime::second`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Runtime::SECOND, 1.0);
@@ -110,8 +104,6 @@ impl Runtime {
 	/// ```
 	pub const SECOND: Self = Self(Self::SECOND_F32, Str::from_static_str("0:01"));
 
-	/// Returned when using [`Runtime::minute`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Runtime::MINUTE, 60.0);
@@ -119,8 +111,6 @@ impl Runtime {
 	/// ```
 	pub const MINUTE: Self = Self(Self::MINUTE_F32, Str::from_static_str("1:00"));
 
-	/// Returned when using [`Runtime::hour`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Runtime::HOUR, 3600.0);
@@ -128,8 +118,6 @@ impl Runtime {
 	/// ```
 	pub const HOUR: Self = Self(Self::HOUR_F32, Str::from_static_str("1:00:00"));
 
-	/// Returned when using [`Runtime::day`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Runtime::DAY, 86400.0);
@@ -137,8 +125,6 @@ impl Runtime {
 	/// ```
 	pub const DAY: Self = Self(Self::DAY_F32, Str::from_static_str("24:00:00"));
 
-	/// Returned when using [`Runtime::max`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Runtime::MAX, 359999.0);
@@ -152,69 +138,6 @@ impl Runtime {
 	impl_common!(f32);
 	impl_const!();
 	impl_usize!();
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Runtime::unknown(), Runtime::UNKNOWN);
-	/// ```
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Runtime::zero(), Runtime::ZERO);
-	/// ```
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Runtime::second(), Runtime::SECOND);
-	/// ```
-	pub const fn second() -> Self {
-		Self::SECOND
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Runtime::minute(), Runtime::MINUTE);
-	/// ```
-	pub const fn minute() -> Self {
-		Self::MINUTE
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Runtime::hour(), Runtime::HOUR);
-	/// ```
-	pub const fn hour() -> Self {
-		Self::HOUR
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Runtime::day(), Runtime::DAY);
-	/// ```
-	pub const fn day() -> Self {
-		Self::DAY
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Runtime::max(), Runtime::MAX);
-	/// ```
-	pub const fn max() -> Self {
-		Self::MAX
-	}
 
 	#[inline]
 	/// ```rust
@@ -241,11 +164,11 @@ impl Runtime {
 	// called before this function.
 	pub(super) fn priv_from(runtime: f32) -> Self {
 		let Some((h, m, s)) = Self::priv_from_inner(runtime) else {
-			return Self::unknown();
+			return Self::UNKNOWN;
 		};
 
 		if (h, m, s) == (0.0, 0.0, 0.0) {
-			return Self::zero();
+			return Self::ZERO;
 		}
 
 		let (hours, minutes, seconds) = (h as u8, m as u8, s as u8);
@@ -558,7 +481,7 @@ macro_rules! impl_runtime {
 				impl From<$from> for $self {
 					#[inline]
 					fn from(f: $from) -> Self {
-						$crate::macros::return_bad_float!(f, Self::unknown, Self::unknown);
+						$crate::macros::return_bad_float!(f, Self::UNKNOWN, Self::UNKNOWN);
 
 						Self::priv_from(f as f32)
 					}
@@ -566,7 +489,7 @@ macro_rules! impl_runtime {
 				impl From<&$from> for $self {
 					#[inline]
 					fn from(f: &$from) -> Self {
-						$crate::macros::return_bad_float!(f, Self::unknown, Self::unknown);
+						$crate::macros::return_bad_float!(f, Self::UNKNOWN, Self::UNKNOWN);
 
 						Self::priv_from(*f as f32)
 					}
@@ -607,7 +530,7 @@ macro_rules! impl_runtime {
 					#[inline]
 					fn from(runtime: $from) -> Self {
 						if runtime.is_negative() {
-							return Self::unknown();
+							return Self::UNKNOWN;
 						}
 						Self::priv_from(runtime as f32)
 					}
@@ -616,7 +539,7 @@ macro_rules! impl_runtime {
 					#[inline]
 					fn from(runtime: &$from) -> Self {
 						if runtime.is_negative() {
-							return Self::unknown();
+							return Self::UNKNOWN;
 						}
 						Self::priv_from(*runtime as f32)
 					}
@@ -773,22 +696,22 @@ mod tests {
 	#[test]
 	fn overflow_float() {
 		assert_eq!(Runtime::from(Runtime::MAX_F32 + 1.0), 0.0);
-		assert_eq!(Runtime::from(Runtime::MAX_F32 + 1.0), Runtime::unknown());
+		assert_eq!(Runtime::from(Runtime::MAX_F32 + 1.0), Runtime::UNKNOWN);
 	}
 
 	#[test]
 	fn overflow_uint() {
 		assert_eq!(Runtime::from(Runtime::MAX_F32 + 1.0), 0.0);
-		assert_eq!(Runtime::from(Runtime::MAX_F32 + 1.0), Runtime::unknown());
+		assert_eq!(Runtime::from(Runtime::MAX_F32 + 1.0), Runtime::UNKNOWN);
 	}
 
 	#[test]
 	fn special() {
-		assert_eq!(Runtime::from(f32::NAN),          Runtime::unknown());
-		assert_eq!(Runtime::from(f32::INFINITY),     Runtime::unknown());
-		assert_eq!(Runtime::from(f32::NEG_INFINITY), Runtime::unknown());
-		assert_eq!(Runtime::from(f64::NAN),          Runtime::unknown());
-		assert_eq!(Runtime::from(f64::INFINITY),     Runtime::unknown());
-		assert_eq!(Runtime::from(f64::NEG_INFINITY), Runtime::unknown());
+		assert_eq!(Runtime::from(f32::NAN),          Runtime::UNKNOWN);
+		assert_eq!(Runtime::from(f32::INFINITY),     Runtime::UNKNOWN);
+		assert_eq!(Runtime::from(f32::NEG_INFINITY), Runtime::UNKNOWN);
+		assert_eq!(Runtime::from(f64::NAN),          Runtime::UNKNOWN);
+		assert_eq!(Runtime::from(f64::INFINITY),     Runtime::UNKNOWN);
+		assert_eq!(Runtime::from(f64::NEG_INFINITY), Runtime::UNKNOWN);
 	}
 }

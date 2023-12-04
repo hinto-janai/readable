@@ -160,88 +160,6 @@ impl UptimeFull {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Uptime::zero(), Uptime::ZERO);
-	/// ```
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::second(), Uptime::SECOND);
-	/// ```
-	pub const fn second() -> Self {
-		Self::SECOND
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::minute(), Uptime::MINUTE);
-	/// ```
-	pub const fn minute() -> Self {
-		Self::MINUTE
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::hour(), Uptime::HOUR);
-	/// ```
-	pub const fn hour() -> Self {
-		Self::HOUR
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::day(), Uptime::DAY);
-	/// ```
-	pub const fn day() -> Self {
-		Self::DAY
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::month(), Uptime::MONTH);
-	/// ```
-	pub const fn month() -> Self {
-		Self::MONTH
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::year(), Uptime::YEAR);
-	/// ```
-	pub const fn year() -> Self {
-		Self::YEAR
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::max(), Uptime::MAX);
-	/// ```
-	pub const fn max() -> Self {
-		Self::MAX
-	}
-
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Uptime::unknown(), Uptime::UNKNOWN);
-	/// ```
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
 	/// assert!(UptimeFull::UNKNOWN.is_unknown());
 	/// assert!(!UptimeFull::ZERO.is_unknown());
 	/// ```
@@ -285,7 +203,7 @@ impl UptimeFull {
 		// }
 
 		if secs == 0 {
-			return Self::zero();
+			return Self::ZERO;
 		}
 
 		let years    = secs / 31_536_000;  // 365 days
@@ -364,7 +282,7 @@ macro_rules! impl_int {
 			#[inline]
 			fn from(int: $int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				Self::from_priv(int as u32)
 			}
@@ -373,7 +291,7 @@ macro_rules! impl_int {
 			#[inline]
 			fn from(int: &$int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				Self::from_priv(*int as u32)
 			}
@@ -390,7 +308,7 @@ macro_rules! impl_int_over {
 			#[inline]
 			fn from(int: $int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(int, $int);
 				Self::from_priv(int as u32)
@@ -400,7 +318,7 @@ macro_rules! impl_int_over {
 			#[inline]
 			fn from(int: &$int) -> Self {
 				if int.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(*int, $int);
 				Self::from_priv(*int as u32)
@@ -418,9 +336,9 @@ macro_rules! impl_f {
 		impl From<$float> for UptimeFull {
 			#[inline]
 			fn from(float: $float) -> Self {
-				return_bad_float!(float, Self::unknown, Self::unknown);
+				return_bad_float!(float, Self::UNKNOWN, Self::UNKNOWN);
 				if float.is_sign_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(float, $float);
 				Self::from_priv(float as u32)
@@ -429,9 +347,9 @@ macro_rules! impl_f {
 		impl From<&$float> for UptimeFull {
 			#[inline]
 			fn from(float: &$float) -> Self {
-				return_bad_float!(float, Self::unknown, Self::unknown);
+				return_bad_float!(float, Self::UNKNOWN, Self::UNKNOWN);
 				if float.is_sign_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				handle_over_u32!(*float, $float);
 				Self::from_priv(*float as u32)
@@ -449,7 +367,7 @@ macro_rules! impl_from_time {
 			#[inline]
 			fn from(from: $other) -> Self {
 				if from.is_unknown() {
-					Self::unknown()
+					Self::UNKNOWN
 				} else {
 					Self::from_priv(from.inner())
 				}
@@ -459,7 +377,7 @@ macro_rules! impl_from_time {
 			#[inline]
 			fn from(from: &$other) -> Self {
 				if from.is_unknown() {
-					Self::unknown()
+					Self::UNKNOWN
 				} else {
 					Self::from_priv(from.inner())
 				}
@@ -538,20 +456,20 @@ mod tests {
 
 	#[test]
 	fn over() {
-		assert_ne!(UptimeFull::from(u32::MAX),            UptimeFull::unknown());
-		assert_eq!(UptimeFull::from(u32::MAX as u64 + 1), UptimeFull::unknown());
-		assert_eq!(UptimeFull::from(u64::MAX),            UptimeFull::unknown());
-		assert_eq!(UptimeFull::from(f64::MAX),            UptimeFull::unknown());
-		assert_eq!(UptimeFull::from(f32::MAX),            UptimeFull::unknown());
+		assert_ne!(UptimeFull::from(u32::MAX),            UptimeFull::UNKNOWN);
+		assert_eq!(UptimeFull::from(u32::MAX as u64 + 1), UptimeFull::UNKNOWN);
+		assert_eq!(UptimeFull::from(u64::MAX),            UptimeFull::UNKNOWN);
+		assert_eq!(UptimeFull::from(f64::MAX),            UptimeFull::UNKNOWN);
+		assert_eq!(UptimeFull::from(f32::MAX),            UptimeFull::UNKNOWN);
 	}
 
 	#[test]
 	fn special() {
-		assert_eq!(UptimeFull::from(f32::NAN),          UptimeFull::unknown());
-		assert_eq!(UptimeFull::from(f32::INFINITY),     UptimeFull::unknown());
-		assert_eq!(UptimeFull::from(f32::NEG_INFINITY), UptimeFull::unknown());
-		assert_eq!(UptimeFull::from(f64::NAN),          UptimeFull::unknown());
-		assert_eq!(UptimeFull::from(f64::INFINITY),     UptimeFull::unknown());
-		assert_eq!(UptimeFull::from(f64::NEG_INFINITY), UptimeFull::unknown());
+		assert_eq!(UptimeFull::from(f32::NAN),          UptimeFull::UNKNOWN);
+		assert_eq!(UptimeFull::from(f32::INFINITY),     UptimeFull::UNKNOWN);
+		assert_eq!(UptimeFull::from(f32::NEG_INFINITY), UptimeFull::UNKNOWN);
+		assert_eq!(UptimeFull::from(f64::NAN),          UptimeFull::UNKNOWN);
+		assert_eq!(UptimeFull::from(f64::INFINITY),     UptimeFull::UNKNOWN);
+		assert_eq!(UptimeFull::from(f64::NEG_INFINITY), UptimeFull::UNKNOWN);
 	}
 }

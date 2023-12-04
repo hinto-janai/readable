@@ -34,10 +34,10 @@ use std::num::{
 /// ```rust
 /// # use readable::*;
 /// // Signed floats will fail.
-/// assert_eq!(Unsigned::try_from(-1.0), Err(Unsigned::unknown()));
+/// assert_eq!(Unsigned::try_from(-1.0), Err(Unsigned::UNKNOWN));
 ///
 /// // Special floats like `f64::NAN` will fail.
-/// assert_eq!(Unsigned::try_from(f64::NAN), Err(Unsigned::unknown()));
+/// assert_eq!(Unsigned::try_from(f64::NAN), Err(Unsigned::UNKNOWN));
 ///
 /// // Fractional parts will be ignored (not rounded)
 /// assert_eq!(Unsigned::try_from(1.99).unwrap(), "1");
@@ -112,7 +112,7 @@ use std::num::{
 /// assert_eq!(Unsigned::from(1_000_000_u64), "1,000,000");
 ///
 /// // From floats.
-/// assert_eq!(Unsigned::try_from(-1.0),                 Err(Unsigned::unknown()));
+/// assert_eq!(Unsigned::try_from(-1.0),                 Err(Unsigned::UNKNOWN));
 /// assert_eq!(Unsigned::try_from(1_000.123).unwrap(),   "1,000");
 /// assert_eq!(Unsigned::try_from(100_000.123).unwrap(), "100,000");
 /// assert_eq!(Unsigned::try_from(100_000.123).unwrap(), "100,000");
@@ -120,9 +120,9 @@ use std::num::{
 ///
 /// // From signed integers.
 /// assert_eq!(Unsigned::try_from(100_i8),         Ok(Unsigned::from(100_u8)));
-/// assert_eq!(Unsigned::try_from(-100_i8),        Err(Unsigned::unknown()));
+/// assert_eq!(Unsigned::try_from(-100_i8),        Err(Unsigned::UNKNOWN));
 /// assert_eq!(Unsigned::try_from(1_000_000_i64),  Ok(Unsigned::from(1_000_000_u32)));
-/// assert_eq!(Unsigned::try_from(-1_000_000_i64), Err(Unsigned::unknown()));
+/// assert_eq!(Unsigned::try_from(-1_000_000_i64), Err(Unsigned::UNKNOWN));
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
@@ -150,7 +150,7 @@ impl Unsigned {
 	/// ```
 	pub const MAX: Self = Self(u64::MAX, Str::from_static_str("18,446,744,073,709,551,615"));
 
-	/// Returned when using [`Unsigned::unknown()`] and error situations.
+	/// Returned when using [`Unsigned::UNKNOWN`] and error situations.
 	///
 	/// ```rust
 	/// # use readable::num::*;
@@ -163,7 +163,7 @@ impl Unsigned {
 	/// The maximum string length of an [`Unsigned`].
 	///
 	/// ```rust
-	/// assert_eq!(readable::Unsigned::max().len(), 26);
+	/// assert_eq!(readable::Unsigned::MAX.len(), 26);
 	/// ```
 	pub const MAX_LEN: usize = LEN;
 }
@@ -174,41 +174,6 @@ impl Unsigned {
 	impl_common!(u64);
 	impl_const!();
 	impl_usize!();
-
-	#[inline]
-	/// Create a new [`Unsigned`].
-	///
-	/// This internally just calls [`Unsigned::from`].
-	pub fn new(u: u64) -> Self {
-		Self::from(u)
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::num::*;
-	/// assert_eq!(Unsigned::zero(), Unsigned::ZERO);
-	/// ```
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::num::*;
-	/// assert_eq!(Unsigned::max(), Unsigned::MAX);
-	/// ```
-	pub const fn max() -> Self {
-		Self::MAX
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::num::*;
-	/// assert_eq!(Unsigned::unknown(), Unsigned::UNKNOWN);
-	/// ```
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
 
 	#[inline]
 	/// ```rust
@@ -536,7 +501,7 @@ impl_u!(u8,u16,u32,u64);
 impl_u!(usize);
 
 //---------------------------------------------------------------------------------------------------- From `u128`
-/// This will return [`Self::unknown`] wrapped
+/// This will return [`Self::UNKNOWN`] wrapped
 /// in [`Result::Err`] if the conversion fails.
 impl TryFrom<u128> for Unsigned {
 	type Error = Self;
@@ -544,11 +509,11 @@ impl TryFrom<u128> for Unsigned {
 	fn try_from(num: u128) -> Result<Self, Self> {
 		match u64::try_from(num) {
 			Ok(u) => Ok(Self::from_priv(u)),
-			_ => Err(Self::unknown()),
+			_ => Err(Self::UNKNOWN),
 		}
 	}
 }
-/// This will return [`Self::unknown`] wrapped
+/// This will return [`Self::UNKNOWN`] wrapped
 /// in [`Result::Err`] if the conversion fails.
 impl TryFrom<&u128> for Unsigned {
 	type Error = Self;
@@ -556,7 +521,7 @@ impl TryFrom<&u128> for Unsigned {
 	fn try_from(num: &u128) -> Result<Self, Self> {
 		match u64::try_from(*num) {
 			Ok(u) => Ok(Self::from_priv(u)),
-			_ => Err(Self::unknown()),
+			_ => Err(Self::UNKNOWN),
 		}
 	}
 }
@@ -587,7 +552,7 @@ impl_nonu!(NonZeroUsize,&NonZeroUsize);
 macro_rules! impl_i {
 	($( $from:ty ),*) => {
 		$(
-			/// This will return [`Self::unknown`] wrapped
+			/// This will return [`Self::UNKNOWN`] wrapped
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<$from> for Unsigned {
 				type Error = Self;
@@ -595,11 +560,11 @@ macro_rules! impl_i {
 				fn try_from(num: $from) -> Result<Self, Self> {
 					match u64::try_from(num) {
 						Ok(u) => Ok(Self::from_priv(u)),
-						_ => Err(Self::unknown()),
+						_ => Err(Self::UNKNOWN),
 					}
 				}
 			}
-			/// This will return [`Self::unknown`] wrapped
+			/// This will return [`Self::UNKNOWN`] wrapped
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<&$from> for Unsigned {
 				type Error = Self;
@@ -607,7 +572,7 @@ macro_rules! impl_i {
 				fn try_from(num: &$from) -> Result<Self, Self> {
 					match u64::try_from(*num) {
 						Ok(u) => Ok(Self::from_priv(u)),
-						_ => Err(Self::unknown()),
+						_ => Err(Self::UNKNOWN),
 					}
 				}
 			}
@@ -620,7 +585,7 @@ impl_i!(i8,i16,i32,i64,isize);
 macro_rules! impl_int {
 	($( $from:ty ),*) => {
 		$(
-			/// This will return [`Self::unknown`] wrapped
+			/// This will return [`Self::UNKNOWN`] wrapped
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<$from> for Unsigned {
 				type Error = Self;
@@ -628,7 +593,7 @@ macro_rules! impl_int {
 				fn try_from(int: $from) -> Result<Self, Self> {
 					match u64::try_from(int.inner()) {
 						Ok(u) => Ok(Self::from_priv(u)),
-						_ => Err(Self::unknown()),
+						_ => Err(Self::UNKNOWN),
 					}
 				}
 			}
@@ -641,7 +606,7 @@ impl_int!(Int,&Int);
 macro_rules! impl_noni {
 	($( $from:ty ),* $(,)?) => {
 		$(
-			/// This will return [`Self::unknown`] wrapped
+			/// This will return [`Self::UNKNOWN`] wrapped
 			/// in [`Result::Err`] if the conversion fails.
 			impl TryFrom<$from> for Unsigned {
 				type Error = Self;
@@ -649,7 +614,7 @@ macro_rules! impl_noni {
 				fn try_from(num: $from) -> Result<Self, Self> {
 					match u64::try_from(num.get()) {
 						Ok(u) => Ok(Self::from_priv(u)),
-						_ => Err(Self::unknown()),
+						_ => Err(Self::UNKNOWN),
 					}
 				}
 			}
@@ -667,7 +632,7 @@ impl_noni!(NonZeroIsize,&NonZeroIsize);
 //---------------------------------------------------------------------------------------------------- From `f32/f64`
 macro_rules! impl_f {
 	($from:ty) => {
-		/// This will return [`Self::unknown`] if the input float is
+		/// This will return [`Self::UNKNOWN`] if the input float is
 		/// `NAN`, `INFINITY`, negative, or higher than [`u64::MAX`].
 		impl TryFrom<$from> for Unsigned {
 			type Error = Self;
@@ -675,15 +640,15 @@ macro_rules! impl_f {
 			fn try_from(float: $from) -> Result<Self, Self> {
 				match float.classify() {
 					std::num::FpCategory::Normal   => (),
-					std::num::FpCategory::Nan      => return Err(Self::unknown()),
-					std::num::FpCategory::Infinite => return Err(Self::unknown()),
+					std::num::FpCategory::Nan      => return Err(Self::UNKNOWN),
+					std::num::FpCategory::Infinite => return Err(Self::UNKNOWN),
 					_ => (),
 				}
 
 				if float.is_sign_negative() {
-					return Err(Self::unknown());
+					return Err(Self::UNKNOWN);
 				} else if float > u64::MAX as $from {
-					return Err(Self::unknown());
+					return Err(Self::UNKNOWN);
 				}
 
 				Ok(Self::from_priv(float as u64))
@@ -745,8 +710,8 @@ mod tests {
 
 	#[test]
 	fn special() {
-		assert_eq!(Unsigned::try_from(f64::NAN),          Err(Unsigned::unknown()));
-		assert_eq!(Unsigned::try_from(f64::INFINITY),     Err(Unsigned::unknown()));
-		assert_eq!(Unsigned::try_from(f64::NEG_INFINITY), Err(Unsigned::unknown()));
+		assert_eq!(Unsigned::try_from(f64::NAN),          Err(Unsigned::UNKNOWN));
+		assert_eq!(Unsigned::try_from(f64::INFINITY),     Err(Unsigned::UNKNOWN));
+		assert_eq!(Unsigned::try_from(f64::NEG_INFINITY), Err(Unsigned::UNKNOWN));
 	}
 }

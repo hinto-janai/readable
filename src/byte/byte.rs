@@ -28,7 +28,7 @@ use crate::macros::{
 /// assert_eq!(Byte::from(912_264_341_125_323_u64),       "912.264 TB");
 /// assert_eq!(Byte::from(8_116_364_000_125_821_u64),     "8.116 PB");
 /// assert_eq!(Byte::from(1_567_112_131_103_513_123_u64), "1.567 EB");
-/// assert_eq!(Byte::max(), "18.446 EB");
+/// assert_eq!(Byte::MAX, "18.446 EB");
 /// ```
 ///
 /// The maximum input is [`u64::MAX`] or `18.446` exabytes.
@@ -43,7 +43,7 @@ use crate::macros::{
 /// Inputs are presumed to be in bytes.
 ///
 /// ## Errors
-/// A [`Byte::unknown()`] will be returned if the input is:
+/// A [`Byte::UNKNOWN`] will be returned if the input is:
 /// - A negative integer
 /// - Larger than [`u64::MAX`]
 /// - [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`] (or the [`f64`] versions)
@@ -118,7 +118,7 @@ const TERABYTE: u64 = 1_000_000_000_000;
 const PETABYTE: u64 = 1_000_000_000_000_000;
 /// 1 `exabyte` in `bytes`
 const EXABYTE: u64 = 1_000_000_000_000_000_000;
-/// Number used when using [`Byte::zero()`] or when [`Byte::unknown()`] is encountered
+/// Number used when using [`Byte::ZERO`] or when [`Byte::UNKNOWN`] is encountered
 const ZERO: u64 = 0;
 
 //---------------------------------------------------------------------------------------------------- Constants
@@ -132,81 +132,81 @@ impl Byte {
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Byte::zero(), "0 B");
-	/// assert_eq!(Byte::zero(), 0_u64);
-	/// assert_eq!(Byte::zero(), Byte::from(0_u64));
+	/// assert_eq!(Byte::ZERO, "0 B");
+	/// assert_eq!(Byte::ZERO, 0_u64);
+	/// assert_eq!(Byte::ZERO, Byte::from(0_u64));
 	/// ```
 	pub const ZERO: Byte = Byte(ZERO, Str::from_static_str("0 B"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Byte::byte(), "1 B");
-	/// assert_eq!(Byte::byte(), 1_u64);
-	/// assert_eq!(Byte::byte(), Byte::from(1_u64));
+	/// assert_eq!(Byte::BYTE, "1 B");
+	/// assert_eq!(Byte::BYTE, 1_u64);
+	/// assert_eq!(Byte::BYTE, Byte::from(1_u64));
 	/// ```
 	pub const BYTE: Byte = Byte(BYTE, Str::from_static_str("1 B"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Byte::kilobyte(), "1.000 KB");
-	/// assert_eq!(Byte::kilobyte(), 1_000_u64);
-	/// assert_eq!(Byte::kilobyte(), Byte::from(1_000_u64));
+	/// assert_eq!(Byte::KILOBYTE, "1.000 KB");
+	/// assert_eq!(Byte::KILOBYTE, 1_000_u64);
+	/// assert_eq!(Byte::KILOBYTE, Byte::from(1_000_u64));
 	/// ```
 	pub const KILOBYTE: Byte = Byte(KILOBYTE, Str::from_static_str("1.000 KB"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Byte::megabyte(), "1.000 MB");
-	/// assert_eq!(Byte::megabyte(), 1_000_000_u64);
-	/// assert_eq!(Byte::megabyte(), Byte::from(1_000_000_u64));
+	/// assert_eq!(Byte::MEGABYTE, "1.000 MB");
+	/// assert_eq!(Byte::MEGABYTE, 1_000_000_u64);
+	/// assert_eq!(Byte::MEGABYTE, Byte::from(1_000_000_u64));
 	/// ```
 	pub const MEGABYTE: Byte = Byte(MEGABYTE, Str::from_static_str("1.000 MB"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Byte::gigabyte(), "1.000 GB");
-	/// assert_eq!(Byte::gigabyte(), 1_000_000_000_u64);
-	/// assert_eq!(Byte::gigabyte(), Byte::from(1_000_000_000_u64));
+	/// assert_eq!(Byte::GIGABYTE, "1.000 GB");
+	/// assert_eq!(Byte::GIGABYTE, 1_000_000_000_u64);
+	/// assert_eq!(Byte::GIGABYTE, Byte::from(1_000_000_000_u64));
 	/// ```
 	pub const GIGABYTE: Byte = Byte(GIGABYTE, Str::from_static_str("1.000 GB"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Byte::terabyte(), "1.000 TB");
-	/// assert_eq!(Byte::terabyte(), 1_000_000_000_000_u64);
-	/// assert_eq!(Byte::terabyte(), Byte::from(1_000_000_000_000_u64));
+	/// assert_eq!(Byte::TERABYTE, "1.000 TB");
+	/// assert_eq!(Byte::TERABYTE, 1_000_000_000_000_u64);
+	/// assert_eq!(Byte::TERABYTE, Byte::from(1_000_000_000_000_u64));
 	/// ```
 	pub const TERABYTE: Byte = Byte(TERABYTE, Str::from_static_str("1.000 TB"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Byte::petabyte(), "1.000 PB");
-	/// assert_eq!(Byte::petabyte(), 1_000_000_000_000_000_u64);
-	/// assert_eq!(Byte::petabyte(), Byte::from(1_000_000_000_000_000_u64));
+	/// assert_eq!(Byte::PETABYTE, "1.000 PB");
+	/// assert_eq!(Byte::PETABYTE, 1_000_000_000_000_000_u64);
+	/// assert_eq!(Byte::PETABYTE, Byte::from(1_000_000_000_000_000_u64));
 	/// ```
 	pub const PETABYTE: Byte = Byte(PETABYTE, Str::from_static_str("1.000 PB"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Byte::exabyte(), "1.000 EB");
-	/// assert_eq!(Byte::exabyte(), 1_000_000_000_000_000_000_u64);
-	/// assert_eq!(Byte::exabyte(), Byte::from(1_000_000_000_000_000_000_u64));
+	/// assert_eq!(Byte::EXABYTE, "1.000 EB");
+	/// assert_eq!(Byte::EXABYTE, 1_000_000_000_000_000_000_u64);
+	/// assert_eq!(Byte::EXABYTE, Byte::from(1_000_000_000_000_000_000_u64));
 	/// ```
 	pub const EXABYTE: Byte = Byte(EXABYTE, Str::from_static_str("1.000 EB"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Byte::max(), Byte::from(u64::MAX));
-	/// assert_eq!(Byte::max(), "18.446 EB");
-	/// assert_eq!(Byte::max(), u64::MAX);
+	/// assert_eq!(Byte::MAX, Byte::from(u64::MAX));
+	/// assert_eq!(Byte::MAX, "18.446 EB");
+	/// assert_eq!(Byte::MAX, u64::MAX);
 	/// ```
 	pub const MAX: Byte = Byte(u64::MAX, Str::from_static_str("18.446 EB"));
 
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(Byte::unknown(), Byte::from(f32::NAN));
-	/// assert_eq!(Byte::unknown(), Byte::from(-1));
-	/// assert_eq!(Byte::unknown(), "???.??? B");
+	/// assert_eq!(Byte::UNKNOWN, Byte::from(f32::NAN));
+	/// assert_eq!(Byte::UNKNOWN, Byte::from(-1));
+	/// assert_eq!(Byte::UNKNOWN, "???.??? B");
 	/// ```
 	pub const UNKNOWN: Byte = Byte(ZERO, Str::from_static_str("???.??? B"));
 }
@@ -216,96 +216,6 @@ impl Byte {
 	impl_common!(u64);
 	impl_const!();
 	impl_usize!();
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Byte::zero(), Byte::ZERO);
-	/// ```
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Byte::byte(), Byte::BYTE);
-	/// ```
-    pub const fn byte() -> Self {
-		Self::BYTE
-    }
-
-    #[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Byte::kilobyte(), Byte::KILOBYTE);
-	/// ```
-    pub const fn kilobyte() -> Self {
-		Self::KILOBYTE
-    }
-
-    #[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Byte::megabyte(), Byte::MEGABYTE);
-	/// ```
-    pub const fn megabyte() -> Self {
-		Self::MEGABYTE
-    }
-
-    #[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Byte::gigabyte(), Byte::GIGABYTE);
-	/// ```
-    pub const fn gigabyte() -> Self {
-		Self::GIGABYTE
-    }
-
-    #[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Byte::terabyte(), Byte::TERABYTE);
-	/// ```
-    pub const fn terabyte() -> Self {
-		Self::TERABYTE
-    }
-
-    #[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Byte::petabyte(), Byte::PETABYTE);
-	/// ```
-    pub const fn petabyte() -> Self {
-		Self::PETABYTE
-    }
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Byte::exabyte(), Byte::EXABYTE);
-	/// ```
-	pub const fn exabyte() -> Self {
-		Self::EXABYTE
-    }
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Byte::max(), Byte::MAX);
-	/// ```
-	pub const fn max() -> Self {
-		Self::MAX
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Byte::unknown(), Byte::UNKNOWN);
-	/// ```
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
 
 	#[inline]
 	/// ```rust
@@ -326,14 +236,14 @@ impl Byte {
 	fn from_priv(bytes: u64) -> Self {
 		// If bytes is a perfect multiple, return literals.
 		match bytes {
-			ZERO     => return Self::zero(),
-			BYTE     => return Self::byte(),
-			KILOBYTE => return Self::kilobyte(),
-			MEGABYTE => return Self::megabyte(),
-			GIGABYTE => return Self::gigabyte(),
-			TERABYTE => return Self::terabyte(),
-			PETABYTE => return Self::petabyte(),
-			EXABYTE  => return Self::exabyte(),
+			ZERO     => return Self::ZERO,
+			BYTE     => return Self::BYTE,
+			KILOBYTE => return Self::KILOBYTE,
+			MEGABYTE => return Self::MEGABYTE,
+			GIGABYTE => return Self::GIGABYTE,
+			TERABYTE => return Self::TERABYTE,
+			PETABYTE => return Self::PETABYTE,
+			EXABYTE  => return Self::EXABYTE,
 			_ => (),
 		}
 
@@ -457,7 +367,7 @@ macro_rules! impl_i {
 				#[inline]
 				fn from(uint: $from) -> Self {
 					if uint.is_negative() {
-						return Self::unknown();
+						return Self::UNKNOWN;
 					}
 					let u = uint as u64;
 					Self::from_priv(u)
@@ -467,7 +377,7 @@ macro_rules! impl_i {
 				#[inline]
 				fn from(uint: &$from) -> Self {
 					if uint.is_negative() {
-						return Self::unknown();
+						return Self::UNKNOWN;
 					}
 					let u = *uint as u64;
 					Self::from_priv(u)
@@ -481,19 +391,19 @@ impl_i!(i8,i16,i32,i64,isize);
 //---------------------------------------------------------------------------------------------------- From `f32/f64`
 macro_rules! impl_f {
 	($from:ty) => {
-		/// This will return [`Self::unknown`]
+		/// This will return [`Self::UNKNOWN`]
 		/// if the input float is `NAN`, `INFINITY`, or negative.
 		impl From<$from> for Byte {
 			fn from(float: $from) -> Self {
 				match float.classify() {
 					std::num::FpCategory::Normal   => (),
-					std::num::FpCategory::Nan      => return Self::unknown(),
-					std::num::FpCategory::Infinite => return Self::unknown(),
+					std::num::FpCategory::Nan      => return Self::UNKNOWN,
+					std::num::FpCategory::Infinite => return Self::UNKNOWN,
 					_ => (),
 				}
 
 				if float.is_sign_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 
 				Self::from_priv(float as u64)
@@ -532,7 +442,7 @@ macro_rules! impl_noni {
 				fn from(int: $from) -> Self {
 					let u = int.get();
 					if u.is_negative() {
-						return Self::unknown();
+						return Self::UNKNOWN;
 					}
 					let u = u as u64;
 					Self::from_priv(u)

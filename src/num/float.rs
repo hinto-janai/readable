@@ -150,7 +150,7 @@ macro_rules! impl_new {
 		paste::item! {
 			#[doc = "Same as [`Float::from`] but with `" $num "` floating point."]
 			pub fn [<from_ $num>](f: f64) -> Self {
-				return_bad_float!(f, Self::nan, Self::infinity);
+				return_bad_float!(f, Self::NAN, Self::INFINITY);
 
 				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
 				Self(f, format_compact!("{}.{}", str_u64!(f as u64), fract))
@@ -164,24 +164,6 @@ impl Float {
 	impl_not_const!();
 	impl_usize!();
 	impl_isize!();
-
-	#[inline]
-	/// Returns [`Self::ZERO`]
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
-	#[inline]
-	/// Returns [`Self::NAN`]
-	pub const fn nan() -> Self {
-		Self::NAN
-	}
-
-	#[inline]
-	/// Returns [`Self::INFINITY`]
-	pub const fn infinity() -> Self {
-		Self::INFINITY
-	}
 
 	#[inline]
 	/// Calls [`f64::is_nan`].
@@ -209,7 +191,7 @@ impl Float {
 	/// | 50.123 | `50`
 	/// | 100.1  | `100`
 	pub fn from_0(f: f64) -> Self {
-		return_bad_float!(f, Self::nan, Self::infinity);
+		return_bad_float!(f, Self::NAN, Self::INFINITY);
 		Self(f, CompactString::from(str_u64!(f as u64)))
 	}
 
@@ -253,7 +235,7 @@ impl_i!(i8,i16,i32,i64,isize);
 impl From<f32> for Float {
 	#[inline]
 	fn from(f: f32) -> Self {
-		return_bad_float!(f, Self::nan, Self::infinity);
+		return_bad_float!(f, Self::NAN, Self::INFINITY);
 		Self::from(f as f64)
 	}
 }
@@ -261,7 +243,7 @@ impl From<f32> for Float {
 impl From<f64> for Float {
 	#[inline]
 	fn from(f: f64) -> Self {
-		return_bad_float!(f, Self::nan, Self::infinity);
+		return_bad_float!(f, Self::NAN, Self::INFINITY);
 
 		let fract = &format_compact!("{:.3}", f.fract())[2..];
 
@@ -277,9 +259,9 @@ mod tests {
 	#[test]
 	fn special() {
 		assert_eq!(Float::from(0.0), "0.000");
-		assert_eq!(Float::zero(),    "0.000");
-		assert_eq!(Float::nan(),     NAN);
-		assert_eq!(Float::infinity(),     INFINITY);
+		assert_eq!(Float::ZERO,      "0.000");
+		assert_eq!(Float::NAN,       NAN);
+		assert_eq!(Float::INFINITY,  INFINITY);
 
 		assert_eq!(Float::from(f64::NAN),          NAN);
 		assert_eq!(Float::from(f64::INFINITY),     INFINITY);

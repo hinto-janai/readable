@@ -54,7 +54,19 @@ impl Nichi {
 	/// ```
 	pub const MAX_LEN: usize = 17;
 
-	/// Returned when using [`Nichi::unknown`] or error situations.
+	/// Returns a [`Self`] with the date values set to `(0, 0, 0)`
+	///
+	/// This is the exact same as [`Self::UNKNOWN`].
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(Nichi::ZERO, (0, 0, 0));
+	/// assert_eq!(Nichi::ZERO, "???");
+	/// assert_eq!(Nichi::ZERO, Nichi::UNKNOWN);
+	/// ```
+	pub const ZERO: Self = Self::UNKNOWN;
+
+	/// Returned when using [`Nichi::UNKNOWN`] or error situations.
 	///
 	/// ```rust
 	/// # use readable::*;
@@ -70,24 +82,6 @@ impl Nichi {
 	impl_const!();
 
 	// Common functions.
-	#[inline]
-	/// Returns a [`Self`] with the date values set to `(0, 0, 0)`
-	///
-	/// The [`String`] is set to [`Self::UNKNOWN`].
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
-
-	#[inline]
-	/// Same as [`Self::unknown`]
-	///
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Nichi::zero(), Nichi::unknown());
-	/// ```
-	pub const fn zero() -> Self {
-		Self::unknown()
-	}
 
 	#[inline]
 	/// Return the inner year (1000-9999)
@@ -141,7 +135,7 @@ impl Nichi {
 		if ok(year, month, day) {
 			Ok(Self::priv_from(year, month, day))
 		} else {
-			Err(Self::unknown())
+			Err(Self::UNKNOWN)
 		}
 	}
 
@@ -158,7 +152,7 @@ impl Nichi {
 		if ok(year, month, day) {
 			Self::priv_from(year, month, day)
 		} else {
-			Self::unknown()
+			Self::UNKNOWN
 		}
 	}
 
@@ -189,7 +183,7 @@ impl Nichi {
 		let nichi = nichi::Date::from_unix(unix_timestamp as i128);
 		let year = nichi.year().inner() as u16;
 		if !ok_year(year) {
-			Err(Self::unknown())
+			Err(Self::UNKNOWN)
 		} else {
 			Ok(Self::priv_from(
 				year,
@@ -339,7 +333,7 @@ impl Nichi {
 				let (y, m, d) = nichi.inner();
 				Ok(Self::priv_from(y as u16, m, d))
 			},
-			None => Err(Self::unknown()),
+			None => Err(Self::UNKNOWN),
 		}
 	}
 
@@ -428,7 +422,7 @@ impl From<crate::Date> for Nichi {
 			let (y,m,d) = value.inner();
 			Self::priv_from(y,m,d)
 		} else {
-			Self::unknown()
+			Self::UNKNOWN
 		}
 	}
 }
@@ -439,7 +433,7 @@ impl From<crate::NichiFull> for Nichi {
 			let (y,m,d) = value.inner();
 			Self::priv_from(y,m,d)
 		} else {
-			Self::unknown()
+			Self::UNKNOWN
 		}
 	}
 }
@@ -455,23 +449,23 @@ mod tests {
 
 	#[test]
 	fn invalid_years() {
-		assert_eq!(Nichi::from_str_silent("0"),    Nichi::unknown());
-		assert_eq!(Nichi::from_str_silent("100"),  Nichi::unknown());
-		assert_eq!(Nichi::from_str_silent("010"),  Nichi::unknown());
-		assert_eq!(Nichi::from_str_silent("0010"), Nichi::unknown());
-		assert_eq!(Nichi::from_str_silent("0100"), Nichi::unknown());
-		assert_eq!(Nichi::from_str_silent("999"),  Nichi::unknown());
-		assert_eq!(Nichi::from_str_silent("0999"), Nichi::unknown());
+		assert_eq!(Nichi::from_str_silent("0"),    Nichi::UNKNOWN);
+		assert_eq!(Nichi::from_str_silent("100"),  Nichi::UNKNOWN);
+		assert_eq!(Nichi::from_str_silent("010"),  Nichi::UNKNOWN);
+		assert_eq!(Nichi::from_str_silent("0010"), Nichi::UNKNOWN);
+		assert_eq!(Nichi::from_str_silent("0100"), Nichi::UNKNOWN);
+		assert_eq!(Nichi::from_str_silent("999"),  Nichi::UNKNOWN);
+		assert_eq!(Nichi::from_str_silent("0999"), Nichi::UNKNOWN);
 	}
 
 	#[test]
 	fn invalid_dates() {
-		assert_eq!(Nichi::from_str_silent("12-25-0100"), Nichi::unknown());
-		assert_eq!(Nichi::from_str_silent("01001225") ,  Nichi::unknown());
-		assert_eq!(Nichi::from_str_silent("25-12-0100"), Nichi::unknown());
-		assert_eq!(Nichi::from_str_silent("01000"),      Nichi::unknown());
-		assert_eq!(Nichi::from_str_silent("010000"),     Nichi::unknown());
-		assert_eq!(Nichi::from_str_silent("0100000"),    Nichi::unknown());
+		assert_eq!(Nichi::from_str_silent("12-25-0100"), Nichi::UNKNOWN);
+		assert_eq!(Nichi::from_str_silent("01001225") ,  Nichi::UNKNOWN);
+		assert_eq!(Nichi::from_str_silent("25-12-0100"), Nichi::UNKNOWN);
+		assert_eq!(Nichi::from_str_silent("01000"),      Nichi::UNKNOWN);
+		assert_eq!(Nichi::from_str_silent("010000"),     Nichi::UNKNOWN);
+		assert_eq!(Nichi::from_str_silent("0100000"),    Nichi::UNKNOWN);
 	}
 
 	#[test]

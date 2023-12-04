@@ -52,7 +52,19 @@ impl NichiFull {
 	/// ```
 	pub const MAX_LEN: usize = 30;
 
-	/// Returned when using [`NichiFull::unknown`] or error situations.
+	/// Returns a [`Self`] with the date values set to `(0, 0, 0)`
+	///
+	/// This is the exact same as [`Self::UNKNOWN`].
+	///
+	/// ```rust
+	/// # use readable::*;
+	/// assert_eq!(NichiFull::ZERO, (0, 0, 0));
+	/// assert_eq!(NichiFull::ZERO, "???");
+	/// assert_eq!(NichiFull::ZERO, NichiFull::UNKNOWN);
+	/// ```
+	pub const ZERO: Self = Self::UNKNOWN;
+
+	/// Returned on error situations.
 	///
 	/// ```rust
 	/// # use readable::*;

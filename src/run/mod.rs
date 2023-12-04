@@ -10,7 +10,7 @@
 //! assert_eq!(Runtime::from(119),  "1:59");
 //! assert_eq!(Runtime::from(3599), "59:59");
 //! assert_eq!(Runtime::from(3600), "1:00:00");
-//! assert_eq!(Runtime::max(),      "99:59:59");
+//! assert_eq!(Runtime::MAX,        "99:59:59");
 //! ```
 //!
 //! Here's a diagram of:
@@ -63,7 +63,7 @@
 //! ## Errors
 //! The max input is `359999` seconds, or: anything over `99:59:59`.
 //!
-//! A [`Runtime::unknown()`] (or the runtime variant's version of it) will be returned if the input is:
+//! A [`Runtime::UNKNOWN`] (or the runtime variant's version of it) will be returned if the input is:
 //! - A negative integer
 //! - Larger than [`Runtime::MAX`]
 //! - [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`] (or the [`f64`] versions)

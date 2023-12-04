@@ -368,7 +368,7 @@ macro_rules! impl_f {
 		impl From<$from> for Time {
 			#[inline]
 			fn from(f: $from) -> Self {
-				$crate::macros::return_bad_float!(f, Self::unknown, Self::unknown);
+				$crate::macros::return_bad_float!(f, Self::UNKNOWN, Self::UNKNOWN);
 
 				Self::priv_from(f as u32)
 			}
@@ -376,7 +376,7 @@ macro_rules! impl_f {
 		impl From<&$from> for Time {
 			#[inline]
 			fn from(f: &$from) -> Self {
-				$crate::macros::return_bad_float!(f, Self::unknown, Self::unknown);
+				$crate::macros::return_bad_float!(f, Self::UNKNOWN, Self::UNKNOWN);
 
 				Self::priv_from(*f as u32)
 			}
@@ -417,7 +417,7 @@ macro_rules! impl_i {
 			#[inline]
 			fn from(seconds: $from) -> Self {
 				if seconds.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				Self::priv_from(seconds as u32)
 			}
@@ -426,7 +426,7 @@ macro_rules! impl_i {
 			#[inline]
 			fn from(seconds: &$from) -> Self {
 				if seconds.is_negative() {
-					return Self::unknown();
+					return Self::UNKNOWN;
 				}
 				Self::priv_from(*seconds as u32)
 			}
@@ -448,7 +448,7 @@ macro_rules! impl_other {
 				#[inline]
 				fn from(other: $from) -> Self {
 					if other.is_unknown() {
-						return Self::unknown();
+						return Self::UNKNOWN;
 					}
 					Self::priv_from(other.inner() as u32)
 				}
@@ -457,7 +457,7 @@ macro_rules! impl_other {
 				#[inline]
 				fn from(other: &$from) -> Self {
 					if other.is_unknown() {
-						return Self::unknown();
+						return Self::UNKNOWN;
 					}
 					Self::priv_from(other.inner() as u32)
 				}

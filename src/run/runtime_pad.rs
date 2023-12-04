@@ -15,16 +15,16 @@ use crate::macros::{
 ///
 /// ```rust
 /// # use readable::*;
-/// let runtime = Runtime::minute();
+/// let runtime = Runtime::MINUTE;
 /// assert_eq!(runtime, "1:00"); // hour left out, minute not padded
 ///
-/// let runtime_zero = RuntimePad::minute();
+/// let runtime_zero = RuntimePad::MINUTE;
 /// assert_eq!(runtime_zero, "00:01:00"); // always includes everything
 ///
-/// let runtime = Runtime::hour();
+/// let runtime = Runtime::HOUR;
 /// assert_eq!(runtime, "1:00:00");
 ///
-/// let runtime_zero = RuntimePad::hour();
+/// let runtime_zero = RuntimePad::HOUR;
 /// assert_eq!(runtime_zero, "01:00:00");
 /// ```
 ///
@@ -78,26 +78,24 @@ impl RuntimePad {
 	/// The max length of [`RuntimePad`]'s string.
 	pub const MAX_LEN: usize = 8;
 
-	/// [`f32`] returned when calling [`RuntimePad::zero`]
+	/// [`f32`] inside of [`RuntimePad::ZERO`]
 	pub const ZERO_F32: f32 = 0.0;
 
-	/// [`f32`] returned when calling [`RuntimePad::second`]
+	/// [`f32`] inside of [`RuntimePad::SECOND`]
 	pub const SECOND_F32: f32 = 1.0;
 
-	/// [`f32`] returned when calling [`RuntimePad::minute`]
+	/// [`f32`] inside of [`RuntimePad::MINUTE`]
 	pub const MINUTE_F32: f32 = 60.0;
 
-	/// [`f32`] returned when calling [`RuntimePad::hour`]
+	/// [`f32`] inside of [`RuntimePad::HOUR`]
 	pub const HOUR_F32: f32 = 3600.0;
 
-	/// [`f32`] returned when calling [`RuntimePad::day`]
+	/// [`f32`] inside of [`RuntimePad::DAY`]
 	pub const DAY_F32: f32 = 86400.0;
 
 	/// Input greater to [`RuntimePad`] will make it return [`Self::MAX`]
 	pub const MAX_F32: f32 = 359999.0;
 
-	/// Returned when using [`RuntimePad::unknown`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(RuntimePad::UNKNOWN, 0.0);
@@ -105,8 +103,6 @@ impl RuntimePad {
 	/// ```
 	pub const UNKNOWN: Self = Self(Self::ZERO_F32, Str::from_static_str("??:??:??"));
 
-	/// Returned when using [`RuntimePad::zero`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(RuntimePad::ZERO, 0.0);
@@ -114,8 +110,6 @@ impl RuntimePad {
 	/// ```
 	pub const ZERO: Self = Self(Self::ZERO_F32, Str::from_static_str("00:00:00"));
 
-	/// Returned when using [`RuntimePad::second`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(RuntimePad::SECOND, 1.0);
@@ -123,8 +117,6 @@ impl RuntimePad {
 	/// ```
 	pub const SECOND: Self = Self(Self::SECOND_F32, Str::from_static_str("00:00:01"));
 
-	/// Returned when using [`RuntimePad::minute`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(RuntimePad::MINUTE, 60.0);
@@ -132,8 +124,6 @@ impl RuntimePad {
 	/// ```
 	pub const MINUTE: Self = Self(Self::MINUTE_F32, Str::from_static_str("00:01:00"));
 
-	/// Returned when using [`RuntimePad::hour`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(RuntimePad::HOUR, 3600.0);
@@ -141,8 +131,6 @@ impl RuntimePad {
 	/// ```
 	pub const HOUR: Self = Self(Self::HOUR_F32, Str::from_static_str("01:00:00"));
 
-	/// Returned when using [`RuntimePad::day`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(RuntimePad::DAY, 86400.0);
@@ -150,8 +138,6 @@ impl RuntimePad {
 	/// ```
 	pub const DAY: Self = Self(Self::DAY_F32, Str::from_static_str("24:00:00"));
 
-	/// Returned when using [`RuntimePad::max`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(RuntimePad::MAX, 359999.0);
@@ -190,69 +176,6 @@ impl RuntimePad {
 	#[inline]
 	/// ```rust
 	/// # use readable::*;
-	/// assert_eq!(RuntimePad::unknown(), RuntimePad::UNKNOWN);
-	/// ```
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(RuntimePad::zero(), RuntimePad::ZERO);
-	/// ```
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(RuntimePad::second(), RuntimePad::SECOND);
-	/// ```
-	pub const fn second() -> Self {
-		Self::SECOND
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(RuntimePad::minute(), RuntimePad::MINUTE);
-	/// ```
-	pub const fn minute() -> Self {
-		Self::MINUTE
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(RuntimePad::hour(), RuntimePad::HOUR);
-	/// ```
-	pub const fn hour() -> Self {
-		Self::HOUR
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(RuntimePad::day(), RuntimePad::DAY);
-	/// ```
-	pub const fn day() -> Self {
-		Self::DAY
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(RuntimePad::max(), RuntimePad::MAX);
-	/// ```
-	pub const fn max() -> Self {
-		Self::MAX
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
 	/// assert!(RuntimePad::UNKNOWN.is_unknown());
 	/// assert!(!RuntimePad::ZERO.is_unknown());
 	/// ```
@@ -274,11 +197,11 @@ impl RuntimePad {
 	// called before this function.
 	pub(super) fn priv_from(runtime: f32) -> Self {
 		let Some((h, m, s)) = Runtime::priv_from_inner(runtime) else {
-			return Self::unknown();
+			return Self::UNKNOWN;
 		};
 
 		if (h, m, s) == (0.0, 0.0, 0.0) {
-			return Self::zero();
+			return Self::ZERO;
 		}
 
 		let (hours, minutes, seconds) = (h as u32, m as u32, s as u32);
@@ -424,22 +347,22 @@ mod tests {
 	#[test]
 	fn overflow_float() {
 		assert_eq!(RuntimePad::from(RuntimePad::MAX_F32 + 1.0), 0.0);
-		assert_eq!(RuntimePad::from(RuntimePad::MAX_F32 + 1.0), RuntimePad::unknown());
+		assert_eq!(RuntimePad::from(RuntimePad::MAX_F32 + 1.0), RuntimePad::UNKNOWN);
 	}
 
 	#[test]
 	fn overflow_uint() {
 		assert_eq!(RuntimePad::from(RuntimePad::MAX_F32 + 1.0), 0.0);
-		assert_eq!(RuntimePad::from(RuntimePad::MAX_F32 + 1.0), RuntimePad::unknown());
+		assert_eq!(RuntimePad::from(RuntimePad::MAX_F32 + 1.0), RuntimePad::UNKNOWN);
 	}
 
 	#[test]
 	fn special() {
-		assert_eq!(RuntimePad::from(f32::NAN),          RuntimePad::unknown());
-		assert_eq!(RuntimePad::from(f32::INFINITY),     RuntimePad::unknown());
-		assert_eq!(RuntimePad::from(f32::NEG_INFINITY), RuntimePad::unknown());
-		assert_eq!(RuntimePad::from(f64::NAN),          RuntimePad::unknown());
-		assert_eq!(RuntimePad::from(f64::INFINITY),     RuntimePad::unknown());
-		assert_eq!(RuntimePad::from(f64::NEG_INFINITY), RuntimePad::unknown());
+		assert_eq!(RuntimePad::from(f32::NAN),          RuntimePad::UNKNOWN);
+		assert_eq!(RuntimePad::from(f32::INFINITY),     RuntimePad::UNKNOWN);
+		assert_eq!(RuntimePad::from(f32::NEG_INFINITY), RuntimePad::UNKNOWN);
+		assert_eq!(RuntimePad::from(f64::NAN),          RuntimePad::UNKNOWN);
+		assert_eq!(RuntimePad::from(f64::INFINITY),     RuntimePad::UNKNOWN);
+		assert_eq!(RuntimePad::from(f64::NEG_INFINITY), RuntimePad::UNKNOWN);
 	}
 }
