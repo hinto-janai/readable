@@ -9,6 +9,9 @@ repository = "https://github.com/hinto-janai/readable"
 readme = "README.md"
 keywords = ["human", "readable", "data", "formatting", "string"]
 license = "MIT"
+exclude = [
+	"inlined",
+]
 
 [package.metadata.docs.rs]
 all-features = true
