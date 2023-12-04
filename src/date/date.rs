@@ -646,7 +646,10 @@ impl Date {
 	/// attempt to extract as much as it can, which may lead to
 	/// surprising results. Read [`Date`]'s documentation for more info.
 	///
-	/// Example:
+	/// ## Safety
+	/// If the input to this function is not ASCII (or 1 byte per character), it may panic.
+	///
+	/// ## Example
 	/// ```rust
 	/// # use readable::Date;
 	/// // Parsed as `YYYY-M` (2022-9)
@@ -678,6 +681,10 @@ impl Date {
 	}
 
 	#[inline]
+	// TODO/FIXME:
+	// This panics on `UTF-8` input, e.g `2222Ꜳ22Ꜳ20` since
+	// we are byte indexing, assuming each character is 1 byte.
+	//
 	/// Same as [`Date::from_str`] but silently returns a [`Self::UNKNOWN`]
 	/// on error that isn't wrapped in a [`Result::Err`].
 	pub fn from_str_silent(string: &str) -> Self {
@@ -971,7 +978,7 @@ impl Date {
 					let y = &s[..4];
 					let m = &s[5..7];
 					return Ok(Self::priv_ym(y, m));
-				} else if YM.is_match(s) {
+				} else if YM.is_match(s) { // YYYY-4
 					let y = &s[..4];
 					let m = &s[5..6];
 					return Ok(Self::priv_ym(y, m));
@@ -1190,6 +1197,28 @@ impl Date {
 }
 
 //---------------------------------------------------------------------------------------------------- TESTS
+impl From<(u16, u8, u8)> for Date {
+	#[inline]
+	// Calls [`Self::from_ymd_silent`].
+	fn from(value: (u16, u8, u8)) -> Self {
+		Self::from_ymd_silent(value.0, value.1, value.2)
+	}
+}
+impl From<(u16, u8)> for Date {
+	#[inline]
+	// Calls [`Self::from_ym_silent`].
+	fn from(value: (u16, u8)) -> Self {
+		Self::from_ym_silent(value.0, value.1)
+	}
+}
+impl From<u16> for Date {
+	#[inline]
+	// Calls [`Self::from_y_silent`].
+	fn from(value: u16) -> Self {
+		Self::from_y_silent(value)
+	}
+}
+
 impl From<nichi::Date> for Date {
 	fn from(value: nichi::Date) -> Self {
 		let (y,m,d) = value.inner();

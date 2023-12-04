@@ -285,6 +285,9 @@ impl Nichi {
 	/// assert_eq!(Nichi::from_str("2010 2 02").unwrap(),  nichi);
 	/// ```
 	///
+	/// ## Safety
+	/// If the input to this function is not ASCII (or 1 byte per character), it may panic.
+	///
 	/// ## Examples
 	/// ```rust
 	/// # use readable::*;
@@ -404,6 +407,14 @@ impl Nichi {
 }
 
 //---------------------------------------------------------------------------------------------------- Impl
+impl From<(u16, u8, u8)> for Nichi {
+	#[inline]
+	// Calls [`Self::new_silent`].
+	fn from(value: (u16, u8, u8)) -> Self {
+		Self::new_silent(value.0, value.1, value.2)
+	}
+}
+
 impl From<nichi::Date> for Nichi {
 	fn from(value: nichi::Date) -> Self {
 		Self::from_nichi(value)

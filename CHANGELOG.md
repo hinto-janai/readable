@@ -20,6 +20,10 @@ Types of changes:
 
 # readable v0.14.0 - 2023-12-03
 ## Added
+- `readable::date::*`:
+	* impl `From<(u16, u8, u8)>`
+	* impl `From<(u16, u8)>`
+	* impl `From<u16>`
 - `readable::str::Str`:
 	* impl `std::fmt::Write`
 	* impl `Index`
