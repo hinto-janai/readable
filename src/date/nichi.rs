@@ -407,11 +407,12 @@ impl Nichi {
 }
 
 //---------------------------------------------------------------------------------------------------- Impl
-impl From<(u16, u8, u8)> for Nichi {
+impl TryFrom<(u16, u8, u8)> for Nichi {
+	type Error = Self;
 	#[inline]
-	// Calls [`Self::new_silent`].
-	fn from(value: (u16, u8, u8)) -> Self {
-		Self::new_silent(value.0, value.1, value.2)
+	// Calls [`Self::new`].
+	fn try_from(value: (u16, u8, u8)) -> Result<Self, Self> {
+		Self::new(value.0, value.1, value.2)
 	}
 }
 

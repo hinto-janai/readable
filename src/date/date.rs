@@ -1197,25 +1197,28 @@ impl Date {
 }
 
 //---------------------------------------------------------------------------------------------------- TESTS
-impl From<(u16, u8, u8)> for Date {
+impl TryFrom<(u16, u8, u8)> for Date {
+	type Error = Self;
 	#[inline]
-	// Calls [`Self::from_ymd_silent`].
-	fn from(value: (u16, u8, u8)) -> Self {
-		Self::from_ymd_silent(value.0, value.1, value.2)
+	// Calls [`Self::from_ymd`].
+	fn try_from(value: (u16, u8, u8)) -> Result<Self, Self> {
+		Self::from_ymd(value.0, value.1, value.2)
 	}
 }
-impl From<(u16, u8)> for Date {
+impl TryFrom<(u16, u8)> for Date {
+	type Error = Self;
 	#[inline]
 	// Calls [`Self::from_ym_silent`].
-	fn from(value: (u16, u8)) -> Self {
-		Self::from_ym_silent(value.0, value.1)
+	fn try_from(value: (u16, u8)) -> Result<Self, Self> {
+		Self::from_ym(value.0, value.1)
 	}
 }
-impl From<u16> for Date {
+impl TryFrom<u16> for Date {
+	type Error = Self;
 	#[inline]
-	// Calls [`Self::from_y_silent`].
-	fn from(value: u16) -> Self {
-		Self::from_y_silent(value)
+	// Calls [`Self::from_y`].
+	fn try_from(value: u16) -> Result<Self, Self> {
+		Self::from_y(value)
 	}
 }
 

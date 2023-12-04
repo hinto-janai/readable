@@ -14,7 +14,7 @@ env:
   RUST_MIN_STACK: 8000000
 
 jobs:
-  ci:
+  fuzz:
     runs-on: ubuntu-latest
 
     strategy:
