@@ -44,6 +44,7 @@ pub trait SysUptime: private::Sealed {
 //---------------------------------------------------------------------------------------------------- SysUptime Function
 #[inline]
 #[must_use]
+#[allow(clippy::missing_const_for_fn)]
 /// Get the current system uptime in seconds
 ///
 /// This function can be used on:
