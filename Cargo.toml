@@ -1,6 +1,6 @@
 [package]
 name = "readable"
-version = "0.14.0"
+version = "0.15.0"
 edition = "2021"
 authors = ["hinto.janai <hinto.janai@protonmail.com>"]
 description = "Human readable strings"
@@ -11,6 +11,8 @@ keywords = ["human", "readable", "data", "formatting", "string"]
 license = "MIT"
 exclude = [
 	"inlined",
+	"fuzz",
+	"CHANGELOG.md",
 ]
 categories = ["value-formatting"]
 

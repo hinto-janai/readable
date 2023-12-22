@@ -11,11 +11,19 @@ Types of changes:
 - `Fixed` for any bug fixes
 - `Security` in case of vulnerabilities
 
+
 ---
 
+
 # readable Unreleased
+
+
+---
+
+
+# readable v0.15.0 - 2023-12-21
 ## Changed
-- `#[must_add]` on applicable functions
+- `#[must_use]` on applicable functions
 - `Str::as_bytes_mut()` is now `unsafe`
 - `Str::from_bytes_exact()` is now `unsafe`
 - `Str::from_str_exact()` takes `impl AsRef<str>` instead of `&str`
@@ -64,7 +72,9 @@ Types of changes:
 * Uptime modules renamed for clarity `readable::time` -> `readable::up`
 * Time-like types from `readable::date` into `time` module
 
+
 ---
+
 
 # readable v0.12.0 - 2023-10-19
 ## Added
@@ -77,7 +87,9 @@ Types of changes:
 ## Removed
 * Feature-flags (except for `serde` & `bincode`)
 
+
 ---
+
 
 # readable v0.11.0 - 2023-10-15
 ## Added
@@ -91,9 +103,9 @@ Types of changes:
 * `Time::UNKNOWN` changed from `???` to `(unknown)`
 * `TimeFull::UNKNOWN` changed from `???` to `(unknown)`
 
+
 ---
+
 
 # readable v0.10.0 - 2023-10-04
 First "public" release.
-
----
