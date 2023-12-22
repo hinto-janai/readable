@@ -73,7 +73,7 @@ impl Nichi {
 	/// assert_eq!(Nichi::UNKNOWN, (0, 0, 0));
 	/// assert_eq!(Nichi::UNKNOWN, "???");
 	/// ```
-	pub const UNKNOWN: Self = Nichi((0, 0, 0), Str::from_static_str("???"));
+	pub const UNKNOWN: Self = Self((0, 0, 0), Str::from_static_str("???"));
 }
 
 //---------------------------------------------------------------------------------------------------- Nichi impl
@@ -84,43 +84,49 @@ impl Nichi {
 	// Common functions.
 
 	#[inline]
+	#[must_use]
 	/// Return the inner year (1000-9999)
 	pub const fn year(&self) -> u16 {
 		self.0.0
 	}
 
 	#[inline]
+	#[must_use]
 	/// Return the inner month (1-12)
 	pub const fn month(&self) -> u8 {
 		self.0.1
 	}
 
 	#[inline]
+	#[must_use]
 	/// Return the inner day (1-31)
 	pub const fn day(&self) -> u8 {
 		self.0.2
 	}
 
 	#[inline]
+	#[must_use]
 	/// Calculate the weekday
 	///
 	/// ```rust
 	/// # use readable::*;
 	/// // Christmas in 1999 was on a Saturday.
 	/// assert_eq!(
-	/// 	Nichi::new(1999, 12, 25).unwrap().weekday().as_str(),
-	/// 	"Saturday"
+	///     Nichi::new(1999, 12, 25).unwrap().weekday().as_str(),
+	///     "Saturday"
 	/// );
 	/// ```
 	pub const fn weekday(&self) -> nichi::Weekday {
+		#[allow(clippy::cast_possible_wrap)]
 		nichi::Date::weekday_raw(self.year() as i16, self.month(), self.day())
 	}
 
 	#[inline]
+	#[must_use]
 	/// Create a [`Self`] using [`nichi`]'s date type
 	pub fn from_nichi(nichi: nichi::Date) -> Self {
 		let (y,m,d) = nichi.inner();
-		Self::priv_from(y as u16,m,d)
+		Self::priv_from(y as u16, m, d)
 	}
 
 	#[inline]
@@ -140,6 +146,7 @@ impl Nichi {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Same as [`Self::new`] but silently errors
 	///
 	/// ## Errors
@@ -180,30 +187,32 @@ impl Nichi {
 	/// Nichi::from_unix(339618217000).unwrap();
 	/// ```
 	pub fn from_unix(unix_timestamp: u64) -> Result<Self, Self> {
-		let nichi = nichi::Date::from_unix(unix_timestamp as i128);
+		let nichi = nichi::Date::from_unix(i128::from(unix_timestamp));
 		let year = nichi.year().inner() as u16;
-		if !ok_year(year) {
-			Err(Self::UNKNOWN)
-		} else {
+		if ok_year(year) {
 			Ok(Self::priv_from(
 				year,
 				nichi.month().inner(),
 				nichi.day().inner(),
 			))
+		} else {
+			Err(Self::UNKNOWN)
 		}
 	}
 
 	#[inline]
+	#[must_use]
 	/// Same as [`Self::from_unix`] but silently returns a [`Self::UNKNOWN`]
 	/// on error that isn't wrapped in a [`Result::Err`].
 	pub fn from_unix_silent(unix_timestamp: u64) -> Self {
 		match Self::from_unix(unix_timestamp) {
-			Ok(s) => s,
-			Err(s) => s,
+			Ok(s) | Err(s) => s,
 		}
 	}
 
 	#[inline]
+	#[must_use]
+	#[allow(clippy::cast_possible_wrap)]
 	/// Get the corresponding UNIX timestamp of [`Self`]
 	///
 	/// ```rust
@@ -227,7 +236,7 @@ impl Nichi {
 	#[allow(clippy::should_implement_trait)] // i don't want to `use std::str::FromStr` everytime.
 	/// Parse arbitrary strings for a date.
 	///
-	/// ## Invariants
+	/// ## Errors
 	/// - The year must be `1000..=9999`
 	/// - The month must be at least the first 3 letters of the month in english (`oct`, `Dec`, `SEP`, etc)
 	/// - The day must be a number, either optionally with a leading `0` or suffixed by `th`, `rd`, `nd`, `st` (but not both, e.g, `3rd` is OK, `03` is OK, `03rd` is INVALID)
@@ -258,8 +267,8 @@ impl Nichi {
 	/// //                          December     |         |
 	/// //                             |         |         |
 	/// assert_eq!( //                 v         v         v
-	/// 	Nichi::from_str("----fasdf decBR wef 25 a - >.a2010a...aa").unwrap(),
-	/// 	Nichi::new(2010, 12, 25).unwrap(),
+	///     Nichi::from_str("----fasdf decBR wef 25 a - >.a2010a...aa").unwrap(),
+	///     Nichi::new(2010, 12, 25).unwrap(),
 	/// );
 	/// ```
 	///
@@ -279,7 +288,7 @@ impl Nichi {
 	/// assert_eq!(Nichi::from_str("2010 2 02").unwrap(),  nichi);
 	/// ```
 	///
-	/// ## Safety
+	/// ## Panic
 	/// If the input to this function is not ASCII (or 1 byte per character), it may panic.
 	///
 	/// ## Examples
@@ -317,17 +326,18 @@ impl Nichi {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Same as [`Nichi::from_str`] but silently returns an [`Self::UNKNOWN`]
 	/// on error that isn't wrapped in a [`Result::Err`].
 	pub fn from_str_silent(string: &str) -> Self {
 		match Self::priv_from_str(string) {
-			Ok(s)  => s,
-			Err(s) => s,
+			Ok(s) | Err(s) => s,
 		}
 	}
 
 	#[inline]
 	fn priv_from_str(s: &str) -> Result<Self, Self> {
+		#[allow(clippy::option_if_let_else)]
 		match nichi::Date::from_str(s) {
 			Some(nichi) => {
 				let (y, m, d) = nichi.inner();
@@ -338,15 +348,13 @@ impl Nichi {
 	}
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(Nichi::UNKNOWN.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
-		match *self {
-			Self::UNKNOWN => true,
-			_ => false,
-		}
+		matches!(*self, Self::UNKNOWN)
 	}
 }
 
@@ -357,6 +365,7 @@ impl Nichi {
 	pub(super) fn priv_from(y: u16, m: u8, d: u8) -> Self {
 		let mut buf = [0_u8; Self::MAX_LEN];
 
+		#[allow(clippy::cast_possible_wrap)]
 		let nichi = nichi::Date::new(y as i16,m,d);
 
 		// Mon, Fri, Sat, etc
@@ -429,11 +438,11 @@ impl From<crate::Date> for Nichi {
 
 impl From<crate::NichiFull> for Nichi {
 	fn from(value: crate::NichiFull) -> Self {
-		if !value.is_unknown() {
+		if value.is_unknown() {
+			Self::UNKNOWN
+		} else {
 			let (y,m,d) = value.inner();
 			Self::priv_from(y,m,d)
-		} else {
-			Self::UNKNOWN
 		}
 	}
 }

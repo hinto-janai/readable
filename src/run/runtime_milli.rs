@@ -181,6 +181,7 @@ impl RuntimeMilli {
 	impl_const!();
 
 	#[inline]
+	#[must_use]
 	/// Dynamically format [`Self`] as a [`Runtime`].
 	///
 	/// As [`RuntimeMilli`] is a superset of [`Runtime`], it can
@@ -202,6 +203,7 @@ impl RuntimeMilli {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Dynamically format [`Self`] as a [`RuntimePad`].
 	///
 	/// As [`RuntimeMilli`] is a superset of [`RuntimePad`], it can
@@ -223,7 +225,7 @@ impl RuntimeMilli {
 		// a number, 8 is the `.` then milliseconds.
 		const END: usize = 8;
 
-		// SAFETY, we trust the buffer.
+		// SAFETY: we trust the buffer.
 		unsafe {
 			let slice = std::slice::from_raw_parts(
 				self.1.as_ptr(),
@@ -234,16 +236,14 @@ impl RuntimeMilli {
 	}
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(RuntimeMilli::UNKNOWN.is_unknown());
 	/// assert!(!RuntimeMilli::ZERO.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
-		match self.1.as_bytes() {
-			b"??:??:??.???" => true,
-			_ => false,
-		}
+		matches!(self.1.as_bytes(), b"??:??:??.???")
 	}
 }
 
@@ -277,6 +277,7 @@ impl RuntimeMilli {
 			(1000.0 * s.fract()).round() as u16,
 		);
 
+		// SAFETY: we know the str len
 		Self(runtime, unsafe { Str::from_raw(buf, Self::MAX_LEN as u8) })
 	}
 
@@ -323,12 +324,13 @@ impl RuntimeMilli {
 	#[inline]
 	// 0 Padding for `hh:mm:ss` according to `RuntimeMilli` rules.
 	fn format(buf: &mut [u8; Self::MAX_LEN], hour: u8, min: u8, sec: u8, milli: u16) {
+		const Z: u8 = b'0';
+		const C: u8 = b':';
+
 		debug_assert!(hour < 100);
 		debug_assert!(min < 60);
 		debug_assert!(sec < 60);
 
-		const Z: u8 = b'0';
-		const C: u8 = b':';
 		// Colons are always in the same position.
 		buf[2] = C;
 		buf[5] = C;
@@ -398,8 +400,7 @@ mod tests {
 			std::str::from_utf8(b).unwrap()
 		}
 
-		let mut buf = [0; RuntimeMilli::MAX_LEN];
-		let buf = &mut buf;
+		let buf = &mut [0; RuntimeMilli::MAX_LEN];
 
 		// 0:0:0
 		RuntimeMilli::format(buf, 1, 1, 1, 555);
@@ -454,10 +455,10 @@ mod tests {
 	fn all_uint() {
 		for i in 0..RuntimeMilli::MAX_F32 as u32 {
 			let rt = RuntimeMilli::from(i);
-			println!("rt:{} - i: {}", rt, i);
+			println!("rt: {rt} - i: {i}");
 			assert_eq!(rt.inner() as u32, i);
 			assert_eq!(rt.inner() as u32, i);
-			println!("{}", rt);
+			println!("{rt}");
 		}
 	}
 
@@ -466,7 +467,7 @@ mod tests {
 		let mut f = 1.0;
 		while f < RuntimeMilli::MAX_F32 {
 			let rt = RuntimeMilli::from(f);
-			println!("rt: {} - f: {}", rt, f);
+			println!("rt: {rt} - f: {f}");
 			assert_eq!(rt, f);
 			f += 0.1;
 		}

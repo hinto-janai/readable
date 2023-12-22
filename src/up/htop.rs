@@ -163,22 +163,21 @@ impl Htop {
 	impl_usize!();
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(Htop::UNKNOWN.is_unknown());
 	/// assert!(!Htop::ZERO.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
-		match *self {
-			Self::UNKNOWN => true,
-			_ => false,
-		}
+		matches!(*self, Self::UNKNOWN)
 	}
 }
 
 //---------------------------------------------------------------------------------------------------- Private impl
 impl Htop {
 	#[inline]
+	#[must_use]
 	fn from_priv(secs: u32) -> Self {
 		if secs == 0 {
 			return Self::ZERO;
@@ -190,6 +189,7 @@ impl Htop {
 		if days > 0 {
 			string.push_str_panic(itoa!(days));
 
+			#[allow(clippy::else_if_without_else)]
 			if days > 100 {
 				string.push_str_panic(" days(!), ");
 			} else if days > 1 {
@@ -403,14 +403,14 @@ impl From<&std::time::Instant> for Htop {
 impl From<Htop> for std::time::Duration {
 	#[inline]
 	fn from(value: Htop) -> Self {
-		std::time::Duration::from_secs(value.inner() as u64)
+		Self::from_secs(value.inner().into())
 	}
 }
 
 impl From<&Htop> for std::time::Duration {
 	#[inline]
 	fn from(value: &Htop) -> Self {
-		std::time::Duration::from_secs(value.inner() as u64)
+		Self::from_secs(value.inner().into())
 	}
 }
 
@@ -422,7 +422,7 @@ mod tests {
 	#[test]
 	fn all_ints() {
 		let mut f = 1_u64;
-		while f < (Htop::MAX.0 as u64) {
+		while f < (u64::from(Htop::MAX.0)) {
 			let t = Htop::from(f);
 			println!("t: {t}, f: {f}");
 			assert_eq!(t, f as u32);
@@ -432,11 +432,11 @@ mod tests {
 
 	#[test]
 	fn over() {
-		assert_ne!(Htop::from(u32::MAX),            Htop::UNKNOWN);
-		assert_eq!(Htop::from(u32::MAX as u64 + 1), Htop::UNKNOWN);
-		assert_eq!(Htop::from(u64::MAX),            Htop::UNKNOWN);
-		assert_eq!(Htop::from(f64::MAX),            Htop::UNKNOWN);
-		assert_eq!(Htop::from(f32::MAX),            Htop::UNKNOWN);
+		assert_ne!(Htop::from(u32::MAX),                Htop::UNKNOWN);
+		assert_eq!(Htop::from(u64::from(u32::MAX) + 1), Htop::UNKNOWN);
+		assert_eq!(Htop::from(u64::MAX),                Htop::UNKNOWN);
+		assert_eq!(Htop::from(f64::MAX),                Htop::UNKNOWN);
+		assert_eq!(Htop::from(f32::MAX),                Htop::UNKNOWN);
 	}
 
 	#[test]

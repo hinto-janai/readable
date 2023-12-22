@@ -1,5 +1,6 @@
 //---------------------------------------------------------------------------------------------------- Ok
 #[inline]
+#[must_use]
 /// Get the current system UNIX timestamp
 ///
 /// The returned value is how many seconds has passed since `UNIX_EPOCH`
@@ -15,6 +16,7 @@ pub fn unix() -> u64 {
 }
 
 #[inline]
+#[must_use]
 /// Get the clock time of a UNIX timestamp
 ///
 /// The input must be a UNIX timestamp.
@@ -37,10 +39,11 @@ pub fn unix() -> u64 {
 /// assert_eq!((h, m, s), (22, 18, 30))
 /// ```
 pub const fn unix_clock(seconds_after_unix_epoch: u64) -> u32 {
-	(seconds_after_unix_epoch % 86400) as _
+	(seconds_after_unix_epoch % 86400) as u32
 }
 
 #[inline]
+#[must_use]
 /// Convert seconds to `hours`, `minutes` and `seconds`.
 ///
 /// - The seconds returned is guaranteed to be `0..=59`
@@ -80,6 +83,7 @@ pub const fn secs_to_hms(seconds: u64) -> (u64, u8, u8) {
 }
 
 #[inline]
+#[must_use]
 /// Convert seconds to clock time, `hours`, `minutes` and `seconds`.
 ///
 /// This is the same as [`secs_to_hms`] except it will wrap around,
@@ -125,6 +129,7 @@ pub const fn secs_to_clock(seconds: u32) -> (u8, u8, u8) {
 
 //---------------------------------------------------------------------------------------------------- Time
 #[inline]
+#[must_use]
 /// Get the current system time in the system's timezone
 ///
 /// The returned value is the total amount of seconds passed in the current day.
@@ -138,6 +143,7 @@ pub fn time() -> u32 {
 }
 
 #[inline]
+#[must_use]
 /// Get the current system time in the UTC timezone
 ///
 /// The returned value is the total amount of seconds passed in the current day.
@@ -151,7 +157,9 @@ pub fn time_utc() -> u32 {
 use chrono::Timelike;
 #[allow(unused_imports)] // docs
 use crate::date::date;
+
 #[inline]
+#[must_use]
 /// Combines [`date()`] and [`time()`]
 ///
 /// This returns the system's current (`year`, `month`, `day`, `seconds_passed_today`).
@@ -160,7 +168,7 @@ use crate::date::date;
 /// have passed in the current day, the same as [`time`].
 pub fn datetime() -> (i16, u8, u8, u32) {
 	let now  = chrono::offset::Local::now();
-	let (y,m,d) = nichi::Date::from_unix(now.timestamp() as i128).inner();
+	let (y,m,d) = nichi::Date::from_unix(i128::from(now.timestamp())).inner();
 	let time = now.time();
 	let seconds = (time.hour() * 3600) + (time.minute() * 60) + time.second();
 
@@ -168,10 +176,11 @@ pub fn datetime() -> (i16, u8, u8, u32) {
 }
 
 #[inline]
+#[must_use]
 /// [`datetime()`] but in the UTC timezone
 pub fn datetime_utc() -> (i16, u8, u8, u32) {
 	let now  = chrono::offset::Utc::now();
-	let (y,m,d) = nichi::Date::from_unix(now.timestamp() as i128).inner();
+	let (y,m,d) = nichi::Date::from_unix(i128::from(now.timestamp())).inner();
 	let time = now.time();
 	let seconds = (time.hour() * 3600) + (time.minute() * 60) + time.second();
 

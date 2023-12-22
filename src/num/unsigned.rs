@@ -176,22 +176,20 @@ impl Unsigned {
 	impl_usize!();
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(Unsigned::UNKNOWN.is_unknown());
 	/// assert!(!Unsigned::ZERO.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
-		match *self {
-			Self::UNKNOWN => true,
-			_ => false,
-		}
+		matches!(*self, Self::UNKNOWN)
 	}
 }
 
 //---------------------------------------------------------------------------------------------------- Private functions.
 impl Unsigned {
-	#[inline(always)]
+	#[inline]
 	fn from_priv(u: u64) -> Self {
 		Self(u, Self::from_priv_inner(u))
 	}
@@ -646,12 +644,12 @@ macro_rules! impl_f {
 				}
 
 				if float.is_sign_negative() {
-					return Err(Self::UNKNOWN);
+					Err(Self::UNKNOWN)
 				} else if float > u64::MAX as $from {
-					return Err(Self::UNKNOWN);
+					Err(Self::UNKNOWN)
+				} else {
+					Ok(Self::from_priv(float as u64))
 				}
-
-				Ok(Self::from_priv(float as u64))
 			}
 		}
 	}

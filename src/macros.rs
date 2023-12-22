@@ -4,6 +4,7 @@
 macro_rules! impl_common {
 	($num:ty) => {
 		#[inline]
+		#[must_use]
 		/// Returns the inner number.
 		pub const fn inner(&self) -> $num {
 			self.0
@@ -16,12 +17,14 @@ pub(super) use impl_common;
 macro_rules! impl_const {
 	() => {
 		#[inline]
+		#[must_use]
 		/// Return a borrowed [`str`] without consuming [`Self`].
 		pub const fn as_str(&self) -> &str {
 			self.1.as_str()
 		}
 
 		#[inline]
+		#[must_use]
 		/// Returns the _valid_ byte slice of the inner [`String`]
 		///
 		/// These bytes can _always_ safely be used for [`std::str::from_utf8_unchecked`].
@@ -30,12 +33,15 @@ macro_rules! impl_const {
 		}
 
 		#[inline]
+		#[must_use]
+		#[allow(clippy::len_without_is_empty)]
 		/// The length of the inner [`String`]
 		pub const fn len(&self) -> usize {
 			self.1.len()
 		}
 
 		#[inline]
+		#[must_use]
 		/// The length of the inner [`String`] as a [`u8`]
 		pub const fn len_u8(&self) -> u8 {
 			self.1.len_u8()
@@ -48,12 +54,14 @@ pub(crate) use impl_const;
 macro_rules! impl_not_const {
 	() => {
 		#[inline]
+		#[must_use]
 		/// Return a borrowed [`str`] without consuming [`Self`].
 		pub fn as_str(&self) -> &str {
 			self.1.as_str()
 		}
 
 		#[inline]
+		#[must_use]
 		/// Returns the _valid_ byte slice of the inner [`String`]
 		///
 		/// These bytes can _always_ safely be used for [`std::str::from_utf8_unchecked`].
@@ -62,12 +70,14 @@ macro_rules! impl_not_const {
 		}
 
 		#[inline]
+		#[must_use]
 		/// The length of the inner [`String`]
 		pub fn len(&self) -> usize {
 			self.1.len()
 		}
 
 		#[inline]
+		#[must_use]
 		/// If the inner [`String`] is empty or not
 		pub fn is_empty(&self) -> bool {
 			self.1.is_empty()
@@ -81,6 +91,7 @@ macro_rules! impl_usize {
 	() => {
 		#[inline]
 		#[cfg(target_pointer_width = "64")]
+		#[must_use]
 		/// Returns the inner number as a [`usize`].
 		///
 		/// # Notes
@@ -97,6 +108,7 @@ macro_rules! impl_isize {
 	() => {
 		#[inline]
 		#[cfg(target_pointer_width = "64")]
+		#[must_use]
 		/// Returns the inner number as an [`isize`].
 		///
 		/// # Notes

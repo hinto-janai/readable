@@ -35,8 +35,8 @@ pub(super) struct DiyFp<F, E> {
 }
 
 impl<F, E> DiyFp<F, E> {
-	pub(super) fn new(f: F, e: E) -> Self {
-        DiyFp { f, e }
+	pub(super) const fn new(f: F, e: E) -> Self {
+        Self { f, e }
     }
 }
 
@@ -47,7 +47,7 @@ where
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self {
-        DiyFp {
+        Self {
             f: self.f - rhs.f,
             e: self.e,
         }
@@ -58,9 +58,9 @@ impl Mul for DiyFp<u32, i32> {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self {
-        let mut tmp = self.f as u64 * rhs.f as u64;
-        tmp += 1u64 << 31; // mult_round
-        DiyFp {
+        let mut tmp = u64::from(self.f) * u64::from(rhs.f);
+        tmp += 1_u64 << 31; // mult_round
+        Self {
             f: (tmp >> 32) as u32,
             e: self.e + rhs.e + 32,
         }
@@ -71,7 +71,7 @@ impl Mul for DiyFp<u64, isize> {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self {
-        let m32 = 0xFFFFFFFFu64;
+        let m32 = 0xFFFFFFFF_u64;
         let a = self.f >> 32;
         let b = self.f & m32;
         let c = rhs.f >> 32;
@@ -81,8 +81,8 @@ impl Mul for DiyFp<u64, isize> {
         let ad = a * d;
         let bd = b * d;
         let mut tmp = (bd >> 32) + (ad & m32) + (bc & m32);
-        tmp += 1u64 << 31; // mult_round
-        DiyFp {
+        tmp += 1_u64 << 31; // mult_round
+        Self {
             f: ac + (ad >> 32) + (bc >> 32) + (tmp >> 32),
             e: self.e + rhs.e + 64,
         }
@@ -159,7 +159,7 @@ macro_rules! diyfp {
                 return res;
             }
             */
-            fn normalize(self) -> DiyFp {
+            const fn normalize(self) -> DiyFp {
                 let mut res = self;
                 while (res.f & (1 << ($diy_significand_size - 1))) == 0 {
                     res.f <<= 1;
@@ -184,7 +184,7 @@ macro_rules! diyfp {
                 return res;
             }
             */
-            fn normalize_boundary(self) -> DiyFp {
+            const fn normalize_boundary(self) -> DiyFp {
                 let mut res = self;
                 while (res.f & $hidden_bit << 1) == 0 {
                     res.f <<= 1;
@@ -213,7 +213,7 @@ macro_rules! diyfp {
                 *minus = mi;
             }
             */
-            fn normalized_boundaries(self) -> (DiyFp, DiyFp) {
+            const fn normalized_boundaries(self) -> (DiyFp, DiyFp) {
                 let pl = DiyFp::new((self.f << 1) + 1, self.e - 1).normalize_boundary();
                 let mut mi = if self.f == $hidden_bit {
                     DiyFp::new((self.f << 2) - 1, self.e - 2)
@@ -242,8 +242,11 @@ macro_rules! diyfp {
         */
         #[inline]
         fn get_cached_power(e: $expty) -> (DiyFp, isize) {
-            let dk = (3 - $diy_significand_size - e) as f64 * 0.30102999566398114f64
-                - ($min_power + 1) as f64;
+            let dk = ((3 - $diy_significand_size - e) as f64).mul_add(0.30102999566398114_f64, -($min_power + 1) as f64);
+            // clippy suggested to use the above instead of the below
+            // let dk = (3 - $diy_significand_size - e) as f64 * 0.30102999566398114_f64
+                // - ($min_power + 1) as f64;
+
             let mut k = dk as isize;
             if dk - k as f64 > 0.0 {
                 k += 1;
@@ -253,6 +256,7 @@ macro_rules! diyfp {
             let k = -($min_power + (index << 3) as isize);
 
             (
+                // SAFETY: dtolnay
                 DiyFp::new(*unsafe { $cached_powers_f.get_unchecked(index) }, *unsafe {
                     $cached_powers_e.get_unchecked(index)
                 }

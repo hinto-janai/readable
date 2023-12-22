@@ -43,6 +43,7 @@ pub trait SysUptime: private::Sealed {
 
 //---------------------------------------------------------------------------------------------------- SysUptime Function
 #[inline]
+#[must_use]
 /// Get the current system uptime in seconds
 ///
 /// This function can be used on:
@@ -53,10 +54,9 @@ pub trait SysUptime: private::Sealed {
 ///
 /// This will return `0` if the underlying system call fails.
 pub fn uptime() -> u32 {
-	// SAFETY: we're calling C.
-
 	#[cfg(target_os = "windows")]
 	{
+		// SAFETY: calling C
 		let milliseconds = unsafe { windows::Win32::System::SystemInformation::GetTickCount64() };
 		return (milliseconds as f64 / 1000.0) as u32;
 	}
@@ -74,6 +74,7 @@ pub fn uptime() -> u32 {
 
 		let mut size: libc::size_t = std::mem::size_of_val(&timeval);
 
+		// SAFETY: calling C
 		let err = unsafe { libc::sysctl(
 			&mut request[0],
 			2,
@@ -98,8 +99,9 @@ pub fn uptime() -> u32 {
 		};
 		let ptr = std::ptr::addr_of_mut!(timespec);
 
+		// SAFETY: calling C
 		// Get time, ignore return error.
-		unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, ptr) };
+		unsafe { libc::clock_gettime(libc::CLOCK_MONOTONIC, ptr); }
 
 		// Uptime is set if no error, else
 		// our default `0` is returned.

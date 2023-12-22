@@ -74,7 +74,7 @@ inline unsigned CountDecimalDigit32(uint32_t n) {
 */
 
 #[inline]
-fn count_decimal_digit32(n: u32) -> usize {
+const fn count_decimal_digit32(n: u32) -> usize {
     if n < 10 {
         1
     } else if n < 100 {
@@ -328,7 +328,7 @@ macro_rules! dtoa_inner {
         */
 
         #[inline]
-    
+        #[allow(clippy::missing_const_for_fn)] // can't be const due to *mut
         unsafe fn grisu_round(buffer: *mut u8, len: isize, delta: $sigty, mut rest: $sigty, ten_kappa: $sigty, wp_w: $sigty) {
             while rest < wp_w && delta - rest >= ten_kappa &&
                 (rest + ten_kappa < wp_w || // closer
@@ -351,7 +351,6 @@ macro_rules! dtoa_inner {
 
         // Returns length and k.
         #[inline]
-    
         unsafe fn digit_gen(w: DiyFp, mp: DiyFp, mut delta: $sigty, buffer: *mut u8, mut k: isize) -> (isize, isize) {
             static POW10: [$sigty; 10] = [ 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000 ];
             let one = DiyFp::new(1 << -mp.e, mp.e);
@@ -519,7 +518,6 @@ macro_rules! dtoa_inner {
         */
 
         #[inline]
-    
         unsafe fn dtoa(buf: &mut [MaybeUninit<u8>; 25], mut value: $fty) -> &str {
             if value == 0.0 {
                 if value.is_sign_negative() {
@@ -528,7 +526,7 @@ macro_rules! dtoa_inner {
                     "0.0"
                 }
             } else {
-                let start = buf.as_mut_ptr() as *mut u8;
+                let start = buf.as_mut_ptr().cast::<u8>();
                 let mut buf_ptr = start;
                 if value < 0.0 {
                     *buf_ptr = b'-';
@@ -583,8 +581,8 @@ pub struct Dtoa {
 
 impl Default for Dtoa {
     #[inline]
-    fn default() -> Dtoa {
-        Dtoa::new_finite(0.0)
+    fn default() -> Self {
+        Self::new_finite(0.0)
     }
 }
 
@@ -681,7 +679,7 @@ impl Dtoa {
 		// Safety: Constructors must set state correctly.
 		unsafe {
 			let slice = slice::from_raw_parts(
-				self.bytes.as_ptr() as *const u8,
+				self.bytes.as_ptr().cast::<u8>(),
 				self.len as usize
 			);
 			std::str::from_utf8_unchecked(slice)
@@ -797,7 +795,7 @@ impl DtoaTmp {
 /// ```rust,ignore
 /// fn dtoa<N: IntoDtoa>(num: N) -> &'tmp str
 /// where
-/// 	'tmp: FreedAtEndOfStatement
+///     'tmp: FreedAtEndOfStatement
 /// ```
 ///
 /// [`DtoaTmp`] is created and immediately dropped, thus it cannot be stored:
@@ -816,7 +814,7 @@ impl DtoaTmp {
 /// assert_eq!(dtoa!(1.0), "1.0"); // ok
 ///
 /// if dtoa!(f32::NAN) == "NaN" {
-/// 	// ok
+///     // ok
 /// }
 ///
 /// // ok
@@ -915,19 +913,19 @@ impl std::fmt::Display for Dtoa {
 /// // u32 conversion is lossless.
 /// let mut i = 1_u64;
 /// while i <= u32::MAX as u64 {
-/// 	let dtoa   = Dtoa::new(i as u32);
-/// 	let string = format!("{i}.0");
-/// 	assert_eq!(dtoa, string);
-/// 	i *= 10;
+///     let dtoa   = Dtoa::new(i as u32);
+///     let string = format!("{i}.0");
+///     assert_eq!(dtoa, string);
+///     i *= 10;
 /// }
 ///
 /// // i32 conversion is lossless.
 /// let mut i = -1_i64;
 /// while i >= i32::MIN as i64 {
-/// 	let dtoa   = Dtoa::new(i as i32);
-/// 	let string = format!("{i}.0");
-/// 	assert_eq!(dtoa, string);
-/// 	i *= 10;
+///     let dtoa   = Dtoa::new(i as i32);
+///     let string = format!("{i}.0");
+///     assert_eq!(dtoa, string);
+///     i *= 10;
 /// }
 ///
 /// // NonZero types work too.
@@ -935,7 +933,7 @@ impl std::fmt::Display for Dtoa {
 /// assert_eq!(dtoa, "1000.0");
 ///
 /// // ⚠️ Manual lossy conversion.
-///	let dtoa = Dtoa::new(u64::MAX as f64);
+/// let dtoa = Dtoa::new(u64::MAX as f64);
 /// assert_ne!(dtoa, format!("{}.0", u64::MAX)) // not equal
 /// ```
 pub trait IntoDtoa: private::Sealed {}
@@ -1075,6 +1073,7 @@ impl private::Sealed for f32 {
             cached_powers_e: CACHED_POWERS_E_32,
             min_power: (-36),
         };
+        // SAFETY: dtolnay
         unsafe { dtoa(buf, self) }
     }
 }
@@ -1119,6 +1118,7 @@ impl private::Sealed for f64 {
             cached_powers_e: CACHED_POWERS_E_64,
             min_power: (-348),
         };
+        // SAFETY: dtolnay
         unsafe { dtoa(buf, self) }
     }
 }

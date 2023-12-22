@@ -140,16 +140,14 @@ impl Runtime {
 	impl_usize!();
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(Runtime::UNKNOWN.is_unknown());
 	/// assert!(!Runtime::ZERO.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
-		match self.1.as_bytes() {
-			b"?:??" => true,
-			_ => false,
-		}
+		matches!(self.1.as_bytes(), b"?:??")
 	}
 }
 
@@ -181,6 +179,7 @@ impl Runtime {
 			Self::format_ms(&mut buf, minutes, seconds)
 		};
 
+		// SAFETY: we know the str len
 		Self(runtime, unsafe { Str::from_raw(buf, len as u8) })
 	}
 
@@ -223,13 +222,13 @@ impl Runtime {
 	//
 	// INVARIANT: Assumes `hour` is 1 or greater.
 	fn format_hms(buf: &mut [u8; Self::MAX_LEN], hour: u8, min: u8, sec: u8) -> usize {
+		const Z: u8 = b'0';
+		const C: u8 = b':';
+
 		debug_assert!(hour >= 1);
 		debug_assert!(hour < 100);
 		debug_assert!(min < 60);
 		debug_assert!(sec < 60);
-
-		const Z: u8 = b'0';
-		const C: u8 = b':';
 
 		let mut h = crate::ItoaTmp::new();
 		let mut m = crate::ItoaTmp::new();
@@ -609,8 +608,7 @@ mod tests {
 			std::str::from_utf8(&b[..l]).unwrap()
 		}
 
-		let mut buf = [0; Runtime::MAX_LEN];
-		let buf = &mut buf;
+		let buf = &mut [0; Runtime::MAX_LEN];
 
 		// 0:0:0
 		let len = Runtime::format_hms(buf, 1, 1, 1);
@@ -651,8 +649,7 @@ mod tests {
 			std::str::from_utf8(&b[..l]).unwrap()
 		}
 
-		let mut buf = [0; Runtime::MAX_LEN];
-		let buf = &mut buf;
+		let buf = &mut [0; Runtime::MAX_LEN];
 
 		// 0:0
 		let len = Runtime::format_ms(buf, 1, 1);
@@ -675,10 +672,10 @@ mod tests {
 	fn all_uint() {
 		for i in 0..Runtime::MAX_F32 as u32 {
 			let rt = Runtime::from(i);
-			println!("rt:{} - i: {}", rt, i);
+			println!("rt: {rt} - i: {i}");
 			assert_eq!(rt.inner() as u32, i);
 			assert_eq!(rt.inner() as u32, i);
-			println!("{}", rt);
+			println!("{rt}");
 		}
 	}
 
@@ -687,7 +684,7 @@ mod tests {
 		let mut f = 1.0;
 		while f < Runtime::MAX_F32 {
 			let rt = Runtime::from(f);
-			println!("rt: {} - f: {}", rt, f);
+			println!("rt: {rt} - f: {f}");
 			assert_eq!(rt, f);
 			f += 0.1;
 		}

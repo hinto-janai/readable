@@ -158,22 +158,20 @@ impl Int {
 	impl_isize!();
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(Int::UNKNOWN.is_unknown());
 	/// assert!(!Int::ZERO.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
-		match *self {
-			Self::UNKNOWN => true,
-			_ => false,
-		}
+		matches!(*self, Self::UNKNOWN)
 	}
 }
 
 //---------------------------------------------------------------------------------------------------- Private functions.
 impl Int {
-	#[inline(always)]
+	#[inline]
 	fn from_priv(i :i64) -> Self {
 		Self(i, Self::from_priv_inner(i))
 	}
@@ -259,7 +257,7 @@ impl Int {
 	#[inline]
 	// -9
 	fn from_neg_2(s: &mut [u8; Self::MAX_LEN], itoa: &[u8]) {
-		s[0..2].copy_from_slice(&itoa[0..2])
+		s[0..2].copy_from_slice(&itoa[0..2]);
 	}
 
 	#[inline]

@@ -136,7 +136,7 @@ impl Byte {
 	/// assert_eq!(Byte::ZERO, 0_u64);
 	/// assert_eq!(Byte::ZERO, Byte::from(0_u64));
 	/// ```
-	pub const ZERO: Byte = Byte(ZERO, Str::from_static_str("0 B"));
+	pub const ZERO: Self = Self(ZERO, Str::from_static_str("0 B"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -144,7 +144,7 @@ impl Byte {
 	/// assert_eq!(Byte::BYTE, 1_u64);
 	/// assert_eq!(Byte::BYTE, Byte::from(1_u64));
 	/// ```
-	pub const BYTE: Byte = Byte(BYTE, Str::from_static_str("1 B"));
+	pub const BYTE: Self = Self(BYTE, Str::from_static_str("1 B"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -152,7 +152,7 @@ impl Byte {
 	/// assert_eq!(Byte::KILOBYTE, 1_000_u64);
 	/// assert_eq!(Byte::KILOBYTE, Byte::from(1_000_u64));
 	/// ```
-	pub const KILOBYTE: Byte = Byte(KILOBYTE, Str::from_static_str("1.000 KB"));
+	pub const KILOBYTE: Self = Self(KILOBYTE, Str::from_static_str("1.000 KB"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -160,7 +160,7 @@ impl Byte {
 	/// assert_eq!(Byte::MEGABYTE, 1_000_000_u64);
 	/// assert_eq!(Byte::MEGABYTE, Byte::from(1_000_000_u64));
 	/// ```
-	pub const MEGABYTE: Byte = Byte(MEGABYTE, Str::from_static_str("1.000 MB"));
+	pub const MEGABYTE: Self = Self(MEGABYTE, Str::from_static_str("1.000 MB"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -168,7 +168,7 @@ impl Byte {
 	/// assert_eq!(Byte::GIGABYTE, 1_000_000_000_u64);
 	/// assert_eq!(Byte::GIGABYTE, Byte::from(1_000_000_000_u64));
 	/// ```
-	pub const GIGABYTE: Byte = Byte(GIGABYTE, Str::from_static_str("1.000 GB"));
+	pub const GIGABYTE: Self = Self(GIGABYTE, Str::from_static_str("1.000 GB"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -176,7 +176,7 @@ impl Byte {
 	/// assert_eq!(Byte::TERABYTE, 1_000_000_000_000_u64);
 	/// assert_eq!(Byte::TERABYTE, Byte::from(1_000_000_000_000_u64));
 	/// ```
-	pub const TERABYTE: Byte = Byte(TERABYTE, Str::from_static_str("1.000 TB"));
+	pub const TERABYTE: Self = Self(TERABYTE, Str::from_static_str("1.000 TB"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -184,7 +184,7 @@ impl Byte {
 	/// assert_eq!(Byte::PETABYTE, 1_000_000_000_000_000_u64);
 	/// assert_eq!(Byte::PETABYTE, Byte::from(1_000_000_000_000_000_u64));
 	/// ```
-	pub const PETABYTE: Byte = Byte(PETABYTE, Str::from_static_str("1.000 PB"));
+	pub const PETABYTE: Self = Self(PETABYTE, Str::from_static_str("1.000 PB"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -192,7 +192,7 @@ impl Byte {
 	/// assert_eq!(Byte::EXABYTE, 1_000_000_000_000_000_000_u64);
 	/// assert_eq!(Byte::EXABYTE, Byte::from(1_000_000_000_000_000_000_u64));
 	/// ```
-	pub const EXABYTE: Byte = Byte(EXABYTE, Str::from_static_str("1.000 EB"));
+	pub const EXABYTE: Self = Self(EXABYTE, Str::from_static_str("1.000 EB"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -200,7 +200,7 @@ impl Byte {
 	/// assert_eq!(Byte::MAX, "18.446 EB");
 	/// assert_eq!(Byte::MAX, u64::MAX);
 	/// ```
-	pub const MAX: Byte = Byte(u64::MAX, Str::from_static_str("18.446 EB"));
+	pub const MAX: Self = Self(u64::MAX, Str::from_static_str("18.446 EB"));
 
 	/// ```rust
 	/// # use readable::*;
@@ -208,7 +208,7 @@ impl Byte {
 	/// assert_eq!(Byte::UNKNOWN, Byte::from(-1));
 	/// assert_eq!(Byte::UNKNOWN, "???.??? B");
 	/// ```
-	pub const UNKNOWN: Byte = Byte(ZERO, Str::from_static_str("???.??? B"));
+	pub const UNKNOWN: Self = Self(ZERO, Str::from_static_str("???.??? B"));
 }
 
 //---------------------------------------------------------------------------------------------------- Byte Impl
@@ -218,22 +218,28 @@ impl Byte {
 	impl_usize!();
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(Byte::UNKNOWN.is_unknown());
 	/// assert!(!Byte::ZERO.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
-		match *self {
-			Self::UNKNOWN => true,
-			_ => false,
-		}
+		matches!(*self, Self::UNKNOWN)
 	}
 }
 
 //---------------------------------------------------------------------------------------------------- Private Impl
 impl Byte {
+	/// Private constructor
 	fn from_priv(bytes: u64) -> Self {
+		const UNITS: [u8; 6] = [b'K', b'M', b'G', b'T', b'P', b'E'];
+		const LN_KILOBYTE: f64 = 6.931471806; // ln 1024
+		const Z:     u8 = b'0';
+		const SPACE: u8 = b' ';
+		const B:     u8 = b'B';
+		const DOT:   u8 = b'.';
+
 		// If bytes is a perfect multiple, return literals.
 		match bytes {
 			ZERO     => return Self::ZERO,
@@ -246,13 +252,6 @@ impl Byte {
 			EXABYTE  => return Self::EXABYTE,
 			_ => (),
 		}
-
-		const UNITS: [u8; 6] = [b'K', b'M', b'G', b'T', b'P', b'E'];
-		const LN_KILOBYTE: f64 = 6.931471806; // ln 1024
-		const Z:     u8 = b'0';
-		const SPACE: u8 = b' ';
-		const B:     u8 = b'B';
-		const DOT:   u8 = b'.';
 
 		// Our final string buffer.
 		let mut b = [0; 10];
@@ -267,13 +266,14 @@ impl Byte {
 			b[len] = SPACE;
 			b[len + 1] = B;
 
+			// SAFETY: we know the str len.
 			Self(bytes, unsafe { Str::from_raw(b, len as u8 + 2) })
 
 		// Else calculate.
 		} else {
 			let size = bytes as f64;
 			let exp = match (size.ln() / LN_KILOBYTE) as usize {
-				e if e == 0 => 1,
+				0 => 1,
 				e => e,
 			};
 
@@ -289,17 +289,15 @@ impl Byte {
 			// Format first 1-3 digits into buffer (111)
 			let mut itoa = crate::ItoaTmp::new();
 			let itoa = itoa.format(base).as_bytes();
+			b[0] = itoa[0];
 			let idx = if base < 10 {
-				b[0] = itoa[0];
 				b[1] = DOT;
 				2
 			} else if base < 100 {
-				b[0] = itoa[0];
 				b[1] = itoa[1];
 				b[2] = DOT;
 				3
 			} else {
-				b[0] = itoa[0];
 				b[1] = itoa[1];
 				b[2] = itoa[2];
 				b[3] = DOT;
@@ -329,6 +327,7 @@ impl Byte {
 			b[idx + 4] = UNITS[exp - 1];
 			b[idx + 5] = B;
 
+			// SAFETY: we know the str len.
 			Self(bytes, unsafe { Str::from_raw(b, idx as u8 + 6)})
 		}
 	}

@@ -210,12 +210,14 @@ impl RuntimeUnion {
 //---------------------------------------------------------------------------------------------------- RuntimeUnion Impl
 impl RuntimeUnion {
 	#[inline]
+	#[must_use]
 	/// Returns the inner number.
 	pub const fn inner(&self) -> f32 {
 		self.float
 	}
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(RuntimeUnion::from(65.555).as_str(), "1:05");
@@ -225,6 +227,7 @@ impl RuntimeUnion {
 	}
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(RuntimeUnion::from(65.555).as_str_pad(), "00:01:05");
@@ -234,6 +237,7 @@ impl RuntimeUnion {
 	}
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(RuntimeUnion::from(65.555).as_str_milli(), "00:01:05.555");
@@ -243,6 +247,7 @@ impl RuntimeUnion {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Creates an identical [`Runtime`] without consuming [`Self`]
 	///
 	/// ```rust
@@ -254,6 +259,7 @@ impl RuntimeUnion {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Creates an identical [`RuntimePad`] without consuming [`Self`]
 	///
 	/// ```rust
@@ -265,6 +271,7 @@ impl RuntimeUnion {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Creates an identical [`RuntimeMilli`] without consuming [`Self`]
 	///
 	/// ```rust
@@ -276,6 +283,7 @@ impl RuntimeUnion {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Deconstructs [`Self`] and returns the [`Runtime`] variants
 	///
 	/// ```rust
@@ -295,6 +303,7 @@ impl RuntimeUnion {
 	}
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(RuntimeUnion::UNKNOWN.is_unknown());
@@ -306,10 +315,7 @@ impl RuntimeUnion {
 			self.runtime_pad.as_bytes(),
 			self.runtime_milli.as_bytes(),
 		);
-		match bytes {
-			(b"?:??", b"??:??:??", b"??:??:??.???") => true,
-			_ => false,
-		}
+		matches!(bytes, (b"?:??", b"??:??:??", b"??:??:??.???"))
 	}
 }
 

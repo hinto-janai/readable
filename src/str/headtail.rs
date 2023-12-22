@@ -50,7 +50,7 @@ pub const DOT: &str = "...";
 /// assert_eq!(emojis.head_tail_dot(2, 2), "🦀🦀...🐸🐸");
 /// ```
 ///
-/// ## Returned "HeadTail" Types
+/// ## Returned [`HeadTail`] Types
 /// All types returned by this trait can compare with strings
 /// without any allocation, e.g:
 /// ```rust
@@ -73,11 +73,11 @@ pub const DOT: &str = "...";
 /// And they all implement [`std::fmt::Display`], so they can also use `.to_string()`:
 /// ```rust
 /// use readable::str::{
-/// 	// This is the main trait.
-/// 	HeadTail,
-/// 	// This is the returned struct
-/// 	// holding `str` references.
-/// 	HeadTailDot
+///     // This is the main trait.
+///     HeadTail,
+///     // This is the returned struct
+///     // holding `str` references.
+///     HeadTailDot
 /// };
 ///
 /// let string: &str = "hello world";
@@ -110,6 +110,7 @@ pub trait HeadTail {
 	fn head(&self, head: usize) -> Head<'_> {
 		let s = self.as_str();
 
+		#[allow(clippy::string_slice)]
 		if let Some((index, _)) = s.char_indices().nth(head) {
 			Head { string: &s[..index], cut: true }
 		} else {
@@ -135,6 +136,7 @@ pub trait HeadTail {
 	fn head_dot(&self, head: usize) -> HeadDot<'_> {
 		let s = self.as_str();
 
+		#[allow(clippy::string_slice)]
 		if let Some((index, _)) = s.char_indices().nth(head) {
 			let mut string = String::with_capacity(s.len() + 3);
 			string += &s[..index];
@@ -164,6 +166,7 @@ pub trait HeadTail {
 			return Tail { string: s, cut: false };
 		}
 
+		#[allow(clippy::string_slice)]
 		if let Some((index, _)) = s.char_indices().nth(end - tail) {
 			Tail { string: &s[index..], cut: true }
 		} else {
@@ -195,6 +198,7 @@ pub trait HeadTail {
 			return TailDot { cow: Cow::Borrowed(s) }
 		}
 
+		#[allow(clippy::string_slice)]
 		if let Some((index, _)) = s.char_indices().nth(end - tail) {
 			let mut string = String::with_capacity(end + 3);
 			string += DOT;
@@ -243,6 +247,7 @@ pub trait HeadTail {
 		let head = s.char_indices().nth(head);
 		let tail = s.char_indices().nth(end - tail);
 
+		#[allow(clippy::string_slice)]
 		if let (Some((head, _)), Some((tail, _))) = (head, tail) {
 			HeadTailStr { head: &s[..head], tail: Some(&s[tail..]) }
 		} else {
@@ -288,6 +293,7 @@ pub trait HeadTail {
 		let head = s.char_indices().nth(head);
 		let tail = s.char_indices().nth(end - tail);
 
+		#[allow(clippy::string_slice)]
 		if let (Some((head, _)), Some((tail, _))) = (head, tail) {
 			HeadTailDot { head: &s[..head], tail: Some(&s[tail..]) }
 		} else {
@@ -328,11 +334,14 @@ macro_rules! impl_string {
 		$(
 			impl<'a> $name<'a> {
 				#[inline]
+				#[must_use]
 				/// Returns the inner `string`, whether cut off or not
 				pub const fn as_str(&self) -> &str {
 					self.string
 				}
+
 				#[inline]
+				#[must_use]
 				/// Returns the inner parts that make this type up.
 				///
 				/// The returned `str` is the head/tail portion.
@@ -357,7 +366,9 @@ macro_rules! impl_string {
 				pub const fn into_parts(self) -> (&'a str, bool) {
 					(self.string, self.cut)
 				}
+
 				#[inline]
+				#[must_use]
 				/// Returns `true` is the string was cut in any way.
 				///
 				/// Returns `false` if running `.to_string()` on this
@@ -457,6 +468,7 @@ macro_rules! impl_cow {
 			}
 			impl<'a> $name<'a> {
 				#[inline]
+				#[must_use]
 				/// Returns the inner `string`, whether cut off or not
 				pub fn as_str(&self) -> &str {
 					match self.cow {
@@ -464,7 +476,9 @@ macro_rules! impl_cow {
 						Cow::Owned(ref s) => s,
 					}
 				}
+
 				#[inline]
+				#[must_use]
 				/// Returns the inner `Cow<'a, str>`.
 				///
 				/// The returned `str` is the head/tail portion.
@@ -483,8 +497,8 @@ macro_rules! impl_cow {
 				/// let head = string.head_dot(11).into_cow();
 				/// assert_eq!(head, string);
 				/// match head {
-				/// 	Cow::Owned(_)    => unreachable!(),
-				/// 	Cow::Borrowed(_) => (),
+				///     Cow::Owned(_)    => unreachable!(),
+				///     Cow::Borrowed(_) => (),
 				/// }
 				///
 				/// // If it can't capture it all (5 != 11),
@@ -492,14 +506,16 @@ macro_rules! impl_cow {
 				/// let head = string.head_dot(5).into_cow();
 				/// assert_eq!(head, "hello...");
 				/// match head {
-				/// 	Cow::Owned(_)    => (),
-				/// 	Cow::Borrowed(_) => unreachable!(),
+				///     Cow::Owned(_)    => (),
+				///     Cow::Borrowed(_) => unreachable!(),
 				/// }
 				/// ```
 				pub fn into_cow(self) -> Cow<'a, str> {
 					self.cow
 				}
+
 				#[inline]
+				#[must_use]
 				/// Returns `true` is the string was cut in any way.
 				///
 				/// Returns `false` if running `.to_string()` on this
@@ -645,6 +661,7 @@ macro_rules! impl_head_tail {
 			}
 			impl<'a> $name<'a> {
 				#[inline]
+				#[must_use]
 				/// Returns `true` is the string was cut in any way.
 				///
 				/// Returns `false` if running `.to_string()` on this
@@ -652,12 +669,16 @@ macro_rules! impl_head_tail {
 				pub const fn cut(&self) -> bool {
 					self.tail.is_some()
 				}
+
 				#[inline]
+				#[must_use]
 				/// Return the only `head` portion of the string
 				pub const fn head(&self) -> &str {
 					self.head
 				}
+
 				#[inline]
+				#[must_use]
 				/// Return the only `tail` portion of the string
 				pub const fn tail(&self) -> &str {
 					match self.tail {
@@ -665,7 +686,9 @@ macro_rules! impl_head_tail {
 						None => self.head,
 					}
 				}
+
 				#[inline]
+				#[must_use]
 				/// Returns the inner `head/tail` `str`'s that make this type up.
 				///
 				/// The returned `&'a str` is the `head` portion.

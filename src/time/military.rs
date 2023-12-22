@@ -118,6 +118,7 @@ impl Military {
 	impl_usize!();
 
 	#[inline]
+	#[must_use]
 	/// Create a [`Self`] from seconds
 	///
 	/// This behaves the exact same way as the [`From`]
@@ -137,6 +138,7 @@ impl Military {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Create a [`Self`] with specified `hours`, `minutes`, and `seconds`
 	///
 	/// This takes hours, minutes, and seconds and will convert the
@@ -147,9 +149,9 @@ impl Military {
 	/// ```rust
 	/// # use readable::*;
 	/// let military = Military::new_specified(
-	/// 	3,  // hours
-	/// 	21, // minutes
-	/// 	55, // seconds
+	///     3,  // hours
+	///     21, // minutes
+	///     55, // seconds
 	/// );
 	/// assert_eq!(military, "03:21:55");
 	///
@@ -174,22 +176,22 @@ impl Military {
 	}
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(Military::UNKNOWN.is_unknown());
 	/// assert!(!Military::ZERO.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
-		match self.1.as_bytes() {
-			b"??:??:??" => true,
-			_ => false,
-		}
+		matches!(self.1.as_bytes(), b"??:??:??")
 	}
 }
 
 //---------------------------------------------------------------------------------------------------- Private impl
 impl Military {
 	pub(super) const fn priv_from(total_seconds: u32) -> Self {
+		const C: u8 = b':';
+
 		let total_seconds = total_seconds % 86400;
 
 		if total_seconds == 0 {
@@ -203,8 +205,6 @@ impl Military {
 		let m = Time::str_0_59(minutes);
 		let s = Time::str_0_59(seconds);
 
-		const C: u8 = b':';
-
 		let buf: [u8; Self::MAX_LEN] = [
 			h[0],
 			h[1],
@@ -216,6 +216,7 @@ impl Military {
 			s[1],
 		];
 
+		// SAFETY: we know the str len
 		Self(total_seconds, unsafe { Str::from_raw(buf, Self::MAX_LEN as u8) })
 	}
 
@@ -379,14 +380,14 @@ impl From<&std::time::Duration> for Military {
 impl From<Military> for std::time::Duration {
 	#[inline]
 	fn from(value: Military) -> Self {
-		std::time::Duration::from_secs(value.inner() as u64)
+		Self::from_secs(value.inner().into())
 	}
 }
 
 impl From<&Military> for std::time::Duration {
 	#[inline]
 	fn from(value: &Military) -> Self {
-		std::time::Duration::from_secs(value.inner() as u64)
+		Self::from_secs(value.inner().into())
 	}
 }
 

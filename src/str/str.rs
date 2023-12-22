@@ -114,6 +114,7 @@ impl<const N: usize> Str<N> {
 	};
 
 	#[inline]
+	#[must_use]
 	/// Returns an empty [`Str`].
 	///
 	/// ```rust
@@ -134,6 +135,8 @@ impl<const N: usize> Str<N> {
 		}
 	}
 
+	#[must_use]
+	#[allow(clippy::missing_panics_doc)] // compile-time
 	/// Create a [`Self`] from static bytes.
 	///
 	/// The length of the input doesn't need to be the
@@ -173,13 +176,8 @@ impl<const N: usize> Str<N> {
 
 		let len = bytes.len();
 
-		if len > N {
-			panic!("byte length is longer than N");
-		}
-
-		if std::str::from_utf8(bytes).is_err() {
-			panic!("bytes are not valid UTF-8");
-		}
+		assert!(len <= N, "byte length is longer than N");
+		assert!(std::str::from_utf8(bytes).is_ok(), "bytes are not valid UTF-8");
 
 		let mut buf = [0_u8; N];
 
@@ -195,6 +193,7 @@ impl<const N: usize> Str<N> {
 		}
 	}
 
+	#[must_use]
 	/// Create a [`Self`] from a static [`str`].
 	///
 	/// The length of the input doesn't need to be the
@@ -232,6 +231,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Return all the bytes of this [`Str`], whether valid UTF-8 or not.
 	///
 	/// ``` rust
@@ -248,6 +248,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Return all the bytes of this [`Str`] (mutably), whether valid UTF-8 or not
 	///
 	/// ## Safety
@@ -268,11 +269,11 @@ impl<const N: usize> Str<N> {
 	/// // leave the bytes as valid UTF-8 bytes
 	/// // and that we set the length correctly.
 	/// unsafe {
-	/// 	// Mutate to valid UTF-8 bytes.
-	/// 	let mut_ref = string.as_bytes_all_mut();
-	/// 	mut_ref.copy_from_slice(&b"world"[..]);
-	/// 	// Set the new length.
-	/// 	string.set_len(5);
+	///     // Mutate to valid UTF-8 bytes.
+	///     let mut_ref = string.as_bytes_all_mut();
+	///     mut_ref.copy_from_slice(&b"world"[..]);
+	///     // Set the new length.
+	///     string.set_len(5);
 	/// }
 	///
 	/// assert_eq!(string, "world");
@@ -283,6 +284,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Return the length of the _valid_ UTF-8 bytes of this [`Str`]
 	///
 	/// ```rust
@@ -299,6 +301,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Return the length of the _valid_ UTF-8 bytes of this [`Str`] as a [`u8`]
 	///
 	/// ```rust
@@ -315,6 +318,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Returns the maximum capacity (`Self::CAPACITY`) of this [`Str`].
 	///
 	/// Should be exactly equal to `N`.
@@ -354,10 +358,10 @@ impl<const N: usize> Str<N> {
 	///
 	/// // Overwrite the bytes.
 	/// unsafe {
-	/// 	let mut_ref = s.as_bytes_all_mut();
-	/// 	mut_ref[0] = b'a';
-	/// 	mut_ref[1] = b'b';
-	/// 	mut_ref[2] = b'c';
+	///     let mut_ref = s.as_bytes_all_mut();
+	///     mut_ref[0] = b'a';
+	///     mut_ref[1] = b'b';
+	///     mut_ref[2] = b'c';
 	/// }
 	/// // Should be safe from this point.
 	/// assert_eq!(s.as_str(), "abc");
@@ -392,10 +396,10 @@ impl<const N: usize> Str<N> {
 	///
 	/// // Overwrite the bytes.
 	/// unsafe {
-	/// 	let mut_ref = s.as_bytes_all_mut();
-	/// 	mut_ref[0] = b'a';
-	/// 	mut_ref[1] = b'b';
-	/// 	mut_ref[2] = b'c';
+	///     let mut_ref = s.as_bytes_all_mut();
+	///     mut_ref[0] = b'a';
+	///     mut_ref[1] = b'b';
+	///     mut_ref[2] = b'c';
 	/// }
 	/// // Should be safe from this point.
 	/// assert_eq!(s.as_str(), "abc");
@@ -411,6 +415,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// How many available bytes are left in this [`Str`]
 	/// before the [`Self::CAPACITY`] is completely filled.
 	///
@@ -425,6 +430,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Returns only the valid `UTF-8` bytes of this [`Str`] as a byte slice.
 	///
 	/// ```rust
@@ -433,7 +439,7 @@ impl<const N: usize> Str<N> {
 	/// assert_eq!(s.as_bytes().len(), 5);
 	/// ```
 	pub const fn as_bytes(&self) -> &[u8] {
-		// SAFETY, we trust `.len()`.
+		// SAFETY: we trust `.len()`.
 		unsafe {
 			std::slice::from_raw_parts(
 				self.as_ptr(),
@@ -443,6 +449,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// [`Self::as_bytes()`], but returns mutable bytes
 	///
 	/// ## Safety
@@ -466,8 +473,8 @@ impl<const N: usize> Str<N> {
 	/// assert_eq!(s.as_str(),         "");
 	/// assert_eq!(s.as_bytes().len(), 0);
 	/// ```
-	pub fn as_bytes_mut(&mut self) -> &mut [u8] {
-		// SAFETY, we trust `.len()`.
+	pub unsafe fn as_bytes_mut(&mut self) -> &mut [u8] {
+		// SAFETY: we trust `.len()`.
 		unsafe {
 			std::slice::from_raw_parts_mut(
 				self.as_mut_ptr(),
@@ -477,6 +484,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Returns a pointer to the first byte in the string array.
 	/// ```rust
 	/// # use readable::Str;
@@ -514,6 +522,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Returns only the valid `UTF-8` bytes of this [`Str`] as a `Vec<u8>`
 	///
 	/// ```rust
@@ -529,6 +538,7 @@ impl<const N: usize> Str<N> {
 		self.as_bytes().to_vec()
 	}
 
+	#[must_use]
 	/// Check this [`Str`] for correctness.
 	///
 	/// When constructing/receiving a [`Str`] outside of
@@ -579,7 +589,7 @@ impl<const N: usize> Str<N> {
 	/// assert!(s.is_empty());
 	/// ```
 	///
-	/// ## Safety
+	/// ## Note
 	/// This does not actually mutate any bytes,
 	/// it simply sets the internal length to `0`.
 	///
@@ -615,6 +625,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// If this [`Str`] is empty.
 	///
 	/// ``` rust
@@ -631,6 +642,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// If this [`Str`] is full (no more capacity left).
 	///
 	/// ``` rust
@@ -648,6 +660,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// This [`Str`], as a valid UTF-8 [`str`].
 	///
 	/// ``` rust
@@ -684,6 +697,8 @@ impl<const N: usize> Str<N> {
 		unsafe { std::str::from_utf8_unchecked_mut(self.as_bytes_mut()) }
 	}
 
+	#[inline]
+	#[must_use]
 	/// Consumes `self` into a [`String`]
 	///
 	/// ``` rust
@@ -704,6 +719,7 @@ impl<const N: usize> Str<N> {
 	/// The input `s` must be the exact same length
 	/// as `N` or this function will error.
 	///
+	/// # Errors
 	/// If the copy was successful, [`Result::Ok`] is returned with the new length of the string.
 	///
 	/// If the copy failed because `s.len() > N`, [`Result::Err`] is returned with how many extra bytes couldn't fit.
@@ -732,14 +748,16 @@ impl<const N: usize> Str<N> {
 
 		if s_len > N {
 			return Err(s_len - N);
-		} else if s_len != N {
+		}
+
+		if s_len != N {
 			return Err(0);
 		}
 
 		// SAFETY: We are directly mutating the bytes and length.
 		// We know the correct values.
 		unsafe {
-			self.as_bytes_all_mut().copy_from_slice(&s_bytes);
+			self.as_bytes_all_mut().copy_from_slice(s_bytes);
 			self.set_len(s_len);
 		}
 
@@ -796,7 +814,7 @@ impl<const N: usize> Str<N> {
 		// SAFETY: We are directly mutating the bytes and length.
 		// We know the correct values.
 		unsafe {
-			self.as_bytes_all_mut().copy_from_slice(&s_bytes);
+			self.as_bytes_all_mut().copy_from_slice(s_bytes);
 			self.set_len(s_len);
 		}
 
@@ -806,6 +824,7 @@ impl<const N: usize> Str<N> {
 	#[inline]
 	/// Appends `self` with the [`str`] `s`.
 	///
+	/// # Errors
 	/// If the push was successful (or `s` was empty),
 	/// [`Result::Ok`] is returned with the new length of the string.
 	///
@@ -906,9 +925,10 @@ impl<const N: usize> Str<N> {
 
 		let remaining = self.remaining();
 
-		if s_len > remaining {
-			panic!("no more space - remaining: {remaining}, input length: {s_len}, capacity: {N}");
-		}
+		assert!(
+			s_len <= remaining,
+			"no more space - remaining: {remaining}, input length: {s_len}, capacity: {N}"
+		);
 
 		let self_len = self.len();
 		let new_len  = s_len + self.len();
@@ -995,28 +1015,30 @@ impl<const N: usize> Str<N> {
 			// We use `.rev()` because we assume the string
 			// is only slightly longer, so starting linear
 			// search from the end is faster.
-			let mut chars = s.char_indices().rev();
 			let mut index = 0;
-			while let Some((i, _)) = chars.next() {
+			for (i, _) in s.char_indices().rev() {
 				index = i;
 
 				if i <= remaining {
 					break;
 				}
 			}
+
+			// We didn't find a good index, push nothing.
 			if index == 0 {
-				// We didn't find a good index, push nothing.
 				return 0;
-			} else {
-				index
 			}
+
+			index
 		};
 
+		#[allow(clippy::string_slice)]
 		self.push_str_panic(&s[..index]);
 		index
 	}
 
 	#[inline]
+	#[allow(clippy::missing_errors_doc)]
 	/// [`Str::push_str`], but with a `char`
 	///
 	/// This acts in the same way as [`Str::push_str`], but the input is a single [`char`].
@@ -1143,6 +1165,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Decomposes a [`Str`] into its raw components
 	///
 	/// Returns the byte array buffer and the valid UTF-8 length of the [`Str`].
@@ -1160,6 +1183,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Creates a new [`Str`] from a byte array buffer and a length
 	///
 	/// ```rust
@@ -1181,6 +1205,7 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Create a [`Str`] directly from a [`str`]
 	///
 	/// ```rust
@@ -1199,16 +1224,18 @@ impl<const N: usize> Str<N> {
 	/// // 1 too many characters, will panic.
 	/// let s = Str::<4>::from_str_exact("12345");
 	/// ```
-	pub fn from_str_exact(string: &str) -> Self {
-		Self::from_bytes_exact(string.as_bytes())
+	pub fn from_str_exact(string: impl AsRef<str>) -> Self {
+		// SAFETY: `str` is valid UTF-8
+		unsafe { Self::from_bytes_exact(string.as_ref().as_bytes()) }
 	}
 
 	#[inline]
+	#[must_use]
 	/// Create a [`Str`] directly from bytes
 	///
 	/// ```rust
 	/// # use readable::*;
-	/// let s = Str::<5>::from_bytes_exact(b"12345");
+	/// let s = unsafe { Str::<5>::from_bytes_exact(b"12345") };
 	/// assert_eq!(s, "12345");
 	/// ```
 	///
@@ -1223,9 +1250,9 @@ impl<const N: usize> Str<N> {
 	/// ```rust,should_panic
 	/// # use readable::*;
 	/// // 1 too many characters, will panic.
-	/// let s = Str::<4>::from_bytes_exact(b"12345");
+	/// let s = unsafe { Str::<4>::from_bytes_exact(b"12345") };
 	/// ```
-	pub fn from_bytes_exact(bytes: &[u8]) -> Self {
+	pub unsafe fn from_bytes_exact(bytes: &[u8]) -> Self {
 		let mut buf = [0; N];
 		buf.copy_from_slice(bytes);
 		Self {
@@ -1267,7 +1294,7 @@ impl<const N: usize> Str<N> {
 	#[inline]
 	/// Shortens this [`Str`] to the specified length.
 	///
-	/// If new_len is greater than the string’s current length, this has no effect.
+	/// If `new_len` is greater than the string’s current length, this has no effect.
 	///
 	/// Note that this method has no effect on the allocated capacity of the string
 	///
@@ -1315,15 +1342,14 @@ impl<const N: usize> Str<N> {
 	/// Panics if `idx` is larger than or equal to the [`Str`]’s length,
 	/// or if it does not lie on a [`char`] boundary.
 	pub fn remove(&mut self, idx: usize) -> char {
-		// https://doc.rust-lang.org/1.74.0/src/alloc/string.rs.html#1298
 
-		let ch = match self.as_str()[idx..].chars().next() {
-			Some(ch) => ch,
-			None => panic!("cannot remove a char from the end of a string"),
-		};
+		#[allow(clippy::string_slice)]
+		let ch = self.as_str()[idx..].chars().next().expect("cannot remove a char from the end of a string");
 
 		let next = idx + ch.len_utf8();
 		let len = self.len();
+
+		// SAFETY: https://doc.rust-lang.org/1.74.0/src/alloc/string.rs.html#1298
 		unsafe {
 			std::ptr::copy(self.as_ptr().add(next), self.as_mut_ptr().add(idx), len - next);
 			self.set_len(len - (next - idx));
@@ -1352,7 +1378,7 @@ impl<const N: usize> Str<N> {
 	pub fn pop(&mut self) -> Option<char> {
 		// https://doc.rust-lang.org/1.74.0/src/alloc/string.rs.html#1268
 
-		let ch = self.as_str().chars().rev().next()?;
+		let ch = self.as_str().chars().next_back()?;
 		let newlen = self.len() - ch.len_utf8();
 
 		// SAFETY: setting length.
@@ -1479,7 +1505,7 @@ impl<const N: usize> std::default::Default for Str<N> {
 }
 
 impl<const N: usize, T: AsRef<str>> std::ops::Add<T> for Str<N> {
-	type Output = Str<N>;
+	type Output = Self;
 
 	#[inline]
 	/// Implements the `+` operator.
@@ -1502,7 +1528,7 @@ impl<const N: usize, T: AsRef<str>> std::ops::Add<T> for Str<N> {
 	/// let _ = s + "bar";
 	/// ```
 	fn add(self, s: T) -> Self::Output {
-		let mut new = self.clone();
+		let mut new = self;
 		new.push_str_panic(s.as_ref());
 		new
 	}

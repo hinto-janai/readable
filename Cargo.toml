@@ -12,6 +12,7 @@ license = "MIT"
 exclude = [
 	"inlined",
 ]
+categories = ["value-formatting"]
 
 [package.metadata.docs.rs]
 all-features = true

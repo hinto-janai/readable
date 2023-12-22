@@ -88,8 +88,6 @@ impl Time {
 	/// ```
 	pub const MAX_LEN: usize = 11;
 
-	/// Returned when using [`Time::unknown`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Time::UNKNOWN, 0);
@@ -97,8 +95,6 @@ impl Time {
 	/// ```
 	pub const UNKNOWN: Self = Self(0, Str::from_static_str("??:??:??"));
 
-	/// Returned when using [`Time::zero`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Time::ZERO, 0);
@@ -106,8 +102,6 @@ impl Time {
 	/// ```
 	pub const ZERO: Self = Self(0, Str::from_static_str("12:00:00 AM"));
 
-	/// Returned when using [`Time::max`]
-	///
 	/// ```rust
 	/// # use readable::*;
 	/// assert_eq!(Time::MAX, 86399);
@@ -123,6 +117,7 @@ impl Time {
 	impl_usize!();
 
 	#[inline]
+	#[must_use]
 	/// Create a [`Self`] from seconds
 	///
 	/// This behaves the exact same way as the [`From`]
@@ -142,6 +137,7 @@ impl Time {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Create a [`Self`] with specified `hours`, `minutes`, and `seconds`
 	///
 	/// This takes hours, minutes, and seconds and will convert the
@@ -152,9 +148,9 @@ impl Time {
 	/// ```rust
 	/// # use readable::*;
 	/// let time = Time::new_specified(
-	/// 	3,  // hours
-	/// 	21, // minutes
-	/// 	55, // seconds
+	///     3,  // hours
+	///     21, // minutes
+	///     55, // seconds
 	/// );
 	/// assert_eq!(time, "3:21:55 AM");
 	///
@@ -179,61 +175,32 @@ impl Time {
 	}
 
 	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Time::unknown(), Time::UNKNOWN);
-	/// ```
-	pub const fn unknown() -> Self {
-		Self::UNKNOWN
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Time::zero(), Time::ZERO);
-	/// ```
-	pub const fn zero() -> Self {
-		Self::ZERO
-	}
-
-	#[inline]
-	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(Time::max(), Time::MAX);
-	/// ```
-	pub const fn max() -> Self {
-		Self::MAX
-	}
-
-	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(Time::UNKNOWN.is_unknown());
 	/// assert!(!Time::ZERO.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
-		match self.1.as_bytes() {
-			b"??:??:??" => true,
-			_ => false,
-		}
+		matches!(self.1.as_bytes(), b"??:??:??")
 	}
 }
 
 //---------------------------------------------------------------------------------------------------- Private impl
 impl Time {
 	pub(super) const fn priv_from(total_seconds: u32) -> Self {
-		let total_seconds = total_seconds % 86400;
-
-		if total_seconds == 0 {
-			return Self::zero();
-		}
-
-		let (hours, minutes, seconds) = crate::time::secs_to_clock(total_seconds);
-
 		// Format.
 		const C: u8 = b':';
 		const S: u8 = b' ';
 		const M: u8 = b'M';
+
+		let total_seconds = total_seconds % 86400;
+
+		if total_seconds == 0 {
+			return Self::ZERO;
+		}
+
+		let (hours, minutes, seconds) = crate::time::secs_to_clock(total_seconds);
 
 		let h = Self::str_0_23(hours);
 		let m = Self::str_0_59(minutes);
@@ -270,6 +237,7 @@ impl Time {
 			], Self::MAX_LEN as u8)
 		};
 
+		// SAFETY: we know the str len
 		Self(total_seconds, unsafe { Str::from_raw(buf,len) })
 	}
 
@@ -489,14 +457,14 @@ impl From<&std::time::Duration> for Time {
 impl From<Time> for std::time::Duration {
 	#[inline]
 	fn from(value: Time) -> Self {
-		std::time::Duration::from_secs(value.inner() as u64)
+		Self::from_secs(value.inner().into())
 	}
 }
 
 impl From<&Time> for std::time::Duration {
 	#[inline]
 	fn from(value: &Time) -> Self {
-		std::time::Duration::from_secs(value.inner() as u64)
+		Self::from_secs(value.inner().into())
 	}
 }
 

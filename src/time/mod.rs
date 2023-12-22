@@ -24,7 +24,7 @@
 //! assert_eq!(Military::from(SECONDS) + 1, "00:00:00");
 //! ```
 //!
-//! ## SysTime
+//! ## `SysTime`
 //! This module contains [`SysTime`] which is a trait that allows direct conversion
 //! from the _live_ system clock time to a type within this module, e.g:
 //!
@@ -56,9 +56,7 @@
 //! assert_eq!(military, "23:59:59");
 //!
 //! // Maintain the `unknown` variant.
-//! let unknown = Time::unknown();
-//! assert_eq!(unknown, Time::UNKNOWN);
-//! assert_eq!(Military::from(unknown), Military::UNKNOWN);
+//! assert_eq!(Military::from(Time::UNKNOWN), Military::UNKNOWN);
 //! ```
 //!
 //! ## Copy

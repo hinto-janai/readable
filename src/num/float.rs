@@ -149,6 +149,7 @@ macro_rules! impl_new {
 	( $num:tt ) => {
 		paste::item! {
 			#[doc = "Same as [`Float::from`] but with `" $num "` floating point."]
+			#[must_use]
 			pub fn [<from_ $num>](f: f64) -> Self {
 				return_bad_float!(f, Self::NAN, Self::INFINITY);
 
@@ -166,18 +167,21 @@ impl Float {
 	impl_isize!();
 
 	#[inline]
+	#[must_use]
 	/// Calls [`f64::is_nan`].
 	pub fn is_nan(&self) -> bool {
 		self.0.is_nan()
 	}
 
 	#[inline]
+	#[must_use]
 	/// Calls [`f64::is_infinite`].
 	pub fn is_infinite(&self) -> bool {
 		self.0.is_infinite()
 	}
 
 	#[inline]
+	#[must_use]
 	/// Same as [`Float::from`] but with no floating point on the inner [`String`].
 	///
 	/// The inner [`f64`] stays the same as the input.
@@ -236,6 +240,7 @@ impl From<f32> for Float {
 	#[inline]
 	fn from(f: f32) -> Self {
 		return_bad_float!(f, Self::NAN, Self::INFINITY);
+		#[allow(clippy::cast_lossless)]
 		Self::from(f as f64)
 	}
 }

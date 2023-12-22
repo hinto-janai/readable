@@ -52,6 +52,7 @@ pub struct Itoa {
 
 impl Itoa {
     #[inline]
+	#[allow(clippy::ptr_as_ptr, clippy::borrow_as_ptr)]
 	/// Create a new [`Itoa`].
 	///
 	/// Takes any [`Integer`] from the standard library (but not floats).
@@ -67,7 +68,7 @@ impl Itoa {
     pub fn new<I: Integer>(i: I) -> Self {
         let mut bytes = [MaybeUninit::<u8>::uninit(); I128_MAX_LEN];
 
-		// Safety: I trust dtolnay
+		// SAFETY: dtolnay
         let (len, offset) = i.write(unsafe {
             &mut *(&mut bytes as *mut [MaybeUninit<u8>; I128_MAX_LEN]
                 as *mut <I as private::Sealed>::Itoa)
@@ -95,7 +96,7 @@ impl Itoa {
 		// Safety: Constructors must set state correctly.
 		unsafe {
 			let slice = slice::from_raw_parts(
-				self.bytes.as_ptr().offset(self.offset as isize) as *const u8,
+				self.bytes.as_ptr().offset(self.offset as isize).cast::<u8>(),
 				self.len as usize
 			);
 			std::str::from_utf8_unchecked(slice)
@@ -103,6 +104,7 @@ impl Itoa {
 	}
 
 	#[inline]
+	#[allow(clippy::len_without_is_empty)]
 	/// Returns the `str` byte length of this [`Itoa`]
 	///
 	/// ```rust
@@ -161,6 +163,7 @@ impl ItoaTmp {
 	}
 
 	#[inline]
+	#[allow(clippy::ptr_as_ptr, clippy::borrow_as_ptr)]
 	/// Format an [`Integer`] into a [`&str`] with an existing [`ItoaTmp`]
 	///
 	/// ```rust
@@ -174,12 +177,12 @@ impl ItoaTmp {
 	/// assert_eq!(itoa.format(1000), "1000");
 	/// ```
 	pub fn format<I: Integer>(&mut self, integer: I) -> &str {
-		// Safety: I trust dtolnay
-        let (len, offset) = integer.write(unsafe {
-            &mut *(&mut self.bytes as *mut [MaybeUninit<u8>; I128_MAX_LEN]
-                as *mut <I as private::Sealed>::Itoa)
-        });
+		// SAFETY: dtolnay
 		unsafe {
+			let (len, offset) = integer.write(
+				&mut *(&mut self.bytes as *mut [MaybeUninit<u8>; I128_MAX_LEN]
+					as *mut <I as private::Sealed>::Itoa)
+			);
 			let slice = slice::from_raw_parts(
 				self.bytes.as_ptr().offset(offset) as *const u8,
 				len,
@@ -203,12 +206,14 @@ impl Itoa64 {
 	}
 
 	#[inline]
+	#[allow(clippy::ptr_as_ptr, clippy::borrow_as_ptr)]
 	pub(crate) fn format_str<I: Integer>(&mut self, integer: I) -> &str {
-        let (len, offset) = integer.write(unsafe {
-            &mut *(&mut self.bytes as *mut [MaybeUninit<u8>; U64_MAX_LEN]
-                as *mut <I as private::Sealed>::Itoa)
-        });
+		// SAFETY: dtolnay
 		unsafe {
+			let (len, offset) = integer.write(
+				&mut *(&mut self.bytes as *mut [MaybeUninit<u8>; U64_MAX_LEN]
+					as *mut <I as private::Sealed>::Itoa)
+			);
 			let slice = slice::from_raw_parts(
 				self.bytes.as_ptr().offset(offset) as *const u8,
 				len,
@@ -218,12 +223,14 @@ impl Itoa64 {
 	}
 
 	#[inline]
+	#[allow(clippy::ptr_as_ptr, clippy::borrow_as_ptr)]
 	pub(crate) fn format<I: Integer>(&mut self, integer: I) -> &[u8] {
-        let (len, offset) = integer.write(unsafe {
-            &mut *(&mut self.bytes as *mut [MaybeUninit<u8>; U64_MAX_LEN]
-                as *mut <I as private::Sealed>::Itoa)
-        });
+		// SAFETY: dtolnay
 		unsafe {
+			let (len, offset) = integer.write(
+				&mut *(&mut self.bytes as *mut [MaybeUninit<u8>; U64_MAX_LEN]
+					as *mut <I as private::Sealed>::Itoa)
+			);
 			slice::from_raw_parts(
 				self.bytes.as_ptr().offset(offset) as *const u8,
 				len,
@@ -240,7 +247,7 @@ impl Itoa64 {
 /// ```rust,ignore
 /// fn itoa<I: Integer>(integer: I) -> &'tmp str
 /// where
-/// 	'tmp: FreedAtEndOfStatement
+///     'tmp: FreedAtEndOfStatement
 /// ```
 ///
 /// [`ItoaTmp`] is created and immediately dropped, thus it cannot be stored:
@@ -259,7 +266,7 @@ impl Itoa64 {
 /// assert_eq!(itoa!(10), "10"); // ok
 ///
 /// if itoa!(10) == "10" {
-/// 	// ok
+///     // ok
 /// }
 ///
 /// // ok
@@ -347,7 +354,7 @@ impl std::fmt::Display for Itoa {
 /// assert_eq!(itoa, "1000");
 ///
 /// // ⚠️ Manual lossy conversion.
-///	let itoa = Itoa::new(134.425 as u8);
+/// let itoa = Itoa::new(134.425 as u8);
 /// assert_eq!(itoa, "134"); // decimal truncated
 /// ```
 pub trait Integer: private::Sealed {}
@@ -388,9 +395,10 @@ macro_rules! impl_Integer {
                     (!(self as $conv_fn)).wrapping_add(1)
                 };
                 let mut curr = buf.len() as isize;
-                let buf_ptr = buf.as_mut_ptr() as *mut u8;
+                let buf_ptr = buf.as_mut_ptr().cast::<u8>();
                 let lut_ptr = DEC_DIGITS_LUT.as_ptr();
 
+				// SAFETY: dtolnay
                 unsafe {
                     // need at least 16 bits for the 4-characters-at-a-time to work.
                     if mem::size_of::<$t>() >= 2 {
@@ -532,12 +540,13 @@ macro_rules! impl_Integer128 {
                     (!(self as u128)).wrapping_add(1)
                 };
                 let mut curr = buf.len() as isize;
-                let buf_ptr = buf.as_mut_ptr() as *mut u8;
+                let buf_ptr = buf.as_mut_ptr().cast::<u8>();
 
+				// SAFETY: dtolnay
                 unsafe {
                     // Divide by 10^19 which is the highest power less than 2^64.
                     let (n, rem) = udiv128::udivmod_1e19(n);
-                    let buf1 = buf_ptr.offset(curr - U64_MAX_LEN as isize) as *mut [MaybeUninit<u8>; U64_MAX_LEN];
+                    let buf1 = buf_ptr.offset(curr - U64_MAX_LEN as isize).cast::<[MaybeUninit<u8>; U64_MAX_LEN]>();
                     curr -= rem.write(&mut *buf1).0 as isize;
 
                     if n != 0 {
@@ -548,7 +557,7 @@ macro_rules! impl_Integer128 {
 
                         // Divide by 10^19 again.
                         let (n, rem) = udiv128::udivmod_1e19(n);
-                        let buf2 = buf_ptr.offset(curr - U64_MAX_LEN as isize) as *mut [MaybeUninit<u8>; U64_MAX_LEN];
+                        let buf2 = buf_ptr.offset(curr - U64_MAX_LEN as isize).cast::<[MaybeUninit<u8>; U64_MAX_LEN]>();
                         curr -= rem.write(&mut *buf2).0 as isize;
 
                         if n != 0 {

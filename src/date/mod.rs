@@ -30,26 +30,26 @@
 //! # use readable::*;
 //! // US Independence day was on a Thursday.
 //! assert_eq!(
-//! 	Nichi::new(1776, 7, 4).unwrap().weekday().as_str(),
-//! 	"Thursday"
+//!     Nichi::new(1776, 7, 4).unwrap().weekday().as_str(),
+//!     "Thursday"
 //! );
 //!
 //! // Nintendo Switch was released on a Friday.
 //! assert_eq!(
-//! 	Nichi::new(2017, 3, 3).unwrap().weekday().as_str(),
-//! 	"Friday"
+//!     Nichi::new(2017, 3, 3).unwrap().weekday().as_str(),
+//!     "Friday"
 //! );
 //!
 //! // Christmas in 1999 was on a Saturday.
 //! assert_eq!(
-//! 	Nichi::new(1999, 12, 25).unwrap().weekday().as_str(),
-//! 	"Saturday"
+//!     Nichi::new(1999, 12, 25).unwrap().weekday().as_str(),
+//!     "Saturday"
 //! );
 //!
 //! // A good album was released on a Wednesday.
 //! assert_eq!(
-//! 	Nichi::new(2018, 4, 25).unwrap().weekday().as_str(),
-//! 	"Wednesday"
+//!     Nichi::new(2018, 4, 25).unwrap().weekday().as_str(),
+//!     "Wednesday"
 //! );
 //! ```
 //! ## From other types

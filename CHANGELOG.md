@@ -14,6 +14,12 @@ Types of changes:
 ---
 
 # readable Unreleased
+## Changed
+- `#[must_add]` on applicable functions
+- `Str::as_bytes_mut()` is now `unsafe`
+- `Str::from_bytes_exact()` is now `unsafe`
+- `Str::from_str_exact()` takes `impl AsRef<str>` instead of `&str`
+
 ## Removed
 - Redundant function constructors for `const` types (e.g `Uptime::day()` -> `Uptime::DAY`)
 

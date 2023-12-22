@@ -277,7 +277,7 @@ impl Date {
 	/// assert_eq!(Date::ZERO, "????-??-??");
 	/// assert_eq!(Date::ZERO, Date::UNKNOWN);
 	/// ```
-	pub const ZERO: Self = Date::UNKNOWN;
+	pub const ZERO: Self = Self::UNKNOWN;
 
 	/// Returned on error situations.
 	///
@@ -286,7 +286,7 @@ impl Date {
 	/// assert_eq!(Date::UNKNOWN, (0, 0, 0));
 	/// assert_eq!(Date::UNKNOWN, "????-??-??");
 	/// ```
-	pub const UNKNOWN: Self = Date((0, 0, 0), Str::from_static_str("????-??-??"));
+	pub const UNKNOWN: Self = Self((0, 0, 0), Str::from_static_str("????-??-??"));
 }
 
 //---------------------------------------------------------------------------------------------------- Date impl
@@ -297,24 +297,28 @@ impl Date {
 	// Common functions.
 
 	#[inline]
+	#[must_use]
 	/// Return the inner year (1000-9999)
 	pub const fn year(&self) -> u16 {
 		self.0.0
 	}
 
 	#[inline]
+	#[must_use]
 	/// Return the inner month (1-12)
 	pub const fn month(&self) -> u8 {
 		self.0.1
 	}
 
 	#[inline]
+	#[must_use]
 	/// Return the inner day (1-31)
 	pub const fn day(&self) -> u8 {
 		self.0.2
 	}
 
 	#[inline]
+	#[must_use]
 	/// Returns `true` if the inner year is valid.
 	/// ```rust
 	/// # use readable::Date;
@@ -329,6 +333,7 @@ impl Date {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Returns `true` if the inner month is valid.
 	/// ```rust
 	/// # use readable::Date;
@@ -343,6 +348,7 @@ impl Date {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Returns `true` if the inner day is valid.
 	/// ```rust
 	/// # use readable::Date;
@@ -357,6 +363,7 @@ impl Date {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Returns `true` if the inner `(year, month, day)` are all valid.
 	/// ```rust
 	/// # use readable::Date;
@@ -422,6 +429,7 @@ impl Date {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Same as [`Self::from_y`] but silently errors
 	///
 	/// ## Errors
@@ -437,6 +445,7 @@ impl Date {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Same as [`Self::from_ym`] but silently errors
 	///
 	/// ## Errors
@@ -453,6 +462,7 @@ impl Date {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Same as [`Self::from_ymd`] but silently errors
 	///
 	/// ## Errors
@@ -470,6 +480,7 @@ impl Date {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Calculate the weekday
 	///
 	/// If [`Date`]'s `year`, `month` and `day` are not fully specified,
@@ -480,15 +491,17 @@ impl Date {
 	/// # use readable::*;
 	/// // Christmas in 1999 was on a Saturday.
 	/// assert_eq!(
-	/// 	Date::from_ymd(1999, 12, 25).unwrap().weekday().unwrap().as_str(),
-	/// 	"Saturday"
+	///     Date::from_ymd(1999, 12, 25).unwrap().weekday().unwrap().as_str(),
+	///     "Saturday"
 	/// );
 	///
 	/// // Missing data returns `None`.
 	/// assert_eq!(Date::from_ym(1999, 12).unwrap().weekday(), None);
 	/// ```
 	pub const fn weekday(&self) -> Option<nichi::Weekday> {
+		#[allow(clippy::if_then_some_else_none)] // not const
 		if self.ok() {
+			#[allow(clippy::cast_possible_wrap)]
 			Some(nichi::Date::weekday_raw(self.year() as i16, self.month(), self.day()))
 		} else {
 			None
@@ -519,30 +532,32 @@ impl Date {
 	/// Date::from_unix(339618217000).unwrap();
 	/// ```
 	pub fn from_unix(unix_timestamp: u64) -> Result<Self, Self> {
-		let nichi = nichi::Date::from_unix(unix_timestamp as i128);
+		let nichi = nichi::Date::from_unix(i128::from(unix_timestamp));
 		let year = nichi.year().inner() as u16;
-		if !ok_year(year) {
-			Err(Self::UNKNOWN)
-		} else {
+		if ok_year(year) {
 			Ok(Self::priv_ymd_num(
 				year,
 				nichi.month().inner(),
 				nichi.day().inner(),
 			))
+		} else {
+			Err(Self::UNKNOWN)
 		}
 	}
 
 	#[inline]
+	#[must_use]
 	/// Same as [`Self::from_unix`] but silently returns a [`Self::UNKNOWN`]
 	/// on error that isn't wrapped in a [`Result::Err`].
 	pub fn from_unix_silent(unix_timestamp: u64) -> Self {
 		match Self::from_unix(unix_timestamp) {
-			Ok(s) => s,
-			Err(s) => s,
+			Ok(s) | Err(s) => s,
 		}
 	}
 
 	#[inline]
+	#[must_use]
+	#[allow(clippy::cast_possible_wrap)]
 	/// Get the corresponding UNIX timestamp of [`Self`]
 	///
 	/// If either the `month` or `day` is missing from
@@ -568,6 +583,7 @@ impl Date {
 	}
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// let date = Date::from_ymd(2012, 10, 25).unwrap();
@@ -585,6 +601,7 @@ impl Date {
 	}
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// let date = Date::from_ymd(2012, 10, 25).unwrap();
@@ -609,6 +626,7 @@ impl Date {
 	}
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// let date = Date::from_ymd(2012, 10, 25).unwrap();
@@ -640,10 +658,10 @@ impl Date {
 	/// attempt to extract as much as it can, which may lead to
 	/// surprising results. Read [`Date`]'s documentation for more info.
 	///
-	/// ## Safety
+	/// # Panic
 	/// If the input to this function is not ASCII (or 1 byte per character), it may panic.
 	///
-	/// ## Example
+	/// # Example
 	/// ```rust
 	/// # use readable::Date;
 	/// // Parsed as `YYYY-M` (2022-9)
@@ -661,10 +679,10 @@ impl Date {
 	/// assert_eq!(d, (2022, 0, 0));
 	/// ```
 	///
+	/// # Errors
 	/// If an [`Err`] is returned, it will contain a [`Date`]
 	/// set with [`Self::UNKNOWN`] which looks like: `????-??-??`.
 	///
-	/// ## Examples:
 	/// ```rust
 	/// # use readable::Date;
 	/// let a = Date::from_str("2022-3-31").unwrap();
@@ -675,6 +693,7 @@ impl Date {
 	}
 
 	#[inline]
+	#[must_use]
 	// TODO/FIXME:
 	// This panics on `UTF-8` input, e.g `2222Ꜳ22Ꜳ20` since
 	// we are byte indexing, assuming each character is 1 byte.
@@ -683,12 +702,12 @@ impl Date {
 	/// on error that isn't wrapped in a [`Result::Err`].
 	pub fn from_str_silent(string: &str) -> Self {
 		match Self::priv_from_str(string) {
-			Ok(s)  => s,
-			Err(s) => s,
+			Ok(s) | Err(s) => s,
 		}
 	}
 
 	#[inline]
+	#[allow(clippy::string_slice, clippy::else_if_without_else)]
 	fn priv_from_str(s: &str) -> Result<Self, Self> {
 		let len = s.len();
 
@@ -717,7 +736,7 @@ impl Date {
 			return Err(Self::UNKNOWN);
 		}
 
-		// SAFETY:
+		// INVARIANT:
 		// If the regex matches, the number and the positions of where
 		// they are in the `str` UTF-8 byte array _should_ be valid,
 		// so `parse().unwrap()` and indexing will only `panic!()`
@@ -984,19 +1003,17 @@ impl Date {
 		}
 
 		// Give up.
-		Err(Date::UNKNOWN)
+		Err(Self::UNKNOWN)
 	}
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(Date::UNKNOWN.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
-		match *self {
-			Self::UNKNOWN => true,
-			_ => false,
-		}
+		matches!(*self, Self::UNKNOWN)
 	}
 }
 
@@ -1225,22 +1242,22 @@ impl From<nichi::Date> for Date {
 
 impl From<crate::Nichi> for Date {
 	fn from(value: crate::Nichi) -> Self {
-		if !value.is_unknown() {
+		if value.is_unknown() {
+			Self::UNKNOWN
+		} else {
 			let (y,m,d) = value.inner();
 			Self::priv_ymd_num(y,m,d)
-		} else {
-			Self::UNKNOWN
 		}
 	}
 }
 
 impl From<crate::NichiFull> for Date {
 	fn from(value: crate::NichiFull) -> Self {
-		if !value.is_unknown() {
+		if value.is_unknown() {
+			Self::UNKNOWN
+		} else {
 			let (y,m,d) = value.inner();
 			Self::priv_ymd_num(y,m,d)
-		} else {
-			Self::UNKNOWN
 		}
 	}
 }

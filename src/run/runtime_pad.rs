@@ -153,6 +153,7 @@ impl RuntimePad {
 	impl_usize!();
 
 	#[inline]
+	#[must_use]
 	/// Dynamically format [`Self`] as a [`Runtime`].
 	///
 	/// As [`RuntimePad`] is a superset of [`Runtime`], it can
@@ -174,16 +175,14 @@ impl RuntimePad {
 	}
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(RuntimePad::UNKNOWN.is_unknown());
 	/// assert!(!RuntimePad::ZERO.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
-		match self.1.as_bytes() {
-			b"??:??:??" => true,
-			_ => false,
-		}
+		matches!(self.1.as_bytes(), b"??:??:??")
 	}
 }
 
@@ -210,18 +209,20 @@ impl RuntimePad {
 		let mut buf = [0; Self::MAX_LEN];
 		Self::format(&mut buf, hours, minutes, seconds);
 
+		// SAFETY: we know the str len
 		Self(runtime, unsafe { Str::from_raw(buf, Self::MAX_LEN as u8) })
 	}
 
 	#[inline]
 	// 0 Padding for `hh:mm:ss` according to `RuntimePad` rules.
 	fn format(buf: &mut [u8; Self::MAX_LEN], hour: u32, min: u32, sec: u32) {
+		const Z: u8 = b'0';
+		const C: u8 = b':';
+
 		debug_assert!(hour < 100);
 		debug_assert!(min < 60);
 		debug_assert!(sec < 60);
 
-		const Z: u8 = b'0';
-		const C: u8 = b':';
 		// Colons are always in the same position.
 		buf[2] = C;
 		buf[5] = C;
@@ -270,8 +271,7 @@ mod tests {
 			std::str::from_utf8(b).unwrap()
 		}
 
-		let mut buf = [0; RuntimePad::MAX_LEN];
-		let buf = &mut buf;
+		let buf = &mut [0; RuntimePad::MAX_LEN];
 
 		// 0:0:0
 		RuntimePad::format(buf, 1, 1, 1);
@@ -326,10 +326,10 @@ mod tests {
 	fn all_uint() {
 		for i in 0..RuntimePad::MAX_F32 as u32 {
 			let rt = RuntimePad::from(i);
-			println!("rt:{} - i: {}", rt, i);
+			println!("rt: {rt} - i: {i}");
 			assert_eq!(rt.inner() as u32, i);
 			assert_eq!(rt.inner() as u32, i);
-			println!("{}", rt);
+			println!("{rt}");
 		}
 	}
 

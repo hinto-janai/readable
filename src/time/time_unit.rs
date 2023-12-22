@@ -29,11 +29,11 @@ use crate::Unsigned;
 /// ```rust
 /// # use readable::*;
 /// let unit = TimeUnit::from(
-/// 	31536000 + // 1 year
-/// 	5356800  + // 2 months
-/// 	1814400  + // 3 weeks
-/// 	345600   + // 4 days
-/// 	18000    + // 5 hours
+///     31536000 + // 1 year
+///     5356800  + // 2 months
+///     1814400  + // 3 weeks
+///     345600   + // 4 days
+///     18000    + // 5 hours
 ///     360      + // 6 minutes
 ///     7          // 7 seconds
 /// );
@@ -213,6 +213,7 @@ impl TimeUnit {
 //---------------------------------------------------------------------------------------------------- Construction Impl
 impl TimeUnit {
 	#[inline]
+	#[must_use]
 	/// Create a new [`TimeUnit`] from seconds as input.
 	///
 	/// This will divide and use the remainder to calculate each unit,
@@ -261,6 +262,7 @@ impl TimeUnit {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Create [`Self`] with minutes as input
 	///
 	/// ```rust
@@ -274,6 +276,7 @@ impl TimeUnit {
 	pub const fn from_minutes(minutes: u32) -> Self { Self::new(minutes.saturating_mul(60)) }
 
 	#[inline]
+	#[must_use]
 	/// Create [`Self`] with hours as input
 	///
 	/// ```rust
@@ -287,6 +290,7 @@ impl TimeUnit {
 	pub const fn from_hours(hours: u32) -> Self { Self::new(hours.saturating_mul(3_600)) }
 
 	#[inline]
+	#[must_use]
 	/// Create [`Self`] with days as input
 	///
 	/// ```rust
@@ -300,6 +304,7 @@ impl TimeUnit {
 	pub const fn from_days(days: u16) -> Self { Self::new((days as u32).saturating_mul(86_400)) }
 
 	#[inline]
+	#[must_use]
 	/// Create [`Self`] with weeks as input
 	///
 	/// ```rust
@@ -313,6 +318,7 @@ impl TimeUnit {
 	pub const fn from_weeks(weeks: u16) -> Self { Self::new((weeks as u32).saturating_mul(604_800)) }
 
 	#[inline]
+	#[must_use]
 	/// Create [`Self`] with months as input
 	///
 	/// ```rust
@@ -326,6 +332,7 @@ impl TimeUnit {
 	pub const fn from_months(months: u16) -> Self { Self::new((months as u32).saturating_mul(2_678_400)) }
 
 	#[inline]
+	#[must_use]
 	/// Create [`Self`] with years as input
 	///
 	/// ```rust
@@ -339,6 +346,7 @@ impl TimeUnit {
 	pub const fn from_years(years: u8) -> Self { Self::new((years as u32).saturating_mul(31_536_000)) }
 
 	#[inline]
+	#[must_use]
 	/// Create a new [`TimeUnit`] from a variety of input
 	///
 	/// This multiplies and combines all the input.
@@ -351,13 +359,13 @@ impl TimeUnit {
 	/// ```rust
 	/// # use readable::*;
 	/// let unit = TimeUnit::new_variety(
-	/// 	0, // years   (0s)
-	/// 	1, // months  (2678400s)
-	/// 	2, // weeks   (1209600s)
-	/// 	3, // days    (259200s)
-	/// 	4, // hours   (14400s)
-	/// 	5, // minutes (300s)
-	/// 	6, // seconds (6s)
+	///     0, // years   (0s)
+	///     1, // months  (2678400s)
+	///     2, // weeks   (1209600s)
+	///     3, // days    (259200s)
+	///     4, // hours   (14400s)
+	///     5, // minutes (300s)
+	///     6, // seconds (6s)
 	/// );
 	///
 	/// // Total second count: 4,161,906 seconds
@@ -375,13 +383,13 @@ impl TimeUnit {
 	/// ```rust
 	/// # use readable::*;
 	/// let unit = TimeUnit::new_variety(
-	/// 	172,   // years
-	/// 	134,   // months
-	/// 	22,    // weeks
-	/// 	32575, // days
-	/// 	46,    // hours
-	/// 	5123,  // minutes
-	/// 	54,    // seconds
+	///     172,   // years
+	///     134,   // months
+	///     22,    // weeks
+	///     32575, // days
+	///     46,    // hours
+	///     5123,  // minutes
+	///     54,    // seconds
 	/// );
 	///
 	/// assert_eq!(unit, TimeUnit::MAX);
@@ -409,6 +417,7 @@ impl TimeUnit {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Returns the internal structure.
 	///
 	/// A tuple is returned mirroring the internal structure of [`TimeUnit`], going from left-to-right:
@@ -426,15 +435,15 @@ impl TimeUnit {
 	/// ```rust
 	/// # use readable::*;
 	/// let (
-	/// 	unknown,
-	/// 	inner,
-	/// 	years,
-	/// 	months,
-	/// 	weeks,
-	/// 	days,
-	/// 	hours,
-	/// 	minutes,
-	/// 	seconds,
+	///     unknown,
+	///     inner,
+	///     years,
+	///     months,
+	///     weeks,
+	///     days,
+	///     hours,
+	///     minutes,
+	///     seconds,
 	/// ) = TimeUnit::from(39071167).into_raw();
 	///
 	/// assert_eq!(unknown, false);
@@ -462,6 +471,7 @@ impl TimeUnit {
 	}
 
 	#[inline]
+	#[must_use]
 	/// Same as [`TimeUnit::into_raw()`] but does not destruct `self`
 	pub const fn to_raw(&self) -> (bool, u32, u8, u8, u8, u8, u8, u8, u8) {
 		(
@@ -478,6 +488,7 @@ impl TimeUnit {
 	}
 
 	#[inline]
+	#[must_use]
 	/// An unknown [`TimeUnit`] can be created on irregular input (negative integer, NaN float, etc)
 	/// or if it was converted from a different `readable::time` type that was unknown.
 	///
@@ -499,7 +510,9 @@ impl TimeUnit {
 	/// assert!(TimeUnit::from(-1).is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool { self.unknown }
+
 	#[inline]
+	#[must_use]
 	/// Returns the _total_ amount of seconds this [`TimeUnit`] represents.
 	///
 	/// ```rust
@@ -511,7 +524,9 @@ impl TimeUnit {
 	/// assert_eq!(unit.inner(), 123);
 	/// ```
 	pub const fn inner(&self) -> u32 { self.inner }
+
 	#[inline]
+	#[must_use]
 	/// Returns the remaining amount of years this [`TimeUnit`] represents.
 	///
 	/// ```rust
@@ -520,7 +535,9 @@ impl TimeUnit {
 	/// assert_eq!(TimeUnit::from(86400 * 365).years(), 1);
 	/// ```
 	pub const fn years(&self) -> u8 { self.years }
+
 	#[inline]
+	#[must_use]
 	/// Returns the remaining amount of months this [`TimeUnit`] represents.
 	///
 	/// ```rust
@@ -530,6 +547,7 @@ impl TimeUnit {
 	/// ```
 	pub const fn months(&self) -> u8 { self.months }
 	#[inline]
+	#[must_use]
 	/// Returns the remaining amount of weeks this [`TimeUnit`] represents.
 	///
 	/// ```rust
@@ -538,7 +556,9 @@ impl TimeUnit {
 	/// assert_eq!(TimeUnit::from(86400 * 7).weeks(), 1);
 	/// ```
 	pub const fn weeks(&self) -> u8 { self.weeks }
+
 	#[inline]
+	#[must_use]
 	/// Returns the remaining amount of days this [`TimeUnit`] represents.
 	///
 	/// ```rust
@@ -547,7 +567,9 @@ impl TimeUnit {
 	/// assert_eq!(TimeUnit::from(86400).days(), 1);
 	/// ```
 	pub const fn days(&self) -> u8 { self.days }
+
 	#[inline]
+	#[must_use]
 	/// Returns the remaining amount of hours this [`TimeUnit`] represents.
 	///
 	/// ```rust
@@ -556,7 +578,9 @@ impl TimeUnit {
 	/// assert_eq!(TimeUnit::from(3600).hours(), 1);
 	/// ```
 	pub const fn hours(&self) -> u8 { self.hours }
+
 	#[inline]
+	#[must_use]
 	/// Returns the remaining amount of minutes this [`TimeUnit`] represents.
 	///
 	/// ```rust
@@ -565,7 +589,9 @@ impl TimeUnit {
 	/// assert_eq!(TimeUnit::from(60).minutes(), 1);
 	/// ```
 	pub const fn minutes(&self) -> u8 { self.minutes }
+
 	#[inline]
+	#[must_use]
 	/// Returns the remaining amount of seconds this [`TimeUnit`] represents.
 	///
 	/// This is the _remaining_ amount of seconds, not the _total_ amount of seconds.
@@ -790,14 +816,14 @@ impl From<&std::time::Instant> for TimeUnit {
 impl From<TimeUnit> for std::time::Duration {
 	#[inline]
 	fn from(value: TimeUnit) -> Self {
-		std::time::Duration::from_secs(value.inner() as u64)
+		Self::from_secs(value.inner().into())
 	}
 }
 
 impl From<&TimeUnit> for std::time::Duration {
 	#[inline]
 	fn from(value: &TimeUnit) -> Self {
-		std::time::Duration::from_secs(value.inner() as u64)
+		Self::from_secs(value.inner().into())
 	}
 }
 

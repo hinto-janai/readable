@@ -158,16 +158,14 @@ impl UptimeFull {
 	impl_usize!();
 
 	#[inline]
+	#[must_use]
 	/// ```rust
 	/// # use readable::*;
 	/// assert!(UptimeFull::UNKNOWN.is_unknown());
 	/// assert!(!UptimeFull::ZERO.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
-		match *self {
-			Self::UNKNOWN => true,
-			_ => false,
-		}
+		matches!(*self, Self::UNKNOWN)
 	}
 }
 
@@ -175,7 +173,7 @@ impl UptimeFull {
 impl UptimeFull {
 	#[inline]
 	fn plural(
-		s: &mut Str<{ UptimeFull::MAX_LEN }>,
+		s: &mut Str<{ Self::MAX_LEN }>,
 		name: &'static str,
 		value: u32,
 		started: &mut bool,
@@ -197,7 +195,7 @@ impl UptimeFull {
 	fn from_priv(secs: u32) -> Self {
 		// #[cfg(feature = "inline_time")]
 		// if secs <= 3660 {
-		// 	// SAFETY:
+		// 	// SAFETEE:
 		// 	// Cast `u64` to `u16` is safe because it's under 65_535.
 		// 	return Self(secs, CompactString::new_inline(readable_inlined_time::inlined(secs as u16)))
 		// }
@@ -427,14 +425,14 @@ impl From<&std::time::Instant> for UptimeFull {
 impl From<UptimeFull> for std::time::Duration {
 	#[inline]
 	fn from(value: UptimeFull) -> Self {
-		std::time::Duration::from_secs(value.inner() as u64)
+		Self::from_secs(value.inner().into())
 	}
 }
 
 impl From<&UptimeFull> for std::time::Duration {
 	#[inline]
 	fn from(value: &UptimeFull) -> Self {
-		std::time::Duration::from_secs(value.inner() as u64)
+		Self::from_secs(value.inner().into())
 	}
 }
 
@@ -446,7 +444,7 @@ mod tests {
 	#[test]
 	fn all_ints() {
 		let mut f = 1_u64;
-		while f < (UptimeFull::MAX.0 as u64) {
+		while f < (u64::from(UptimeFull::MAX.0)) {
 			let t = UptimeFull::from(f);
 			println!("t: {t}, f: {f}");
 			assert_eq!(t, f as u32);
@@ -456,11 +454,11 @@ mod tests {
 
 	#[test]
 	fn over() {
-		assert_ne!(UptimeFull::from(u32::MAX),            UptimeFull::UNKNOWN);
-		assert_eq!(UptimeFull::from(u32::MAX as u64 + 1), UptimeFull::UNKNOWN);
-		assert_eq!(UptimeFull::from(u64::MAX),            UptimeFull::UNKNOWN);
-		assert_eq!(UptimeFull::from(f64::MAX),            UptimeFull::UNKNOWN);
-		assert_eq!(UptimeFull::from(f32::MAX),            UptimeFull::UNKNOWN);
+		assert_ne!(UptimeFull::from(u32::MAX),                UptimeFull::UNKNOWN);
+		assert_eq!(UptimeFull::from(u64::from(u32::MAX) + 1), UptimeFull::UNKNOWN);
+		assert_eq!(UptimeFull::from(u64::MAX),                UptimeFull::UNKNOWN);
+		assert_eq!(UptimeFull::from(f64::MAX),                UptimeFull::UNKNOWN);
+		assert_eq!(UptimeFull::from(f32::MAX),                UptimeFull::UNKNOWN);
 	}
 
 	#[test]
