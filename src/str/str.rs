@@ -318,27 +318,6 @@ impl<const N: usize> Str<N> {
 	}
 
 	#[inline]
-	#[must_use]
-	/// Returns the maximum capacity (`Self::CAPACITY`) of this [`Str`].
-	///
-	/// Should be exactly equal to `N`.
-	///
-	/// ```rust
-	/// # use readable::Str;
-	/// //        This is N (usize)    This is CAPACITY (u8)
-	/// //               |           /       |
-	/// //               |           |       |
-	/// //               v           v       v
-	/// assert_eq!(Str::<10>::CAPACITY,  10_u8);
-	///
-	/// let s = Str::<10>::new();
-	/// assert_eq!(s.capacity(), 10_u8);
-	/// ```
-	pub const fn capacity(&self) -> u8 {
-		Self::CAPACITY
-	}
-
-	#[inline]
 	/// Set the length of the _valid_ UTF-8 bytes of this [`Str`]
 	///
 	/// This will usually be used when manually mutating [`Str`] with [`Str::as_bytes_all_mut()`].
@@ -534,7 +513,7 @@ impl<const N: usize> Str<N> {
 	/// let s = unsafe { String::from_utf8_unchecked(v) };
 	/// assert_eq!(s, "hello");
 	/// ```
-	pub fn into_vec(self) -> Vec<u8> where Self: Sized {
+	pub fn into_vec(self) -> Vec<u8> {
 		self.as_bytes().to_vec()
 	}
 
@@ -547,7 +526,6 @@ impl<const N: usize> Str<N> {
 	///
 	/// This function will return `true` if:
 	/// - Internal length is greater than the internal byte array
-	/// - Inner byte array is longer than `255`
 	/// - `.as_str()` would return invalid UTF-8
 	///
 	/// ```rust
@@ -561,17 +539,11 @@ impl<const N: usize> Str<N> {
 	/// // This string is now invalid.
 	/// assert_eq!(string.invalid(), true);
 	/// ```
-	pub fn invalid(&self) -> bool {
+	pub const fn invalid(&self) -> bool {
 		let len     = self.len as usize;
 		let buf_len = self.buf.len();
 
-		if len > buf_len ||
-  			buf_len > 255 ||
-  			std::str::from_utf8(&self.buf[..len]).is_err() {
-			return true;
-		}
-
-		false
+		len > buf_len || std::str::from_utf8(self.as_bytes()).is_err()
 	}
 
 	#[inline]
@@ -668,7 +640,15 @@ impl<const N: usize> Str<N> {
 	/// let s = Str::<5>::from_static_str("hello");
 	/// assert_eq!(s.as_str(), "hello");
 	/// ```
+	///
+	/// # Panics
+	/// This will panic in debug mode if [`Self::invalid`] returns true.
 	pub const fn as_str(&self) -> &str {
+		debug_assert!(
+			!self.invalid(),
+			"Str::invalid() returned true, inner str is corrupt"
+		);
+
 		// SAFETY: `.as_valid_slice()` must be correctly implemented.
 		// The internal state must be correct.
 		unsafe { std::str::from_utf8_unchecked(self.as_bytes()) }
@@ -679,6 +659,8 @@ impl<const N: usize> Str<N> {
 	///
 	/// ## Safety
 	/// The length must be set correctly if mutated.
+	///
+	/// The `str` must be valid UTF-8.
 	///
 	/// ``` rust
 	/// # use readable::Str;
@@ -708,7 +690,7 @@ impl<const N: usize> Str<N> {
 	/// let s: String = s.into_string();
 	/// assert_eq!(s, "hello");
 	/// ```
-	pub fn into_string(self) -> String where Self: Sized {
+	pub fn into_string(self) -> String {
 		// SAFETY: The internal state must be correct.
 		unsafe { String::from_utf8_unchecked(self.into_vec()) }
 	}
@@ -1252,9 +1234,9 @@ impl<const N: usize> Str<N> {
 	/// // 1 too many characters, will panic.
 	/// let s = unsafe { Str::<4>::from_bytes_exact(b"12345") };
 	/// ```
-	pub unsafe fn from_bytes_exact(bytes: &[u8]) -> Self {
+	pub unsafe fn from_bytes_exact(bytes: impl AsRef<[u8]>) -> Self {
 		let mut buf = [0; N];
-		buf.copy_from_slice(bytes);
+		buf.copy_from_slice(bytes.as_ref());
 		Self {
 			len: N as u8,
 			buf,
@@ -1388,6 +1370,7 @@ impl<const N: usize> Str<N> {
 }
 
 //---------------------------------------------------------------------------------------------------- From
+/// This is a macro for now since `TryFrom<AsRef<str>>` has some conflicts.
 macro_rules! impl_from_str {
 	($($string:ty),*) => {
 		$(

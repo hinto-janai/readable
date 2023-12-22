@@ -16,7 +16,13 @@ Types of changes:
 
 
 # readable Unreleased
+## Changed
+- `Str::invalid()` is now `const`
+- `Str::as_str()` now panics in debug mode when `Str::invalid()` returns `true`
+- `Str::from_bytes_exact()` takes `impl AsRef<[u8]>` instead of `&[u8]`
 
+## Removed
+- `Str::capacity()`
 
 ---
 
