@@ -1,12 +1,8 @@
 use std::fmt::{self,Display};
-use std::borrow::{Cow, Borrow};
+use std::borrow::Cow;
 
 //---------------------------------------------------------------------------------------------------- Impl
-impl<T: Borrow<str>> HeadTail for T {
-	fn as_str(&self) -> &str {
-		self.borrow()
-	}
-}
+impl<T: AsRef<str>> HeadTail for T {}
 
 /// The separator string inserted when using [`HeadTail`]'s `dot` functions.
 pub const DOT: &str = "...";
@@ -18,11 +14,11 @@ pub const DOT: &str = "...";
 /// cutting off a string either by the head, tail,
 /// or both, with optional `...` after/before/in-between.
 ///
-/// Anything that implements [`std::borrow::Borrow<str>`] can use this trait automatically.
+/// Anything that implements [`AsRef<str>`] can use this trait.
 ///
 /// ## Examples
 /// ```rust
-/// use readable::HeadTail;
+/// use readable::str::HeadTail;
 ///
 /// let string = "hello world";
 /// assert_eq!(string.len(), 11);
@@ -37,7 +33,7 @@ pub const DOT: &str = "...";
 ///
 /// The characters are split as `UTF-8` characters, so strings like this will work:
 /// ```rust
-/// use readable::HeadTail;
+/// use readable::str::HeadTail;
 ///
 /// let emojis = "🦀🦀🦀🐸🐸🐸";
 /// assert_eq!(emojis.len(), 24);
@@ -54,7 +50,7 @@ pub const DOT: &str = "...";
 /// All types returned by this trait can compare with strings
 /// without any allocation, e.g:
 /// ```rust
-/// # use readable::HeadTail;
+/// # use readable::str::HeadTail;
 /// let emojis = "🦀🦀🦀🐸🐸🐸";
 /// // This comparison isn't allocating anything.
 /// assert_eq!(emojis.head_tail_dot(2, 2), "🦀🦀...🐸🐸");
@@ -90,25 +86,19 @@ pub const DOT: &str = "...";
 /// let new: String = dot.to_string();
 /// assert_eq!(new, "he...ld");
 /// ```
-pub trait HeadTail {
-	/// Turn `self` into a [`str`].
-	///
-	/// If your type implements [`std::borrow::Borrow<str>`],
-	/// it will automatically implement [`HeadTail`].
-	fn as_str(&self) -> &str;
-
+pub trait HeadTail: AsRef<str> {
 	/// Return the first `head` UTF-8 characters of this [`str`].
 	///
 	/// This will return the full [`str`] if `head` is
 	/// longer than the actual inner [`str`].
 	///
 	/// ```rust
-	/// # use readable::HeadTail;
+	/// # use readable::str::HeadTail;
 	/// let string = "hello world";
 	/// assert_eq!(string.head(5), "hello");
 	/// ```
 	fn head(&self, head: usize) -> Head<'_> {
-		let s = self.as_str();
+		let s = self.as_ref();
 
 		#[allow(clippy::string_slice)]
 		if let Some((index, _)) = s.char_indices().nth(head) {
@@ -125,7 +115,7 @@ pub trait HeadTail {
 	/// `...` if `head` is longer than the actual inner [`str`].
 	///
 	/// ```rust
-	/// # use readable::HeadTail;
+	/// # use readable::str::HeadTail;
 	/// let string = "hello world";
 	/// assert_eq!(string.head_dot(5), "hello...");
 	///
@@ -134,7 +124,7 @@ pub trait HeadTail {
 	/// assert_eq!(string.head_dot(11), string);
 	/// ```
 	fn head_dot(&self, head: usize) -> HeadDot<'_> {
-		let s = self.as_str();
+		let s = self.as_ref();
 
 		#[allow(clippy::string_slice)]
 		if let Some((index, _)) = s.char_indices().nth(head) {
@@ -153,12 +143,12 @@ pub trait HeadTail {
 	/// longer than the actual inner [`str`].
 	///
 	/// ```rust
-	/// # use readable::HeadTail;
+	/// # use readable::str::HeadTail;
 	/// let string = "hello world";
 	/// assert_eq!(string.tail(5), "world");
 	/// ```
 	fn tail(&self, tail: usize) -> Tail<'_> {
-		let s = self.as_str();
+		let s = self.as_ref();
 
 		let end = s.chars().count();
 
@@ -181,7 +171,7 @@ pub trait HeadTail {
 	/// `tail` is longer than the actual inner [`str`].
 	///
 	/// ```rust
-	/// # use readable::HeadTail;
+	/// # use readable::str::HeadTail;
 	/// let string = "hello world";
 	/// assert_eq!(string.tail_dot(5), "...world");
 	///
@@ -190,7 +180,7 @@ pub trait HeadTail {
 	/// assert_eq!(string.tail_dot(11), string);
 	/// ```
 	fn tail_dot(&self, tail: usize) -> TailDot<'_> {
-		let s = self.as_str();
+		let s = self.as_ref();
 
 		let end = s.chars().count();
 
@@ -213,7 +203,7 @@ pub trait HeadTail {
 	/// UTF-8 characters of this [`str`].
 	///
 	/// ```rust
-	/// # use readable::HeadTail;
+	/// # use readable::str::HeadTail;
 	/// let string = "hello world";
 	/// assert_eq!(string.head_tail(5, 5), "helloworld");
 	///
@@ -235,7 +225,7 @@ pub trait HeadTail {
 	/// assert_eq!(four_chars.head_tail(2, 2),    four_chars);
 	/// ```
 	fn head_tail(&self, head: usize, tail: usize) -> HeadTailStr<'_> {
-		let s = self.as_str();
+		let s = self.as_ref();
 
 		let end = s.chars().count();
 
@@ -259,7 +249,7 @@ pub trait HeadTail {
 	/// UTF-8 characters of this [`str`] separated with `...`.
 	///
 	/// ```rust
-	/// # use readable::HeadTail;
+	/// # use readable::str::HeadTail;
 	/// let string = "hello world";
 	/// assert_eq!(string.head_tail_dot(5, 5), "hello...world");
 	///
@@ -281,7 +271,7 @@ pub trait HeadTail {
 	/// assert_eq!(four_chars.head_tail_dot(2, 2),    four_chars);
 	/// ```
 	fn head_tail_dot(&self, head: usize, tail: usize) -> HeadTailDot<'_> {
-		let s = self.as_str();
+		let s = self.as_ref();
 
 		let end = s.chars().count();
 
@@ -349,7 +339,7 @@ macro_rules! impl_string {
 				/// The returned `bool` is whether the input string was cut or not.
 				///
 				/// ```rust
-				/// # use readable::HeadTail;
+				/// # use readable::str::HeadTail;
 				/// let string = "hello world";
 				///
 				/// // Input (11) can capture the whole string, so no cutting.
@@ -463,7 +453,7 @@ macro_rules! impl_cow {
 				type Target = str;
 
 				fn deref(&self) -> &Self::Target {
-					self.as_str()
+					self.as_ref()
 				}
 			}
 			impl<'a> $name<'a> {
@@ -488,7 +478,7 @@ macro_rules! impl_cow {
 				/// If the [`Cow`] is [`Cow::Borrowed`] then it means the string was not cut.
 				///
 				/// ```rust
-				/// # use readable::HeadTail;
+				/// # use readable::str::HeadTail;
 				/// # use std::borrow::Cow;
 				/// let string = "hello world";
 				///
@@ -595,7 +585,7 @@ impl HeadTailStr<'_> {
 /// would be correct to compare against.
 ///
 /// ```rust
-/// # use readable::HeadTail;
+/// # use readable::str::HeadTail;
 /// let string = "head tail";
 /// let dot    = string.head_tail_dot(4, 4);
 /// assert_eq!(dot, "head...tail");
@@ -701,7 +691,7 @@ macro_rules! impl_head_tail {
 				/// and the entire input resides inside the `head` portion.
 				///
 				/// ```rust
-				/// # use readable::HeadTail;
+				/// # use readable::str::HeadTail;
 				/// let string = "hello world";
 				///
 				/// // Input (6+5 == 11) can capture the whole string.

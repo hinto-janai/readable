@@ -4,7 +4,7 @@
 /// The number separator character.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::num::*;
 /// let x = Unsigned::from(1000_u16);
 /// assert_eq!(x, "1,000");
 ///

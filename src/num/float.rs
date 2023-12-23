@@ -23,7 +23,7 @@ use crate::num::{Int,Unsigned}; // docs
 /// This can be changed by using different functions when initially
 /// creating the [`Float`], or converting an existing [`Float`], for example:
 /// ```
-/// # use readable::Float;
+/// # use readable::num::Float;
 /// let f2 = Float::from_2(3.0);
 /// let f6 = Float::from_6(3.0);
 /// let f9 = Float::from_9(f2.inner());
@@ -47,14 +47,14 @@ use crate::num::{Int,Unsigned}; // docs
 /// This type may or may not be heap allocated.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::num::*;
 /// assert_eq!(std::mem::size_of::<Float>(), 32);
 /// ```
 ///
 /// ## Cloning
 /// [`Clone`] may be a heap allocation clone:
 /// ```rust
-/// # use readable::Float;
+/// # use readable::num::Float;
 /// // Stack allocated string.
 /// let a = Float::from(100.0);
 /// let b = a.clone();
@@ -85,7 +85,7 @@ use crate::num::{Int,Unsigned}; // docs
 /// - Or with the inner number itself: `Float::from(1.0) + 1.0`
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::num::*;
 /// // Regular operators.
 /// assert!(Float::from(10.0) + 10.0 == Float::from(20.0));
 /// assert!(Float::from(10.0) - 10.0 == Float::from(0.0));
@@ -96,7 +96,7 @@ use crate::num::{Int,Unsigned}; // docs
 ///
 /// # Examples
 /// ```rust
-/// # use readable::Float;
+/// # use readable::num::Float;
 /// assert_eq!(Float::from(0.0), "0.000");
 ///
 /// // This gets rounded up to '.568'
@@ -106,8 +106,17 @@ use crate::num::{Int,Unsigned}; // docs
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct Float(f64, #[cfg_attr(feature = "bincode", bincode(with_serde))] CompactString);
+pub struct Float(
+	f64,
+	#[cfg_attr(feature = "bincode", bincode(with_serde))]
+	#[cfg_attr(feature = "borsh", borsh(
+		serialize_with = "crate::borsh_serde::ser_compact_string",
+		deserialize_with = "crate::borsh_serde::de_compact_string",
+	))]
+	CompactString,
+);
 
 impl_math!(Float, f64);
 impl_traits!(Float, f64);

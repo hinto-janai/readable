@@ -2,7 +2,7 @@
 //!
 //! This module includes various [`Date`] types meant for calendar day formatting:
 //! ```rust
-//! # use readable::*;
+//! # use readable::date::*;
 //! let date  = Date::from_ymd(2020, 12, 25).unwrap();
 //! let nichi = Nichi::new(2020, 12, 25).unwrap();
 //!
@@ -27,7 +27,7 @@
 //! but only accurate for [`Date`] when it has the `month` and `day`.
 //!
 //! ```rust
-//! # use readable::*;
+//! # use readable::date::*;
 //! // US Independence day was on a Thursday.
 //! assert_eq!(
 //!     Nichi::new(1776, 7, 4).unwrap().weekday().as_str(),
@@ -57,7 +57,7 @@
 //! although [`Date`] itself is only lossless if the full `year-month-day` is available.
 //!
 //! ```rust
-//! # use readable::*;
+//! # use readable::date::*;
 //! // Lossless.
 //! let date  = Date::from_ymd(2020, 12, 25).unwrap();
 //! let nichi = Nichi::from(date);
@@ -76,7 +76,7 @@
 //! [`Copy`] is available.
 //!
 //! ```rust
-//! # use readable::Date;
+//! # use readable::date::*;
 //! let a = Date::from_str("2014-04-22").unwrap();
 //!
 //! // Copy 'a', use 'b'.

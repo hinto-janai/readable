@@ -24,7 +24,7 @@ use std::borrow::Cow;
 ///
 /// Using [`Str`] in powers of 2 is recommended.
 /// ```rust
-/// # use readable::Str;
+/// # use readable::str::*;
 /// // 64 bytes in total, 63 bytes available for the string.
 /// // This will fit in a typical CPU cache-line.
 /// assert_eq!(std::mem::size_of::<Str::<63>>(), 64);
@@ -40,7 +40,7 @@ use std::borrow::Cow;
 /// ## Compile-time panic
 /// Any usage of [`Str`] will panic at compile time if `N > 255`:
 /// ```rust,ignore
-/// # use readable::Str;
+/// # use readable::str::*;
 /// /// These will all panic at _compile time_
 /// Str::<256>::new();
 /// Str::<256>::try_from("");
@@ -50,7 +50,7 @@ use std::borrow::Cow;
 ///
 /// ## Usage
 /// ```rust
-/// # use readable::Str;
+/// # use readable::str::*;
 /// // Create a `Str` with a maximum capacity of `24` bytes.
 /// const N: usize  = 24;
 /// let mut string = Str::<N>::new();
@@ -88,7 +88,6 @@ use std::borrow::Cow;
 /// assert_eq!(string, "hello-------------------");
 /// assert_eq!(string.len(), 24);
 /// ```
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 #[repr(C)]
 pub struct Str<const N: usize> {
@@ -118,7 +117,7 @@ impl<const N: usize> Str<N> {
 	/// Returns an empty [`Str`].
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let string = Str::<4>::new();
 	/// assert!(string.is_empty());
 	/// assert_eq!(string.len(), 0);
@@ -144,7 +143,7 @@ impl<const N: usize> Str<N> {
 	///
 	/// Exact length:
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// const BYTES: [u8; 3] = *b"abc";
 	/// const STR: Str<3> = Str::from_static_bytes(&BYTES);
 	///
@@ -152,7 +151,7 @@ impl<const N: usize> Str<N> {
 	/// ```
 	/// Slightly less length is okay too:
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// const BYTES: [u8; 2] = *b"ab";
 	/// const STR: Str<3> = Str::from_static_bytes(&BYTES);
 	///
@@ -166,7 +165,7 @@ impl<const N: usize> Str<N> {
 	/// - The byte's are not valid UTF-8 bytes
 	///
 	/// ```rust,ignore
-	/// # use readable::{Str};
+	/// # use readable::str::*;
 	/// // This doesn't fit, will panic at compile time.
 	/// const STR: Str<3> = Str::from_static_bytes("abcd");
 	/// ```
@@ -201,7 +200,7 @@ impl<const N: usize> Str<N> {
 	///
 	/// Exact length:
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// const S: &str = "abc";
 	/// const STR: Str<3> = Str::from_static_str(&S);
 	///
@@ -209,7 +208,7 @@ impl<const N: usize> Str<N> {
 	/// ```
 	/// Slightly less length is okay too:
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// const S: &str = "ab";
 	/// const STR: Str<3> = Str::from_static_str(&S);
 	///
@@ -222,7 +221,7 @@ impl<const N: usize> Str<N> {
 	/// if the [`str`] length is longer than `N`.
 	///
 	/// ```rust,ignore
-	/// # use readable::{Str};
+	/// # use readable::str::*;
 	/// // This doesn't fit, will panic at compile time.
 	/// const STR: Str<3> = Str::from_static_str("abcd");
 	/// ```
@@ -235,7 +234,7 @@ impl<const N: usize> Str<N> {
 	/// Return all the bytes of this [`Str`], whether valid UTF-8 or not.
 	///
 	/// ``` rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut string = Str::<10>::new();
 	/// string.push_str("hello").unwrap();
 	///
@@ -259,7 +258,7 @@ impl<const N: usize> Str<N> {
 	/// with [`Str::set_len`] or [`Str::set_len_u8`].
 	///
 	/// ``` rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut string = Str::<5>::new();
 	/// string.push_str("hi").unwrap();
 	/// assert_eq!(string, "hi");
@@ -288,7 +287,7 @@ impl<const N: usize> Str<N> {
 	/// Return the length of the _valid_ UTF-8 bytes of this [`Str`]
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<5>::new();
 	/// s.push_str("h").unwrap();
 	/// assert_eq!(s.len(), 1_usize);
@@ -305,7 +304,7 @@ impl<const N: usize> Str<N> {
 	/// Return the length of the _valid_ UTF-8 bytes of this [`Str`] as a [`u8`]
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<5>::new();
 	/// s.push_str("h").unwrap();
 	/// assert_eq!(s.len_u8(), 1_u8);
@@ -323,7 +322,7 @@ impl<const N: usize> Str<N> {
 	/// This will usually be used when manually mutating [`Str`] with [`Str::as_bytes_all_mut()`].
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<3>::new();
 	/// assert_eq!(s.len(), 0);
 	///
@@ -361,7 +360,7 @@ impl<const N: usize> Str<N> {
 	/// This will usually be used when manually mutating [`Str`] with [`Str::as_bytes_all_mut()`].
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<3>::new();
 	/// assert_eq!(s.len(), 0);
 	///
@@ -399,7 +398,7 @@ impl<const N: usize> Str<N> {
 	/// before the [`Self::CAPACITY`] is completely filled.
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<5>::new();
 	/// s.push_str("hi");
 	/// assert_eq!(s.remaining(), 3);
@@ -413,7 +412,7 @@ impl<const N: usize> Str<N> {
 	/// Returns only the valid `UTF-8` bytes of this [`Str`] as a byte slice.
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let s = Str::<10>::from_static_str("hello");
 	/// assert_eq!(s.as_bytes().len(), 5);
 	/// ```
@@ -435,7 +434,7 @@ impl<const N: usize> Str<N> {
 	/// The length must be set correctly if mutated.
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<10>::from_static_str("hello");
 	/// assert_eq!(s.as_bytes().len(), 5);
 	///
@@ -466,7 +465,7 @@ impl<const N: usize> Str<N> {
 	#[must_use]
 	/// Returns a pointer to the first byte in the string array.
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let s = Str::<5>::from_static_str("hello");
 	///
 	/// let ptr = s.as_ptr();
@@ -483,7 +482,7 @@ impl<const N: usize> Str<N> {
 	/// Returns a mutable pointer to the first byte in the string array.
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<5>::from_static_str("hello");
 	///
 	/// let ptr = s.as_mut_ptr();
@@ -505,7 +504,7 @@ impl<const N: usize> Str<N> {
 	/// Returns only the valid `UTF-8` bytes of this [`Str`] as a `Vec<u8>`
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let s = Str::<10>::from_static_str("hello");
 	/// let v = s.into_vec();
 	/// assert_eq!(v.len(), 5);
@@ -529,7 +528,7 @@ impl<const N: usize> Str<N> {
 	/// - `.as_str()` would return invalid UTF-8
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// // Create `Str` with maximum 5 length.
 	/// let mut string = Str::<5>::new();
 	/// assert_eq!(string.invalid(), false);
@@ -550,7 +549,7 @@ impl<const N: usize> Str<N> {
 	/// Clears all bytes of this [`Str`].
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// // Create a string.
 	/// let mut s = Str::<5>::from_static_str("hello");
 	/// assert_eq!(s, "hello");
@@ -577,7 +576,7 @@ impl<const N: usize> Str<N> {
 	/// the bytes in the internal array to `0`.
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// // Create a string.
 	/// let mut s = Str::<5>::from_static_str("hello");
 	/// assert_eq!(s, "hello");
@@ -601,7 +600,7 @@ impl<const N: usize> Str<N> {
 	/// If this [`Str`] is empty.
 	///
 	/// ``` rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<10>::new();
 	/// assert_eq!(s, "");
 	/// assert!(s.is_empty());
@@ -618,7 +617,7 @@ impl<const N: usize> Str<N> {
 	/// If this [`Str`] is full (no more capacity left).
 	///
 	/// ``` rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<3>::new();
 	/// assert_eq!(s.len(), 0);
 	/// assert!(!s.is_full());
@@ -636,7 +635,7 @@ impl<const N: usize> Str<N> {
 	/// This [`Str`], as a valid UTF-8 [`str`].
 	///
 	/// ``` rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let s = Str::<5>::from_static_str("hello");
 	/// assert_eq!(s.as_str(), "hello");
 	/// ```
@@ -663,7 +662,7 @@ impl<const N: usize> Str<N> {
 	/// The `str` must be valid UTF-8.
 	///
 	/// ``` rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<5>::from_static_str("hello");
 	/// assert_eq!(s.as_str(), "hello");
 	///
@@ -684,7 +683,7 @@ impl<const N: usize> Str<N> {
 	/// Consumes `self` into a [`String`]
 	///
 	/// ``` rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let s = Str::<5>::from_static_str("hello");
 	///
 	/// let s: String = s.into_string();
@@ -709,7 +708,7 @@ impl<const N: usize> Str<N> {
 	/// If the copy failed because `s.len() != N`, [`Result::Err`] is returned as `Err(0)`.
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut string = Str::<3>::new();
 	///
 	/// // Input string is 4 in length, we can't copy it.
@@ -755,7 +754,7 @@ impl<const N: usize> Str<N> {
 	/// If the copy failed, this function will panic.
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut string = Str::<3>::new();
 	///
 	/// // Input string is 3 in length, we can copy it.
@@ -767,7 +766,7 @@ impl<const N: usize> Str<N> {
 	///
 	/// Input too long:
 	/// ```rust,should_panic
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut string = Str::<3>::new();
 	///
 	/// // Input string is 5 in length, this will panic.
@@ -775,7 +774,7 @@ impl<const N: usize> Str<N> {
 	/// ```
 	/// Input not long enough:
 	/// ```rust,should_panic
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut string = Str::<3>::new();
 	///
 	/// // Input string is 2 in length, this will panic.
@@ -783,7 +782,7 @@ impl<const N: usize> Str<N> {
 	/// ```
 	/// Input is just right:
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut string = Str::<3>::new();
 	/// string.copy_str_unchecked("abc");
 	/// assert_eq!(string, "abc")
@@ -814,7 +813,7 @@ impl<const N: usize> Str<N> {
 	/// with how many extra bytes couldn't fit.
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut string = Str::<3>::new();
 	///
 	/// // Input string is 4 in length.
@@ -871,7 +870,7 @@ impl<const N: usize> Str<N> {
 	/// a `usize` is returned, representing the new length of the string.
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<5>::new();
 	/// assert_eq!(s.push_str_panic("wow"), 3);
 	/// ```
@@ -881,14 +880,14 @@ impl<const N: usize> Str<N> {
 	///
 	/// Input string is `>` than capacity:
 	/// ```rust,should_panic
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<3>::new();
 	/// s.push_str_panic("abcd");
 	/// ```
 	///
 	/// [`Str`] has no more remaining capacity:
 	/// ```rust,should_panic
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<4>::from_static_str("wow");
 	/// assert_eq!(s.len(),       3);
 	/// assert_eq!(s.remaining(), 1);
@@ -933,7 +932,7 @@ impl<const N: usize> Str<N> {
 	///
 	/// UTF-8 strings are accounted for, and are split on `char` basis, for example:
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<7>::new();
 	///
 	/// // Crab is 4 bytes.
@@ -948,7 +947,7 @@ impl<const N: usize> Str<N> {
 	///
 	/// ## Examples
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<3>::new();
 	///
 	/// // Only 1 char, 3 bytes can fit.
@@ -1026,7 +1025,7 @@ impl<const N: usize> Str<N> {
 	/// This acts in the same way as [`Str::push_str`], but the input is a single [`char`].
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut string = Str::<3>::new();
 	///
 	/// // Input char is 4 in length.
@@ -1060,7 +1059,7 @@ impl<const N: usize> Str<N> {
 	/// This acts in the same way as [`Str::push_str_panic`], but the input is a single [`char`].
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<5>::new();
 	/// assert_eq!(s.push_char_panic('す'), 3);
 	/// ```
@@ -1070,14 +1069,14 @@ impl<const N: usize> Str<N> {
 	///
 	/// Input `char` is `>` than capacity:
 	/// ```rust,should_panic
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<3>::new();
 	/// s.push_char_panic('🦀');
 	/// ```
 	///
 	/// [`Str`] has no more remaining capacity:
 	/// ```rust,should_panic
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<4>::from_static_str("wow");
 	/// assert_eq!(s.len(),       3);
 	/// assert_eq!(s.remaining(), 1);
@@ -1099,7 +1098,7 @@ impl<const N: usize> Str<N> {
 	/// This acts in the same way as [`Str::push_str_saturating`], but the input is a single [`char`].
 	///
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<7>::new();
 	///
 	/// // Crab is 4 bytes.
@@ -1115,7 +1114,7 @@ impl<const N: usize> Str<N> {
 	///
 	/// ## Examples
 	/// ```rust
-	/// # use readable::Str;
+	/// # use readable::str::*;
 	/// let mut s = Str::<3>::new();
 	///
 	/// assert_eq!(1, s.push_char_saturating('w'));
@@ -1153,7 +1152,7 @@ impl<const N: usize> Str<N> {
 	/// Returns the byte array buffer and the valid UTF-8 length of the [`Str`].
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let s = Str::<5>::from_static_str("hi");
 	/// let (buf, len) = s.into_raw();
 	///
@@ -1169,7 +1168,7 @@ impl<const N: usize> Str<N> {
 	/// Creates a new [`Str`] from a byte array buffer and a length
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let buf = [b'h', b'i', 0, 0, 0];
 	/// let len = 2;
 	///
@@ -1191,7 +1190,7 @@ impl<const N: usize> Str<N> {
 	/// Create a [`Str`] directly from a [`str`]
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let s = Str::<5>::from_str_exact("12345");
 	/// assert_eq!(s, "12345");
 	/// ```
@@ -1202,7 +1201,7 @@ impl<const N: usize> Str<N> {
 	/// function will panic.
 	///
 	/// ```rust,should_panic
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// // 1 too many characters, will panic.
 	/// let s = Str::<4>::from_str_exact("12345");
 	/// ```
@@ -1216,7 +1215,7 @@ impl<const N: usize> Str<N> {
 	/// Create a [`Str`] directly from bytes
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let s = unsafe { Str::<5>::from_bytes_exact(b"12345") };
 	/// assert_eq!(s, "12345");
 	/// ```
@@ -1230,7 +1229,7 @@ impl<const N: usize> Str<N> {
 	/// function will panic.
 	///
 	/// ```rust,should_panic
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// // 1 too many characters, will panic.
 	/// let s = unsafe { Str::<4>::from_bytes_exact(b"12345") };
 	/// ```
@@ -1247,7 +1246,7 @@ impl<const N: usize> Str<N> {
 	/// Calls [`str::make_ascii_uppercase`].
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<5>::from_static_str("hello");
 	///
 	/// s.make_ascii_uppercase();
@@ -1262,7 +1261,7 @@ impl<const N: usize> Str<N> {
 	/// Calls [`str::make_ascii_lowercase`].
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<5>::from_static_str("HELLO");
 	///
 	/// s.make_ascii_lowercase();
@@ -1281,7 +1280,7 @@ impl<const N: usize> Str<N> {
 	/// Note that this method has no effect on the allocated capacity of the string
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<4>::from_static_str("asdf");
 	///
 	/// s.truncate(1);
@@ -1292,7 +1291,7 @@ impl<const N: usize> Str<N> {
 	/// Panics if `new_len` does not lie on a [`char`] boundary.
 	///
 	/// ```rust,should_panic
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<6>::from_static_str("です");
 	///
 	/// // This does not lie on a full char, it will panic.
@@ -1312,7 +1311,7 @@ impl<const N: usize> Str<N> {
 	/// This is an _O(n)_ operation, as it requires copying every element in the buffer.
 	///
 	/// ```
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<3>::from_static_str("foo");
 	///
 	/// assert_eq!(s.remove(0), 'f');
@@ -1345,7 +1344,7 @@ impl<const N: usize> Str<N> {
 	/// Returns `None` if this [`Str`] is empty.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<3>::from_static_str("foo");
 	///
 	/// assert_eq!(s.len(), 3);
@@ -1384,7 +1383,7 @@ macro_rules! impl_from_str {
 				/// If this function fails, [`Result::Err`] is returned with how many extra bytes couldn't fit.
 				///
 				/// ```rust
-				/// # use readable::Str;
+				/// # use readable::str::*;
 				/// // Input string is 4 in length, we can't copy it.
 				/// // There is 1 extra byte that can't fit.
 				/// assert_eq!(Str::<3>::try_from("abcd"), Err(1));
@@ -1393,7 +1392,7 @@ macro_rules! impl_from_str {
 				/// ## Compile-time panic
 				/// This function will panic at compile time if `N > 255`.
 				/// ```rust,ignore
-				/// # use readable::Str;
+				/// # use readable::str::*;
 				/// // Compile error!
 				/// Str::<256>::try_from("");
 				/// ```
@@ -1454,7 +1453,7 @@ impl<const N: usize> std::ops::Deref for Str<N> {
 	/// Equivalent to [`Str::as_str()`].
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// use std::ops::Deref;
 	/// let mut s = Str::<3>::from_static_str("foo");
 	///
@@ -1494,7 +1493,7 @@ impl<const N: usize, T: AsRef<str>> std::ops::Add<T> for Str<N> {
 	/// Implements the `+` operator.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<6>::from_static_str("foo");
 	///
 	/// assert_eq!(s + "bar", "foobar");
@@ -1504,7 +1503,7 @@ impl<const N: usize, T: AsRef<str>> std::ops::Add<T> for Str<N> {
 	/// This calls [`Str::push_str_panic`] and will panic in the same ways.
 	///
 	/// ```rust,should_panic
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<3>::from_static_str("foo");
 	///
 	/// // This will panic, not enough capacity!
@@ -1522,7 +1521,7 @@ impl<const N: usize, T: AsRef<str>> std::ops::AddAssign<T> for Str<N> {
 	/// Implements the `+=` operator.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<6>::from_static_str("foo");
 	/// s += "bar";
 	///
@@ -1533,7 +1532,7 @@ impl<const N: usize, T: AsRef<str>> std::ops::AddAssign<T> for Str<N> {
 	/// This calls [`Str::push_str_panic`] and will panic in the same ways.
 	///
 	/// ```rust,should_panic
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<3>::from_static_str("foo");
 	///
 	/// // This will panic, not enough capacity!
@@ -1549,7 +1548,7 @@ impl<const N: usize> AsRef<[u8]> for Str<N> {
 	/// Calls [`Str::as_bytes()`], only including valid `UTF-8` bytes.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// // 6 in capacity, but only 3 in length.
 	/// let mut s = Str::<6>::from_static_str("foo");
 	///
@@ -1579,7 +1578,7 @@ impl<const N: usize> Extend<char> for Str<N> {
 	/// Calls [`Str::push_char_panic`] for each `char`.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<3>::new();
 	///
 	/// s.extend(['a', 'b', 'c']);
@@ -1597,7 +1596,7 @@ impl<'a, const N: usize> Extend<&'a str> for Str<N> {
 	/// Calls [`Str::push_str_panic`] for each `str`.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<12>::new();
 	///
 	/// s.extend(["hello", " ", "world", "!"]);
@@ -1645,7 +1644,7 @@ impl<const N: usize> std::fmt::Write for Str<N> {
 	/// Calls [`Str::push_str()`]
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<12>::new();
 	///
 	/// std::fmt::Write::write_str(&mut s, "hello world!").unwrap();
@@ -1661,7 +1660,7 @@ impl<const N: usize> std::fmt::Write for Str<N> {
 	/// Calls [`Str::push_char()`]
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::str::*;
 	/// let mut s = Str::<3>::new();
 	///
 	/// std::fmt::Write::write_char(&mut s, 'で').unwrap();
@@ -1676,9 +1675,10 @@ impl<const N: usize> std::fmt::Write for Str<N> {
 }
 
 //---------------------------------------------------------------------------------------------------- Serde
-#[cfg(feature="serde")]
+#[cfg(feature = "serde")]
 impl<const N: usize> serde::Serialize for Str<N>
 {
+	#[inline]
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: serde::Serializer
     {
@@ -1689,6 +1689,7 @@ impl<const N: usize> serde::Serialize for Str<N>
 #[cfg(feature = "serde")]
 impl<'de, const N: usize> serde::Deserialize<'de> for Str<N>
 {
+	#[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: serde::Deserializer<'de>
     {
@@ -1736,6 +1737,48 @@ impl<'de, const N: usize> serde::Deserialize<'de> for Str<N>
 
         deserializer.deserialize_str(StrVisitor(PhantomData))
     }
+}
+
+#[cfg(feature = "bincode")]
+impl<const N: usize> bincode::Encode for Str<N> {
+	#[inline]
+	fn encode<E: bincode::enc::Encoder>(&self, encoder: &mut E) -> Result<(), bincode::error::EncodeError> {
+		bincode::Encode::encode(self.as_str(), encoder)
+	}
+}
+
+#[cfg(feature = "bincode")]
+impl<const N: usize> bincode::Decode for Str<N> {
+	#[inline]
+	fn decode<D: bincode::de::Decoder>(decoder: &mut D) -> Result<Self, bincode::error::DecodeError> {
+		let s: String = bincode::Decode::decode(decoder)?;
+		#[allow(clippy::map_err_ignore)]
+		Self::try_from(s).map_err(|_| bincode::error::DecodeError::Other("Str::invalid() failed"))
+	}
+}
+#[cfg(feature = "bincode")]
+impl<'de, const N: usize> bincode::BorrowDecode<'de> for Str<N> {
+	fn borrow_decode<D: bincode::de::BorrowDecoder<'de>>(decoder: &mut D) -> Result<Self, bincode::error::DecodeError> {
+		bincode::Decode::decode(decoder)
+	}
+}
+
+#[cfg(feature = "borsh")]
+impl<const N: usize> borsh::BorshSerialize for Str<N> {
+	#[inline]
+	fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+		borsh::BorshSerialize::serialize(self.as_str(), writer)
+	}
+}
+
+#[cfg(feature = "borsh")]
+impl<const N: usize> borsh::BorshDeserialize for Str<N> {
+	#[inline]
+	fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> borsh::io::Result<Self> {
+		let s: String = borsh::BorshDeserialize::deserialize_reader(reader)?;
+		#[allow(clippy::map_err_ignore)]
+		Self::try_from(s).map_err(|_| borsh::io::Error::other("Str::try_from() failed"))
+	}
 }
 
 //---------------------------------------------------------------------------------------------------- TESTS

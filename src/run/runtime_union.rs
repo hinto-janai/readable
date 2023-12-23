@@ -22,7 +22,7 @@ use crate::macros::{
 /// However, the computation is very small so you should usually just use [`RuntimeMilli`].
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::run::*;
 /// let runtime_union = RuntimeUnion::from(65.555);
 ///
 /// // We can display regular `Runtime`
@@ -42,13 +42,13 @@ use crate::macros::{
 /// - A [`Str<12>`] for the [`RuntimeMilli`] formatted string
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::run::*;
 /// assert_eq!(std::mem::size_of::<RuntimeUnion>(), 36);
 /// ```
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::*;
+/// # use readable::run::*;
 /// // Always round down.
 /// assert_eq!(RuntimeUnion::from(11.111).as_str_milli(), "00:00:11.111");
 /// assert_eq!(RuntimeUnion::from(11.999).as_str_milli(), "00:00:11.999");
@@ -65,6 +65,7 @@ use crate::macros::{
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub struct RuntimeUnion {
 	pub(super) float: f32,
@@ -103,7 +104,7 @@ impl RuntimeUnion {
 	pub const MAX_F32: f32 = 359999.0;
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeUnion::UNKNOWN,                0.0);
 	/// assert_eq!(RuntimeUnion::UNKNOWN.as_str(),       "?:??");
 	/// assert_eq!(RuntimeUnion::UNKNOWN.as_str_pad(),   "??:??:??");
@@ -117,7 +118,7 @@ impl RuntimeUnion {
 	};
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeUnion::ZERO,                0.0);
 	/// assert_eq!(RuntimeUnion::ZERO.as_str(),       "0:00");
 	/// assert_eq!(RuntimeUnion::ZERO.as_str_pad(),   "00:00:00");
@@ -132,7 +133,7 @@ impl RuntimeUnion {
 	};
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeUnion::SECOND,                1.0);
 	/// assert_eq!(RuntimeUnion::SECOND.as_str(),       "0:01");
 	/// assert_eq!(RuntimeUnion::SECOND.as_str_pad(),   "00:00:01");
@@ -147,7 +148,7 @@ impl RuntimeUnion {
 	};
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeUnion::MINUTE,                60.0);
 	/// assert_eq!(RuntimeUnion::MINUTE.as_str(),       "1:00");
 	/// assert_eq!(RuntimeUnion::MINUTE.as_str_pad(),   "00:01:00");
@@ -162,7 +163,7 @@ impl RuntimeUnion {
 	};
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeUnion::HOUR,                3600.0);
 	/// assert_eq!(RuntimeUnion::HOUR.as_str(),       "1:00:00");
 	/// assert_eq!(RuntimeUnion::HOUR.as_str_pad(),   "01:00:00");
@@ -177,7 +178,7 @@ impl RuntimeUnion {
 	};
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeUnion::DAY,                86400.0);
 	/// assert_eq!(RuntimeUnion::DAY.as_str(),       "24:00:00");
 	/// assert_eq!(RuntimeUnion::DAY.as_str_pad(),   "24:00:00");
@@ -192,7 +193,7 @@ impl RuntimeUnion {
 	};
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeUnion::MAX,                359999.0);
 	/// assert_eq!(RuntimeUnion::MAX.as_str(),       "99:59:59");
 	/// assert_eq!(RuntimeUnion::MAX.as_str_pad(),   "99:59:59");
@@ -219,7 +220,7 @@ impl RuntimeUnion {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeUnion::from(65.555).as_str(), "1:05");
 	/// ```
 	pub const fn as_str(&self) -> &str {
@@ -229,7 +230,7 @@ impl RuntimeUnion {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeUnion::from(65.555).as_str_pad(), "00:01:05");
 	/// ```
 	pub const fn as_str_pad(&self) -> &str {
@@ -239,7 +240,7 @@ impl RuntimeUnion {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeUnion::from(65.555).as_str_milli(), "00:01:05.555");
 	/// ```
 	pub const fn as_str_milli(&self) -> &str {
@@ -251,7 +252,7 @@ impl RuntimeUnion {
 	/// Creates an identical [`Runtime`] without consuming [`Self`]
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeUnion::from(65.555).to_runtime(), Runtime::from(65.555));
 	/// ```
 	pub const fn to_runtime(&self) -> Runtime {
@@ -263,7 +264,7 @@ impl RuntimeUnion {
 	/// Creates an identical [`RuntimePad`] without consuming [`Self`]
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeUnion::from(65.555).to_pad(), RuntimePad::from(65.555));
 	/// ```
 	pub const fn to_pad(&self) -> RuntimePad {
@@ -275,7 +276,7 @@ impl RuntimeUnion {
 	/// Creates an identical [`RuntimeMilli`] without consuming [`Self`]
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeUnion::from(65.555).to_milli(), RuntimeMilli::from(65.555));
 	/// ```
 	pub const fn to_milli(&self) -> RuntimeMilli {
@@ -287,7 +288,7 @@ impl RuntimeUnion {
 	/// Deconstructs [`Self`] and returns the [`Runtime`] variants
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// let (r, p, m) = RuntimeUnion::from(65.555).into_inner();
 	///
 	/// assert_eq!(r, Runtime::from(65.555));
@@ -305,7 +306,7 @@ impl RuntimeUnion {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert!(RuntimeUnion::UNKNOWN.is_unknown());
 	/// assert!(!RuntimeUnion::ZERO.is_unknown());
 	/// ```

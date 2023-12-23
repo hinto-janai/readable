@@ -32,7 +32,7 @@ use std::num::{
 /// will all lead to `Err(Unsigned::unknown)` being returned.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::num::*;
 /// // Signed floats will fail.
 /// assert_eq!(Unsigned::try_from(-1.0), Err(Unsigned::UNKNOWN));
 ///
@@ -58,7 +58,7 @@ use std::num::{
 /// [`Str<26>`] is used internally to represent the string.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::num::*;
 /// assert_eq!(std::mem::size_of::<Unsigned>(), 40);
 /// ```
 ///
@@ -70,7 +70,7 @@ use std::num::{
 ///
 /// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also either a [`String`].
 /// ```rust
-/// # use readable::Unsigned;
+/// # use readable::num::Unsigned;
 /// let a = Unsigned::from(100_000_u64);
 ///
 /// // Copy 'a', use 'b'.
@@ -94,7 +94,7 @@ use std::num::{
 /// - Or with the inner number itself: `Unsigned::from(1) + 1`
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::num::*;
 /// assert!(Unsigned::from(10_u64) + 10 == Unsigned::from(20_u64));
 /// assert!(Unsigned::from(10_u64) - 10 == Unsigned::from(0_u64));
 /// assert!(Unsigned::from(10_u64) / 10 == Unsigned::from(1_u64));
@@ -104,7 +104,7 @@ use std::num::{
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::Unsigned;
+/// # use readable::num::Unsigned;
 /// // From unsigned integers.
 /// assert_eq!(Unsigned::from(100_u8),        "100");
 /// assert_eq!(Unsigned::from(10_000_u16),    "10,000");
@@ -126,6 +126,7 @@ use std::num::{
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Unsigned(u64, Str<LEN>);
 
@@ -137,7 +138,7 @@ impl_traits!(Unsigned, u64);
 //---------------------------------------------------------------------------------------------------- Unsigned Constants
 impl Unsigned {
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::num::*;
 	/// assert_eq!(Unsigned::ZERO, 0);
 	/// assert_eq!(Unsigned::ZERO, "0");
 	/// ```
@@ -163,7 +164,8 @@ impl Unsigned {
 	/// The maximum string length of an [`Unsigned`].
 	///
 	/// ```rust
-	/// assert_eq!(readable::Unsigned::MAX.len(), 26);
+	/// # use readable::num::*;
+	/// assert_eq!(Unsigned::MAX.len(), 26);
 	/// ```
 	pub const MAX_LEN: usize = LEN;
 }
@@ -178,7 +180,7 @@ impl Unsigned {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::num::*;
 	/// assert!(Unsigned::UNKNOWN.is_unknown());
 	/// assert!(!Unsigned::ZERO.is_unknown());
 	/// ```

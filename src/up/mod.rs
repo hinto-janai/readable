@@ -2,7 +2,7 @@
 //!
 //! "Uptime"-style strings, e.g:
 //! ```rust
-//! # use readable::*;
+//! # use readable::up::*;
 //! const SECONDS: usize = 158079;
 //!
 //! assert_eq!(Uptime::from(SECONDS),     "1d, 19h, 54m, 39s");
@@ -36,7 +36,7 @@
 //! ```rust
 //! # use readable::up::*;
 //! // Introduce trait into scope.
-//! use readable::Uptime;
+//! use readable::up::Uptime;
 //!
 //! // Capture the _current_ system uptime,
 //! // and format it into a `Uptime`.
@@ -55,7 +55,7 @@
 //! If the type is an `unknown` variant, that will also be maintained.
 //!
 //! ```rust
-//! # use readable::*;
+//! # use readable::up::*;
 //! // Uptime
 //! let uptime = Uptime::from(86461);
 //! assert_eq!(uptime, "1d, 1m, 1s");
@@ -103,7 +103,7 @@
 //! The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
 //!
 //! ```
-//! # use readable::*;
+//! # use readable::up::*;
 //! let a = Uptime::from(100_000);
 //!
 //! // Copy 'a', use 'b'.
@@ -127,7 +127,7 @@
 //! - Or with the inner number itself: `Uptime::from(1) + 1`
 //!
 //! ```rust
-//! # use readable::*;
+//! # use readable::up::*;
 //! assert!(Uptime::from(10_u32) + 10 == Uptime::from(20_u32));
 //! assert!(Uptime::from(10_u32) - 10 == Uptime::from(0_u32));
 //! assert!(Uptime::from(10_u32) / 10 == Uptime::from(1_u32));

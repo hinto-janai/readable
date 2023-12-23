@@ -380,7 +380,7 @@ pub(crate) use return_bad_float;
 //---------------------------------------------------------------------------------------------------- `u64/i64` -> `str`
 macro_rules! str_u64 {
 	($number:expr) => {{
-		$crate::Unsigned::from_priv_inner($number).as_str()
+		$crate::num::Unsigned::from_priv_inner($number).as_str()
 	}}
 }
 pub(crate) use str_u64;
@@ -388,7 +388,7 @@ pub(crate) use str_u64;
 //---------------------------------------------------------------------------------------------------- `u64/i64` -> `str`
 macro_rules! str_i64 {
 	($number:expr) => {{
-		$crate::Int::from_priv_inner($number).as_str()
+		$crate::num::Int::from_priv_inner($number).as_str()
 	}}
 }
 pub(crate) use str_i64;

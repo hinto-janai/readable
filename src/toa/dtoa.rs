@@ -479,7 +479,6 @@ macro_rules! dtoa_inner {
 
         // Returns length and k.
         #[inline]
-    
         unsafe fn grisu2(value: $fty, buffer: *mut u8) -> (isize, isize) {
             let v = DiyFp::from(value);
             let (w_m, w_p) = v.normalized_boundaries();
@@ -561,7 +560,7 @@ const NEG_INFINITY: &str = "-inf";
 ///
 /// ## Example
 /// ```rust
-/// # use readable::Dtoa;
+/// # use readable::toa::Dtoa;
 /// let dtoa = Dtoa::new(0.0);
 /// assert_eq!(dtoa, "0.0");
 ///
@@ -571,7 +570,8 @@ const NEG_INFINITY: &str = "-inf";
 ///
 /// ## Size
 /// ```rust
-/// assert_eq!(std::mem::size_of::<readable::Dtoa>(), 26);
+/// # use readable::toa::*;
+/// assert_eq!(std::mem::size_of::<Dtoa>(), 26);
 /// ```
 #[derive(Copy, Clone, Debug)]
 pub struct Dtoa {
@@ -597,7 +597,7 @@ impl Dtoa {
 	/// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
 	///
 	/// ```rust
-	/// # use readable::Dtoa;
+	/// # use readable::toa::Dtoa;
 	/// let dtoa = Dtoa::new(1.0);
 	/// assert_eq!(dtoa, "1.0");
 	///
@@ -635,7 +635,7 @@ impl Dtoa {
 	/// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
 	///
 	/// ```rust
-	/// # use readable::Dtoa;
+	/// # use readable::toa::Dtoa;
 	/// let dtoa = Dtoa::new(18.425);
 	/// assert_eq!(dtoa, "18.425");
 	/// let dtoa = Dtoa::new(19.0918);
@@ -670,7 +670,7 @@ impl Dtoa {
 	/// Turns [`Dtoa`] into a `&str`.
 	///
 	/// ```rust
-	/// # use readable::Dtoa;
+	/// # use readable::toa::Dtoa;
 	/// let dtoa:   Dtoa = Dtoa::new(123.456);
 	/// let string: &str = dtoa.as_str();
 	/// assert_eq!(string, "123.456");
@@ -700,7 +700,7 @@ impl Dtoa {
 /// See [`crate::dtoa!()`] for a quick 1-line format macro.
 ///
 /// ```rust
-/// # use readable::DtoaTmp;
+/// # use readable::toa::DtoaTmp;
 /// assert_eq!(DtoaTmp::new().format(1.0), "1.0");
 /// ```
 ///
@@ -708,7 +708,7 @@ impl Dtoa {
 /// as a factory to keep formatting new strings,
 /// as it will reuse the inner buffer:
 /// ```rust
-/// # use readable::DtoaTmp;
+/// # use readable::toa::*;
 /// let mut dtoa = DtoaTmp::new();
 ///
 /// assert_eq!(dtoa.format(1.0), "1.0");
@@ -718,7 +718,8 @@ impl Dtoa {
 ///
 /// ## Size
 /// ```rust
-/// assert_eq!(std::mem::size_of::<readable::DtoaTmp>(), 25);
+/// # use readable::toa::*;
+/// assert_eq!(std::mem::size_of::<DtoaTmp>(), 25);
 /// ```
 #[derive(Copy, Clone, Debug)]
 pub struct DtoaTmp {
@@ -740,7 +741,7 @@ impl DtoaTmp {
 	/// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
 	///
 	/// ```rust
-	/// # use readable::DtoaTmp;
+	/// # use readable::toa::DtoaTmp;
 	/// // We can cheaply reuse this.
 	/// let mut dtoa = DtoaTmp::new();
 	///
@@ -769,7 +770,7 @@ impl DtoaTmp {
 	/// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
 	///
 	/// ```rust
-	/// # use readable::DtoaTmp;
+	/// # use readable::toa::DtoaTmp;
 	/// // We can cheaply reuse this.
 	/// let mut dtoa = DtoaTmp::new();
 	///
@@ -829,11 +830,11 @@ impl DtoaTmp {
 ///
 /// dtoa!(1.0);
 ///
-/// readable::DtoaTmp::new().format(1.0);
+/// readable::toa::DtoaTmp::new().format(1.0);
 /// ```
 macro_rules! dtoa {
 	($into_dtoa:expr) => {{
-		$crate::DtoaTmp::new().format($into_dtoa)
+		$crate::toa::DtoaTmp::new().format($into_dtoa)
 	}};
 }
 
@@ -898,7 +899,7 @@ impl std::fmt::Display for Dtoa {
 /// 64/128-bit integers may be lossy, so they aren't implemented for [`IntoDtoa`].
 ///
 /// ```rust
-/// # use readable::Dtoa;
+/// # use readable::toa::Dtoa;
 /// let dtoa_from_float = Dtoa::new(-2147483648.0_f64);
 /// assert_eq!(dtoa_from_float, "-2147483648.0");
 ///

@@ -19,6 +19,7 @@ use std::num::{
 //---------------------------------------------------------------------------------------------------- Int
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 /// Human readable signed integer.
 ///
@@ -40,7 +41,7 @@ use std::num::{
 /// [`Str<26>`] is used internally to represent the string.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::num::*;
 /// assert_eq!(std::mem::size_of::<Int>(), 40);
 /// ```
 ///
@@ -52,7 +53,7 @@ use std::num::{
 ///
 /// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
 /// ```rust
-/// # use readable::Int;
+/// # use readable::num::Int;
 /// let a = Int::from(100_000);
 ///
 /// // Copy 'a', use 'b'.
@@ -76,7 +77,7 @@ use std::num::{
 /// - Or with the inner number itself: `Int::from(1) + 1`
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::num::*;
 /// assert!(Int::from(10) + 10 == Int::from(20));
 /// assert!(Int::from(10) - 10 == Int::from(0));
 /// assert!(Int::from(10) / 10 == Int::from(1));
@@ -86,7 +87,7 @@ use std::num::{
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::Int;
+/// # use readable::num::Int;
 /// // From u32.
 /// assert!(Int::from(1_000_u32)     == "1,000");
 /// assert!(Int::from(100_000_u32)   == "100,000");
@@ -113,7 +114,7 @@ impl_traits!(Int, i64);
 //---------------------------------------------------------------------------------------------------- Int Constants
 impl Int {
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::num::*;
 	/// assert_eq!(Int::ZERO, 0);
 	/// assert_eq!(Int::ZERO, "0");
 	/// ```
@@ -146,7 +147,8 @@ impl Int {
 	/// The maximum string length of an [`Int`].
 	///
 	/// ```rust
-	/// assert_eq!(readable::Int::MIN.len(), 26);
+	/// # use readable::num::*;
+	/// assert_eq!(Int::MIN.len(), 26);
 	/// ```
 	pub const MAX_LEN: usize = LEN;
 }
@@ -160,7 +162,7 @@ impl Int {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::num::*;
 	/// assert!(Int::UNKNOWN.is_unknown());
 	/// assert!(!Int::ZERO.is_unknown());
 	/// ```

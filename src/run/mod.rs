@@ -4,7 +4,7 @@
 //!
 //! The basic type is [`Runtime`] which formats strings to what you would expect from most audio/video players, e.g:
 //! ```rust
-//! # use readable::*;
+//! # use readable::run::*;
 //! assert_eq!(Runtime::from(0),    "0:00");
 //! assert_eq!(Runtime::from(60),   "1:00");
 //! assert_eq!(Runtime::from(119),  "1:59");
@@ -37,7 +37,7 @@
 //! go from [`RuntimeMilli`] -> [`Runtime`] -> [`RuntimeMilli`]
 //!
 //! ```rust
-//! # use readable::*;
+//! # use readable::run::*;
 //! // Millisecond data.
 //! let milli = RuntimeMilli::from(1.555);
 //! assert_eq!(milli, "00:00:01.555");
@@ -81,7 +81,7 @@
 //! - Or with the inner number itself: `RuntimePad::from(1.0) + 1.0`
 //!
 //! ```rust
-//! # use readable::*;
+//! # use readable::run::*;
 //! let runtime = Runtime::from(1.0) + Runtime::from(1.0);
 //! assert_eq!(runtime, Runtime::from(2.0));
 //! assert_eq!(runtime, "0:02");
@@ -112,7 +112,7 @@
 //!
 //! The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
 //! ```rust
-//! # use readable::*;
+//! # use readable::run::*;
 //! let a = Runtime::from(100_000.0);
 //!
 //! // Copy 'a', use 'b'.

@@ -31,7 +31,7 @@ use std::borrow::Borrow;
 ///
 /// ## Example
 /// ```rust
-/// # use readable::Itoa;
+/// # use readable::toa::*;
 /// let itoa = Itoa::new(1000);
 /// assert_eq!(itoa, "1000");
 ///
@@ -41,7 +41,8 @@ use std::borrow::Borrow;
 ///
 /// ## Size
 /// ```rust
-/// assert_eq!(std::mem::size_of::<readable::Itoa>(), 42);
+/// # use readable::toa::*;
+/// assert_eq!(std::mem::size_of::<Itoa>(), 42);
 /// ```
 #[derive(Copy, Clone, Debug)]
 pub struct Itoa {
@@ -58,7 +59,7 @@ impl Itoa {
 	/// Takes any [`Integer`] from the standard library (but not floats).
 	///
 	/// ```rust
-	/// # use readable::Itoa;
+	/// # use readable::toa::Itoa;
 	/// let itoa = Itoa::new(u128::MAX);
 	/// assert_eq!(itoa, "340282366920938463463374607431768211455");
 	///
@@ -85,7 +86,7 @@ impl Itoa {
 	/// Turns [`Itoa`] into a `&str`.
 	///
 	/// ```rust
-	/// # use readable::Itoa;
+	/// # use readable::toa::Itoa;
 	/// let itoa = Itoa::new(u128::MAX);
 	/// assert_eq!(itoa, "340282366920938463463374607431768211455");
 	///
@@ -108,7 +109,7 @@ impl Itoa {
 	/// Returns the `str` byte length of this [`Itoa`]
 	///
 	/// ```rust
-	/// # use readable::Itoa;
+	/// # use readable::toa::Itoa;
 	/// let itoa = Itoa::new(1000);
 	/// assert_eq!(itoa.len(), 4);
 	/// ```
@@ -130,7 +131,7 @@ impl Itoa {
 /// See [`crate::itoa!()`] for a quick 1-line format macro.
 ///
 /// ```rust
-/// # use readable::ItoaTmp;
+/// # use readable::toa::ItoaTmp;
 /// assert_eq!(ItoaTmp::new().format(10), "10");
 /// ```
 ///
@@ -138,7 +139,7 @@ impl Itoa {
 /// as a factory to keep formatting new strings,
 /// as it will reuse the inner buffer:
 /// ```rust
-/// # use readable::ItoaTmp;
+/// # use readable::toa::*;
 /// let mut itoa = ItoaTmp::new();
 ///
 /// assert_eq!(itoa.format(10), "10");
@@ -148,7 +149,8 @@ impl Itoa {
 ///
 /// ## Size
 /// ```rust
-/// assert_eq!(std::mem::size_of::<readable::ItoaTmp>(), 40);
+/// # use readable::toa::*;
+/// assert_eq!(std::mem::size_of::<ItoaTmp>(), 40);
 /// ```
 #[derive(Copy, Clone, Debug)]
 pub struct ItoaTmp {
@@ -167,7 +169,7 @@ impl ItoaTmp {
 	/// Format an [`Integer`] into a [`&str`] with an existing [`ItoaTmp`]
 	///
 	/// ```rust
-	/// # use readable::ItoaTmp;
+	/// # use readable::toa::ItoaTmp;
 	/// // We can cheaply reuse this.
 	/// let mut itoa = ItoaTmp::new();
 	///
@@ -252,7 +254,7 @@ impl Itoa64 {
 ///
 /// [`ItoaTmp`] is created and immediately dropped, thus it cannot be stored:
 /// ```rust,ignore
-/// # use readable::itoa;
+/// # use readable::itoa::*;
 /// let x = itoa!(10);
 ///         ^^^^^^^^^- temporary value is freed at the end of this statement
 ///
@@ -281,12 +283,12 @@ impl Itoa64 {
 ///
 /// itoa!(10);
 ///
-/// readable::ItoaTmp::new().format(10);
+/// readable::toa::ItoaTmp::new().format(10);
 /// ```
 #[macro_export]
 macro_rules! itoa {
 	($into_dtoa:expr) => {{
-		$crate::ItoaTmp::new().format($into_dtoa)
+		$crate::toa::ItoaTmp::new().format($into_dtoa)
 	}};
 }
 
@@ -345,7 +347,7 @@ impl std::fmt::Display for Itoa {
 /// An integer that can be written into an [`Itoa`].
 ///
 /// ```rust
-/// # use readable::Itoa;
+/// # use readable::toa::Itoa;
 /// let itoa = Itoa::new(-2147483648_i64);
 /// assert_eq!(itoa, "-2147483648");
 ///

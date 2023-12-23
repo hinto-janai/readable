@@ -19,7 +19,7 @@ use crate::macros::{
 ///
 /// The unit will increase as the inner number increases, for example:
 /// ```rust
-/// # use readable::*;
+/// # use readable::byte::*;
 /// assert_eq!(Byte::from(1_u64),                         "1 B");
 /// assert_eq!(Byte::from(999_u64),                       "999 B");
 /// assert_eq!(Byte::from(1_000_u64),                     "1.000 KB");
@@ -61,7 +61,7 @@ use crate::macros::{
 /// - Or with the inner number itself: `BytePad::from(1.0) + 1.0`
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::byte::*;
 /// let byte = Byte::from(1.0);
 /// assert_eq!(byte, "1 B");
 ///
@@ -73,7 +73,7 @@ use crate::macros::{
 /// [`Str<10>`] is used internally to represent the string.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::byte::*;
 /// assert_eq!(std::mem::size_of::<Byte>(), 24);
 /// ```
 ///
@@ -85,7 +85,7 @@ use crate::macros::{
 ///
 /// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
 /// ```rust
-/// # use readable::*;
+/// # use readable::byte::*;
 /// let a = Byte::from(100_000);
 ///
 /// // Copy 'a', use 'b'.
@@ -97,6 +97,7 @@ use crate::macros::{
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Byte(u64, Str<{ Byte::MAX_LEN }>);
 
@@ -125,13 +126,13 @@ const ZERO: u64 = 0;
 impl Byte {
 	/// The maximum string length of a [`Byte`]
 	/// ```rust
-	/// # use readable::Byte;
+	/// # use readable::byte::Byte;
 	/// assert_eq!("xxx.xxx KB".len(), Byte::MAX_LEN);
 	/// ```
 	pub const MAX_LEN: usize = 10;
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::byte::*;
 	/// assert_eq!(Byte::ZERO, "0 B");
 	/// assert_eq!(Byte::ZERO, 0_u64);
 	/// assert_eq!(Byte::ZERO, Byte::from(0_u64));
@@ -139,7 +140,7 @@ impl Byte {
 	pub const ZERO: Self = Self(ZERO, Str::from_static_str("0 B"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::byte::*;
 	/// assert_eq!(Byte::BYTE, "1 B");
 	/// assert_eq!(Byte::BYTE, 1_u64);
 	/// assert_eq!(Byte::BYTE, Byte::from(1_u64));
@@ -147,7 +148,7 @@ impl Byte {
 	pub const BYTE: Self = Self(BYTE, Str::from_static_str("1 B"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::byte::*;
 	/// assert_eq!(Byte::KILOBYTE, "1.000 KB");
 	/// assert_eq!(Byte::KILOBYTE, 1_000_u64);
 	/// assert_eq!(Byte::KILOBYTE, Byte::from(1_000_u64));
@@ -155,7 +156,7 @@ impl Byte {
 	pub const KILOBYTE: Self = Self(KILOBYTE, Str::from_static_str("1.000 KB"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::byte::*;
 	/// assert_eq!(Byte::MEGABYTE, "1.000 MB");
 	/// assert_eq!(Byte::MEGABYTE, 1_000_000_u64);
 	/// assert_eq!(Byte::MEGABYTE, Byte::from(1_000_000_u64));
@@ -163,7 +164,7 @@ impl Byte {
 	pub const MEGABYTE: Self = Self(MEGABYTE, Str::from_static_str("1.000 MB"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::byte::*;
 	/// assert_eq!(Byte::GIGABYTE, "1.000 GB");
 	/// assert_eq!(Byte::GIGABYTE, 1_000_000_000_u64);
 	/// assert_eq!(Byte::GIGABYTE, Byte::from(1_000_000_000_u64));
@@ -171,7 +172,7 @@ impl Byte {
 	pub const GIGABYTE: Self = Self(GIGABYTE, Str::from_static_str("1.000 GB"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::byte::*;
 	/// assert_eq!(Byte::TERABYTE, "1.000 TB");
 	/// assert_eq!(Byte::TERABYTE, 1_000_000_000_000_u64);
 	/// assert_eq!(Byte::TERABYTE, Byte::from(1_000_000_000_000_u64));
@@ -179,7 +180,7 @@ impl Byte {
 	pub const TERABYTE: Self = Self(TERABYTE, Str::from_static_str("1.000 TB"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::byte::*;
 	/// assert_eq!(Byte::PETABYTE, "1.000 PB");
 	/// assert_eq!(Byte::PETABYTE, 1_000_000_000_000_000_u64);
 	/// assert_eq!(Byte::PETABYTE, Byte::from(1_000_000_000_000_000_u64));
@@ -187,7 +188,7 @@ impl Byte {
 	pub const PETABYTE: Self = Self(PETABYTE, Str::from_static_str("1.000 PB"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::byte::*;
 	/// assert_eq!(Byte::EXABYTE, "1.000 EB");
 	/// assert_eq!(Byte::EXABYTE, 1_000_000_000_000_000_000_u64);
 	/// assert_eq!(Byte::EXABYTE, Byte::from(1_000_000_000_000_000_000_u64));
@@ -195,7 +196,7 @@ impl Byte {
 	pub const EXABYTE: Self = Self(EXABYTE, Str::from_static_str("1.000 EB"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::byte::*;
 	/// assert_eq!(Byte::MAX, Byte::from(u64::MAX));
 	/// assert_eq!(Byte::MAX, "18.446 EB");
 	/// assert_eq!(Byte::MAX, u64::MAX);
@@ -203,7 +204,7 @@ impl Byte {
 	pub const MAX: Self = Self(u64::MAX, Str::from_static_str("18.446 EB"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::byte::*;
 	/// assert_eq!(Byte::UNKNOWN, Byte::from(f32::NAN));
 	/// assert_eq!(Byte::UNKNOWN, Byte::from(-1));
 	/// assert_eq!(Byte::UNKNOWN, "???.??? B");
@@ -220,7 +221,7 @@ impl Byte {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::byte::*;
 	/// assert!(Byte::UNKNOWN.is_unknown());
 	/// assert!(!Byte::ZERO.is_unknown());
 	/// ```
@@ -258,7 +259,7 @@ impl Byte {
 
 		// If bytes is `999 B` or less.
 		if bytes < Self::KILOBYTE {
-			let mut itoa = crate::ItoaTmp::new();
+			let mut itoa = crate::toa::ItoaTmp::new();
 			let itoa = itoa.format(bytes).as_bytes();
 			let len = itoa.len();
 			b[..len].copy_from_slice(itoa);
@@ -287,7 +288,7 @@ impl Byte {
 			let base = float as u16;
 
 			// Format first 1-3 digits into buffer (111)
-			let mut itoa = crate::ItoaTmp::new();
+			let mut itoa = crate::toa::ItoaTmp::new();
 			let itoa = itoa.format(base).as_bytes();
 			b[0] = itoa[0];
 			let idx = if base < 10 {
@@ -305,7 +306,7 @@ impl Byte {
 			};
 
 			// Format 3 fractional digits into buffer (222)
-			let mut itoa = crate::ItoaTmp::new();
+			let mut itoa = crate::toa::ItoaTmp::new();
 			let itoa = itoa.format(fract).as_bytes();
 			if fract < 10 {
 				b[idx    ] = Z;

@@ -2,7 +2,7 @@
 //!
 //! "Clock time" formatted strings:
 //! ```rust
-//! # use readable::*;
+//! # use readable::time::*;
 //! const SECONDS: usize = 86399;
 //!
 //! assert_eq!(Time::from(SECONDS),     "11:59:59 PM");
@@ -14,7 +14,7 @@
 //!
 //! After which point, `time` types will wrap back around (like a real clock):
 //! ```rust
-//! # use readable::*;
+//! # use readable::time::*;
 //! const SECONDS: usize = 86399;
 //!
 //! assert_eq!(Time::from(SECONDS),     "11:59:59 PM");
@@ -29,9 +29,9 @@
 //! from the _live_ system clock time to a type within this module, e.g:
 //!
 //! ```rust
-//! # use readable::*;
+//! # use readable::time::*;
 //! // Introduce trait into scope.
-//! use readable::SysTime;
+//! use readable::time::SysTime;
 //!
 //! // Capture the _current_ system clock
 //! // time and format it into a `Time`.
@@ -46,7 +46,7 @@
 //! If the type is an `unknown` variant, that will also be maintained.
 //!
 //! ```rust
-//! # use readable::*;
+//! # use readable::time::*;
 //! // Time
 //! let time = Time::from(86399);
 //! assert_eq!(time, "11:59:59 PM");
@@ -68,7 +68,7 @@
 //! The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also be a [`String`].
 //!
 //! ```
-//! # use readable::*;
+//! # use readable::time::*;
 //! let a = Time::from(86399);
 //!
 //! // Copy 'a', use 'b'.
@@ -92,7 +92,7 @@
 //! - Or with the inner number itself: `Time::from(1) + 1`
 //!
 //! ```rust
-//! # use readable::*;
+//! # use readable::time::*;
 //! assert!(Time::from(10_u32) + 10 == Time::from(20_u32));
 //! assert!(Time::from(10_u32) - 10 == Time::from(0_u32));
 //! assert!(Time::from(10_u32) / 10 == Time::from(1_u32));

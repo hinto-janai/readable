@@ -14,7 +14,7 @@ use crate::date::Nichi; // docs
 /// Same as [`Nichi`] but with fully specified words
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::date::*;
 /// let nichi = NichiFull::new(2020, 12, 25).unwrap();
 /// assert_eq!(nichi, "Friday, December 25th, 2020");
 /// assert_eq!(nichi, (2020, 12, 25));
@@ -24,13 +24,13 @@ use crate::date::Nichi; // docs
 /// [`Str<30>`] is used internally to represent the string.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::date::*;
 /// assert_eq!(std::mem::size_of::<NichiFull>(), 36);
 /// ```
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::*;
+/// # use readable::date::*;
 /// assert_eq!(NichiFull::new(1776, 7, 4).unwrap(),   "Thursday, July 4th, 1776");
 /// assert_eq!(NichiFull::new(2017, 3, 3).unwrap(),   "Friday, March 3rd, 2017");
 /// assert_eq!(NichiFull::new(1999, 12, 25).unwrap(), "Saturday, December 25th, 1999");
@@ -38,6 +38,7 @@ use crate::date::Nichi; // docs
 /// ```
 #[cfg_attr(feature = "serde",derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode",derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NichiFull((u16, u8, u8), Str<{ NichiFull::MAX_LEN }>);
 
@@ -47,7 +48,7 @@ impl_traits!(NichiFull, (u16, u8, u8));
 impl NichiFull {
 	/// The maximum string length of a [`NichiFull`].
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// assert_eq!(NichiFull::from_str("Saturday, September 31st, 9998").unwrap().len(), NichiFull::MAX_LEN);
 	/// ```
 	pub const MAX_LEN: usize = 30;
@@ -57,7 +58,7 @@ impl NichiFull {
 	/// This is the exact same as [`Self::UNKNOWN`].
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// assert_eq!(NichiFull::ZERO, (0, 0, 0));
 	/// assert_eq!(NichiFull::ZERO, "???");
 	/// assert_eq!(NichiFull::ZERO, NichiFull::UNKNOWN);
@@ -67,7 +68,7 @@ impl NichiFull {
 	/// Returned on error situations.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// assert_eq!(NichiFull::UNKNOWN, (0, 0, 0));
 	/// assert_eq!(NichiFull::UNKNOWN, "???");
 	/// ```
@@ -94,7 +95,7 @@ impl NichiFull {
 	/// Same as [`Self::unknown`]
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// assert_eq!(NichiFull::zero(), NichiFull::unknown());
 	/// ```
 	pub const fn zero() -> Self {
@@ -127,7 +128,7 @@ impl NichiFull {
 	/// Calculate the weekday
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// // Christmas in 1999 was on a Saturday.
 	/// assert_eq!(
 	///     NichiFull::new(1999, 12, 25).unwrap().weekday().as_str(),
@@ -189,7 +190,7 @@ impl NichiFull {
 	/// (Seconds after `January 1st, 1970 UTC`).
 	//
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// let nichi = NichiFull::from_unix(1698019200).unwrap();
 	/// println!("{nichi}");
 	/// assert_eq!(nichi, "Monday, October 23rd, 2023");
@@ -201,7 +202,7 @@ impl NichiFull {
 	/// `unix_timestamp` is a date with a year larger than `9999` or less than `1000`.
 	///
 	/// ```rust,should_panic
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// // Would be `12732-1-28`.
 	/// NichiFull::from_unix(339618217000).unwrap();
 	/// ```
@@ -235,7 +236,7 @@ impl NichiFull {
 	/// Get the corresponding UNIX timestamp of [`Self`]
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// let nichi = NichiFull::from_unix(1698019200).unwrap();
 	/// assert_eq!(nichi.as_unix(), 1698019200);
 	/// ```
@@ -258,7 +259,7 @@ impl NichiFull {
 	///
 	/// The order of the `year`, `month`, and `day` do not matter:
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// let december_25th_2010 = NichiFull::new(2010, 12, 25).unwrap();
 	/// assert_eq!(NichiFull::from_str("dec 25 2010").unwrap(), december_25th_2010);
 	/// assert_eq!(NichiFull::from_str("2010 dec 25").unwrap(), december_25th_2010);
@@ -268,7 +269,7 @@ impl NichiFull {
 	///
 	/// Infinite amount of separator characters are allowed:
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// let december_25th_2010 = NichiFull::new(2010, 12, 25).unwrap();
 	/// assert_eq!(NichiFull::from_str("dec-25 ...       2010").unwrap(), december_25th_2010);
 	/// ```
@@ -276,7 +277,7 @@ impl NichiFull {
 	/// This function is extremely leniant, as long as some resemblance of a
 	/// calendar date is in the input string, it will parse it out:
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// //                                             Year 2010
 	/// //                                   25th day      |
 	/// //                          December     |         |
@@ -295,7 +296,7 @@ impl NichiFull {
 	/// A single separator character must exist, although it does not need to be `-`.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// let nichi = NichiFull::new(2010, 2, 2).unwrap();
 	/// assert_eq!(NichiFull::from_str("2010.02.02").unwrap(), nichi);
 	/// assert_eq!(NichiFull::from_str("2010/2/2").unwrap(),   nichi);
@@ -308,7 +309,7 @@ impl NichiFull {
 	///
 	/// ## Examples
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// let december_25th_2010 = NichiFull::new(2010, 12, 25).unwrap();
 	///
 	/// assert_eq!(NichiFull::from_str("dec, 25, 2010").unwrap(),        december_25th_2010);
@@ -365,7 +366,7 @@ impl NichiFull {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// assert!(NichiFull::UNKNOWN.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
@@ -434,8 +435,8 @@ impl From<nichi::Date> for NichiFull {
 	}
 }
 
-impl From<crate::Date> for NichiFull {
-	fn from(value: crate::Date) -> Self {
+impl From<crate::date::Date> for NichiFull {
+	fn from(value: crate::date::Date) -> Self {
 		if value.ok() {
 			let (y,m,d) = value.inner();
 			Self::priv_from(y,m,d)
@@ -445,8 +446,8 @@ impl From<crate::Date> for NichiFull {
 	}
 }
 
-impl From<crate::Nichi> for NichiFull {
-	fn from(value: crate::Nichi) -> Self {
+impl From<crate::date::Nichi> for NichiFull {
+	fn from(value: crate::date::Nichi) -> Self {
 		if value.is_unknown() {
 			Self::unknown()
 		} else {

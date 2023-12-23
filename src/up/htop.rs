@@ -42,13 +42,13 @@ use crate::itoa;
 /// [`Str<23>`] is used internally to represent the string.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::up::*;
 /// assert_eq!(std::mem::size_of::<Htop>(), 28);
 /// ```
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::Htop;
+/// # use readable::up::Htop;
 /// assert_eq!(Htop::from(0_u32),       "00:00:00");
 /// assert_eq!(Htop::from(1_u32),       "00:00:01");
 /// assert_eq!(Htop::from(2_u32),       "00:00:02");
@@ -69,6 +69,7 @@ use crate::itoa;
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Htop(pub(super) u32, pub(super) Str<{ Htop::MAX_LEN }>);
 
@@ -78,21 +79,21 @@ impl_traits!(Htop, u32);
 //---------------------------------------------------------------------------------------------------- Constants
 impl Htop {
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// let time = "49710 days(!), 06:28:15";
 	/// assert_eq!(time.len(), Htop::MAX_LEN);
 	/// ```
 	pub const MAX_LEN: usize = 23;
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Htop::UNKNOWN, 0);
 	/// assert_eq!(Htop::UNKNOWN, "(unknown)");
 	/// ```
 	pub const UNKNOWN: Self = Self(0, Str::from_static_str("(unknown)"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Htop::ZERO, 0);
 	/// assert_eq!(Htop::ZERO, "00:00:00");
 	/// assert_eq!(Htop::ZERO, Htop::from(0));
@@ -100,7 +101,7 @@ impl Htop {
 	pub const ZERO: Self = Self(0, Str::from_static_str("00:00:00"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Htop::SECOND, 1);
 	/// assert_eq!(Htop::SECOND, "00:00:01");
 	/// assert_eq!(Htop::SECOND, Htop::from(1));
@@ -108,7 +109,7 @@ impl Htop {
 	pub const SECOND: Self = Self(1, Str::from_static_str("00:00:01"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Htop::MINUTE, 60);
 	/// assert_eq!(Htop::MINUTE, "00:01:00");
 	/// assert_eq!(Htop::MINUTE, Htop::from(60));
@@ -116,7 +117,7 @@ impl Htop {
 	pub const MINUTE: Self = Self(60, Str::from_static_str("00:01:00"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Htop::HOUR, 3600);
 	/// assert_eq!(Htop::HOUR, "01:00:00");
 	/// assert_eq!(Htop::HOUR, Htop::from(3600));
@@ -124,7 +125,7 @@ impl Htop {
 	pub const HOUR: Self = Self(3600, Str::from_static_str("01:00:00"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Htop::DAY, 86400);
 	/// assert_eq!(Htop::DAY, "1 day, 00:00:00");
 	/// assert_eq!(Htop::DAY, Htop::from(86400));
@@ -132,7 +133,7 @@ impl Htop {
 	pub const DAY: Self = Self(86400, Str::from_static_str("1 day, 00:00:00"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Htop::MONTH, 2678400);
 	/// assert_eq!(Htop::MONTH, "31 days, 00:00:00");
 	/// assert_eq!(Htop::MONTH, Htop::from(2678400));
@@ -140,7 +141,7 @@ impl Htop {
 	pub const MONTH: Self = Self(2678400, Str::from_static_str("31 days, 00:00:00"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Htop::YEAR, 31536000);
 	/// assert_eq!(Htop::YEAR, "365 days(!), 00:00:00");
 	/// assert_eq!(Htop::YEAR, Htop::from(31536000));
@@ -148,7 +149,7 @@ impl Htop {
 	pub const YEAR: Self = Self(31536000, Str::from_static_str("365 days(!), 00:00:00"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Htop::MAX, u32::MAX);
 	/// assert_eq!(Htop::MAX, "49710 days(!), 06:28:15");
 	/// assert_eq!(Htop::MAX, Htop::from(u32::MAX));
@@ -165,7 +166,7 @@ impl Htop {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert!(Htop::UNKNOWN.is_unknown());
 	/// assert!(!Htop::ZERO.is_unknown());
 	/// ```

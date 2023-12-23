@@ -1,4 +1,4 @@
-use crate::{TimeUnit, Unsigned};
+use crate::{time::TimeUnit, num::Unsigned};
 //---------------------------------------------------------------------------------------------------- Use
 use crate::str::Str;
 use crate::time::Time;
@@ -16,7 +16,7 @@ use crate::macros::{
 ///
 /// An overflowing input will wrap back around (like a real clock), e.g:
 /// ```rust
-/// # use readable::*;
+/// # use readable::time::*;
 /// // 23 hours, 59 minutes, 59 seconds.
 /// assert_eq!(Military::from(86399), "23:59:59");
 ///
@@ -31,13 +31,13 @@ use crate::macros::{
 /// [`Str<7>`] is used internally to represent the string.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::time::*;
 /// assert_eq!(std::mem::size_of::<Military>(), 16);
 /// ```
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::Military;
+/// # use readable::time::*;
 /// assert_eq!(Military::from(0),         "00:00:00");
 /// assert_eq!(Military::from(1),         "00:00:01");
 /// assert_eq!(Military::from(10),        "00:00:10");
@@ -74,6 +74,7 @@ use crate::macros::{
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Military(pub(super) u32, pub(super) Str<{ Military::MAX_LEN }>);
 
@@ -84,27 +85,27 @@ impl_math!(Military, u32);
 impl Military {
 	/// The max length of [`Military`]'s string.
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!("10:10:10".len(), Military::MAX_LEN);
 	/// ```
 	pub const MAX_LEN: usize = 8;
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(Military::UNKNOWN, 0);
 	/// assert_eq!(Military::UNKNOWN, "??:??:??");
 	/// ```
 	pub const UNKNOWN: Self = Self(0, Str::from_static_str("??:??:??"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(Military::ZERO, 0);
 	/// assert_eq!(Military::ZERO, "00:00:00");
 	/// ```
 	pub const ZERO: Self = Self(0, Str::from_static_str("00:00:00"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(Military::MAX, 86399);
 	/// assert_eq!(Military::MAX, "23:59:59");
 	/// ```
@@ -125,7 +126,7 @@ impl Military {
 	/// implementation, although this function is `const`.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// let from:    Military = Military::from(86399);
 	/// const CONST: Military = Military::new(86399);
 	///
@@ -147,7 +148,7 @@ impl Military {
 	/// A value being left as `None` is equal to `0`.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// let military = Military::new_specified(
 	///     3,  // hours
 	///     21, // minutes
@@ -178,7 +179,7 @@ impl Military {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert!(Military::UNKNOWN.is_unknown());
 	/// assert!(!Military::ZERO.is_unknown());
 	/// ```

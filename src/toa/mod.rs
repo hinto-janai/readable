@@ -8,7 +8,10 @@
 //! The strings are stack allocated.
 //!
 //! ```rust
-//! use readable::{Itoa, Dtoa, Unsigned, Float};
+//! use readable::{
+//!     toa::{Itoa, Dtoa},
+//!     num::{Unsigned, Float},
+//! };
 //!
 //! // No formatting, is extremely fast to create.
 //! let itoa = Itoa::new(1000_u32);

@@ -19,13 +19,13 @@ use crate::macros::{
 /// [`Str<8>`] is used internally to represent the string.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::run::*;
 /// assert_eq!(std::mem::size_of::<Runtime>(), 16);
 /// ```
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::*;
+/// # use readable::run::*;
 /// // Always round down.
 /// assert_eq!(Runtime::from(11.1111), "0:11");
 /// assert_eq!(Runtime::from(11.9999), "0:11");
@@ -46,6 +46,7 @@ use crate::macros::{
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub struct Runtime(pub(super) f32, pub(super) Str<{ Runtime::MAX_LEN }>);
 
@@ -84,49 +85,49 @@ impl Runtime {
 	pub const MAX_F32: f32 = 359999.0;
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(Runtime::UNKNOWN, 0.0);
 	/// assert_eq!(Runtime::UNKNOWN, "?:??");
 	/// ```
 	pub const UNKNOWN: Self = Self(Self::ZERO_F32, Str::from_static_str("?:??"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(Runtime::ZERO, 0.0);
 	/// assert_eq!(Runtime::ZERO, "0:00");
 	/// ```
 	pub const ZERO: Self = Self(Self::ZERO_F32, Str::from_static_str("0:00"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(Runtime::SECOND, 1.0);
 	/// assert_eq!(Runtime::SECOND, "0:01");
 	/// ```
 	pub const SECOND: Self = Self(Self::SECOND_F32, Str::from_static_str("0:01"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(Runtime::MINUTE, 60.0);
 	/// assert_eq!(Runtime::MINUTE, "1:00");
 	/// ```
 	pub const MINUTE: Self = Self(Self::MINUTE_F32, Str::from_static_str("1:00"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(Runtime::HOUR, 3600.0);
 	/// assert_eq!(Runtime::HOUR, "1:00:00");
 	/// ```
 	pub const HOUR: Self = Self(Self::HOUR_F32, Str::from_static_str("1:00:00"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(Runtime::DAY, 86400.0);
 	/// assert_eq!(Runtime::DAY, "24:00:00");
 	/// ```
 	pub const DAY: Self = Self(Self::DAY_F32, Str::from_static_str("24:00:00"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(Runtime::MAX, 359999.0);
 	/// assert_eq!(Runtime::MAX, "99:59:59");
 	/// ```
@@ -142,7 +143,7 @@ impl Runtime {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert!(Runtime::UNKNOWN.is_unknown());
 	/// assert!(!Runtime::ZERO.is_unknown());
 	/// ```
@@ -230,9 +231,9 @@ impl Runtime {
 		debug_assert!(min < 60);
 		debug_assert!(sec < 60);
 
-		let mut h = crate::ItoaTmp::new();
-		let mut m = crate::ItoaTmp::new();
-		let mut s = crate::ItoaTmp::new();
+		let mut h = crate::toa::ItoaTmp::new();
+		let mut m = crate::toa::ItoaTmp::new();
+		let mut s = crate::toa::ItoaTmp::new();
 		let h = h.format(hour).as_bytes();
 		let m = m.format(min).as_bytes();
 		let s = s.format(sec).as_bytes();
@@ -342,8 +343,8 @@ impl Runtime {
 		const Z: u8 = b'0';
 		const C: u8 = b':';
 
-		let mut m = crate::ItoaTmp::new();
-		let mut s = crate::ItoaTmp::new();
+		let mut m = crate::toa::ItoaTmp::new();
+		let mut s = crate::toa::ItoaTmp::new();
 		let m = m.format(min).as_bytes();
 		let s = s.format(sec).as_bytes();
 

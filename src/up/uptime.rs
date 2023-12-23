@@ -19,21 +19,21 @@ use crate::itoa;
 /// [`Str<29>`] is used internally to represent the string.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::up::*;
 /// assert_eq!(std::mem::size_of::<Uptime>(), 36);
 /// ```
 ///
 /// ## Warning
 /// This stylizes both `minute` and `month` as `m`, thus:
 /// ```rust
-/// # use readable::*;
+/// # use readable::up::*;
 /// assert_eq!(Uptime::MINUTE, "1m");
 /// assert_eq!(Uptime::MONTH,  "1m");
 /// ```
 ///
 /// Although, their inner number will be different and context may make it more clear:
 /// ```
-/// # use readable::*;
+/// # use readable::up::*;
 /// assert_eq!(Uptime::MINUTE.inner(), 60);
 /// assert_eq!(Uptime::MONTH.inner(),  2678400);
 ///
@@ -43,7 +43,7 @@ use crate::itoa;
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::Uptime;
+/// # use readable::up::Uptime;
 /// assert_eq!(Uptime::from(0_u32),        "0s");
 /// assert_eq!(Uptime::from(1_u32),        "1s");
 /// assert_eq!(Uptime::from(2_u32),        "2s");
@@ -84,6 +84,7 @@ use crate::itoa;
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Uptime(pub(super) u32, pub(super) Str<{ Uptime::MAX_LEN }>);
 
@@ -93,70 +94,70 @@ impl_traits!(Uptime, u32);
 //---------------------------------------------------------------------------------------------------- Constants
 impl Uptime {
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// let time = "---y, --m, --d, --h, --m, --s";
 	/// assert_eq!(time.len(), Uptime::MAX_LEN);
 	/// ```
 	pub const MAX_LEN: usize = 29;
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Uptime::UNKNOWN, 0);
 	/// assert_eq!(Uptime::UNKNOWN, "(unknown)");
 	/// ```
 	pub const UNKNOWN: Self = Self(0, Str::from_static_str("(unknown)"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Uptime::ZERO, 0);
 	/// assert_eq!(Uptime::ZERO, "0s");
 	/// ```
 	pub const ZERO: Self = Self(0, Str::from_static_str("0s"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Uptime::SECOND, 1);
 	/// assert_eq!(Uptime::SECOND, "1s");
 	/// ```
 	pub const SECOND: Self = Self(1, Str::from_static_str("1s"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Uptime::MINUTE, 60);
 	/// assert_eq!(Uptime::MINUTE, "1m");
 	/// ```
 	pub const MINUTE: Self = Self(60, Str::from_static_str("1m"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Uptime::HOUR, 3600);
 	/// assert_eq!(Uptime::HOUR, "1h");
 	/// ```
 	pub const HOUR: Self = Self(3600, Str::from_static_str("1h"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Uptime::DAY, 86400);
 	/// assert_eq!(Uptime::DAY, "1d");
 	/// ```
 	pub const DAY: Self = Self(86400, Str::from_static_str("1d"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Uptime::MONTH, 2678400);
 	/// assert_eq!(Uptime::MONTH, "1m");
 	/// ```
 	pub const MONTH: Self = Self(2678400, Str::from_static_str("1m"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Uptime::YEAR, 31536000);
 	/// assert_eq!(Uptime::YEAR, "1y");
 	/// ```
 	pub const YEAR: Self = Self(31536000, Str::from_static_str("1y"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(Uptime::MAX, u32::MAX);
 	/// assert_eq!(Uptime::MAX, "136y, 2m, 8d, 6h, 28m, 15s");
 	/// ```
@@ -172,7 +173,7 @@ impl Uptime {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert!(Uptime::UNKNOWN.is_unknown());
 	/// assert!(!Uptime::ZERO.is_unknown());
 	/// ```

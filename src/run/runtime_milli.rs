@@ -13,7 +13,7 @@ use crate::macros::{
 /// milliseconds are included, which makes this type `4` bytes bigger.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::run::*;
 /// let runtime_full = RuntimePad::MINUTE;
 /// assert_eq!(runtime_full, "00:01:00"); // seconds is lowest unit
 ///
@@ -25,13 +25,13 @@ use crate::macros::{
 /// [`Str<12>`] is used internally to represent the string.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::run::*;
 /// assert_eq!(std::mem::size_of::<RuntimeMilli>(), 20);
 /// ```
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::*;
+/// # use readable::run::*;
 /// // Always round down.
 /// assert_eq!(RuntimeMilli::from(11.111), "00:00:11.111");
 /// assert_eq!(RuntimeMilli::from(11.999), "00:00:11.999");
@@ -90,49 +90,49 @@ impl RuntimeMilli {
 	pub const MAX_F32: f32 = 359999.0;
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeMilli::UNKNOWN, 0.0);
 	/// assert_eq!(RuntimeMilli::UNKNOWN, "??:??:??.???");
 	/// ```
 	pub const UNKNOWN: Self = Self(Self::ZERO_F32, Str::from_static_str("??:??:??.???"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeMilli::ZERO, 0.0);
 	/// assert_eq!(RuntimeMilli::ZERO, "00:00:00.000");
 	/// ```
 	pub const ZERO: Self = Self(Self::ZERO_F32, Str::from_static_str("00:00:00.000"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeMilli::SECOND, 1.0);
 	/// assert_eq!(RuntimeMilli::SECOND, "00:00:01.000");
 	/// ```
 	pub const SECOND: Self = Self(Self::SECOND_F32, Str::from_static_str("00:00:01.000"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeMilli::MINUTE, 60.0);
 	/// assert_eq!(RuntimeMilli::MINUTE, "00:01:00.000");
 	/// ```
 	pub const MINUTE: Self = Self(Self::MINUTE_F32, Str::from_static_str("00:01:00.000"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeMilli::HOUR, 3600.0);
 	/// assert_eq!(RuntimeMilli::HOUR, "01:00:00.000");
 	/// ```
 	pub const HOUR: Self = Self(Self::HOUR_F32, Str::from_static_str("01:00:00.000"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeMilli::DAY, 86400.0);
 	/// assert_eq!(RuntimeMilli::DAY, "24:00:00.000");
 	/// ```
 	pub const DAY: Self = Self(Self::DAY_F32, Str::from_static_str("24:00:00.000"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeMilli::MAX, 359999.0);
 	/// assert_eq!(RuntimeMilli::MAX, "99:59:59.000");
 	/// ```
@@ -190,7 +190,7 @@ impl RuntimeMilli {
 	/// This branches a maximum of 4 times and does not allocate anything.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeMilli::from(0.0).as_str_runtime(),     "0:00");
 	/// assert_eq!(RuntimeMilli::from(59.0).as_str_runtime(),    "0:59");
 	/// assert_eq!(RuntimeMilli::from(599.0).as_str_runtime(),   "9:59");
@@ -212,7 +212,7 @@ impl RuntimeMilli {
 	/// This does not allocate anything.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert_eq!(RuntimeMilli::from(0.0).as_str_pad(),     "00:00:00");
 	/// assert_eq!(RuntimeMilli::from(59.0).as_str_pad(),    "00:00:59");
 	/// assert_eq!(RuntimeMilli::from(599.0).as_str_pad(),   "00:09:59");
@@ -238,7 +238,7 @@ impl RuntimeMilli {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::run::*;
 	/// assert!(RuntimeMilli::UNKNOWN.is_unknown());
 	/// assert!(!RuntimeMilli::ZERO.is_unknown());
 	/// ```
@@ -336,10 +336,10 @@ impl RuntimeMilli {
 		buf[5] = C;
 		buf[8] = b'.';
 
-		let mut h = crate::ItoaTmp::new();
-		let mut m = crate::ItoaTmp::new();
-		let mut s = crate::ItoaTmp::new();
-		let mut i = crate::ItoaTmp::new();
+		let mut h = crate::toa::ItoaTmp::new();
+		let mut m = crate::toa::ItoaTmp::new();
+		let mut s = crate::toa::ItoaTmp::new();
+		let mut i = crate::toa::ItoaTmp::new();
 		let h = h.format(hour).as_bytes();
 		let m = m.format(min).as_bytes();
 		let s = s.format(sec).as_bytes();

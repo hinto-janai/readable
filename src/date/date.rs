@@ -96,7 +96,7 @@ pub(super) static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0
 ///
 /// Any value being `0` means it is invalid, akin to a [`None`]:
 /// ```rust
-/// # use readable::Date;
+/// # use readable::date::*;
 /// let a = Date::from_str("2020-12").unwrap();
 ///
 /// assert_eq!(a, "2020-12");
@@ -105,7 +105,7 @@ pub(super) static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0
 ///
 /// Example:
 /// ```
-/// # use readable::Date;
+/// # use readable::date::*;
 /// let (y, m, d) = (2020_u16, 12_u8, 1_u8);
 ///
 /// let d1 = Date::from_ymd(y, m, d).unwrap();
@@ -122,7 +122,7 @@ pub(super) static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0
 ///
 /// Although [`Date`] will always internally be `YYYY-MM-DD`, the input string can be any of these formats:
 /// ```rust
-/// # use readable::Date;
+/// # use readable::date::*;
 /// assert_eq!(Date::from_str("2022-12-31").unwrap(), "2022-12-31"); // YYYY-MM-DD
 /// assert_eq!(Date::from_str("2022-01-01").unwrap(), "2022-01-01"); // YYYY-M-D
 /// assert_eq!(Date::from_str("2022-12").unwrap(),    "2022-12");    // YYYY-MM
@@ -143,7 +143,7 @@ pub(super) static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0
 ///
 /// You can input a string that is _just_ numbers, or separated by a single byte, e.g:
 /// ```rust
-/// # use readable::Date;
+/// # use readable::date::*;
 /// let dates = [
 ///     Date::from_str("20201231").unwrap(),
 ///     Date::from_str("2020-12-31").unwrap(),
@@ -162,7 +162,7 @@ pub(super) static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0
 ///
 /// The separator character doesn't need to be `-` and it doesn't need to exist at all:
 /// ```rust
-/// # use readable::Date;
+/// # use readable::date::*;
 /// assert_eq!(Date::from_str("20221231").unwrap(), "2022-12-31"); // YYYYMMDD
 /// assert_eq!(Date::from_str("202212").unwrap(),   "2022-12");    // YYYYMM
 /// assert_eq!(Date::from_str("2022").unwrap(),     "2022");       // YYYY
@@ -181,7 +181,7 @@ pub(super) static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0
 ///
 /// Example:
 /// ```rust
-/// # use readable::Date;
+/// # use readable::date::*;
 /// // This could be:
 /// //   - 1111-11-11 (YMD)
 /// //   - 11-11-1111 (MDY)
@@ -211,7 +211,7 @@ pub(super) static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0
 /// [`Date`] is very lenient when parsing strings, as it will ignore trailing
 /// characters if there is a valid match in the first characters, for example:
 /// ```rust
-/// # use readable::Date;
+/// # use readable::date::*;
 /// // This is an invalid year (10,000), although the first 4 characters
 /// // extracted _are_ a valid year (1000), so this gets a pass.
 /// assert_eq!(Date::from_str("10000-57-99").unwrap(), "1000");
@@ -224,7 +224,7 @@ pub(super) static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0
 /// This leniency causes [`Date`] to parse some incorrect strings,
 /// even if it plainly looks incorrect (for convenience sake):
 /// ```rust
-/// # use readable::Date;
+/// # use readable::date::*;
 /// // trailing 0 is ignored, year 1000 is extracted
 /// let d1 = Date::from_str("10000").unwrap();
 /// // 32nd day is ignored, year.month is extracted
@@ -245,11 +245,12 @@ pub(super) static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0
 /// [`Str<10>`] is used internally to represent the string.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::date::*;
 /// assert_eq!(std::mem::size_of::<Date>(), 16);
 /// ```
 #[cfg_attr(feature = "serde",derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode",derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Date((u16, u8, u8), Str<{ Date::MAX_LEN }>);
 
@@ -259,8 +260,8 @@ impl_traits!(Date, (u16, u8, u8));
 impl Date {
 	/// The maximum string length of a [`Date`].
 	/// ```rust
-	/// # use readable::*;
-	/// assert_eq!(readable::Date::from_str("2018-04-25").unwrap().len(), Date::MAX_LEN);
+	/// # use readable::date::*;
+	/// assert_eq!(Date::from_str("2018-04-25").unwrap().len(), Date::MAX_LEN);
 	/// ```
 	pub const MAX_LEN: usize = 10;
 
@@ -272,7 +273,7 @@ impl Date {
 	/// This is the exact same as [`Self::UNKNOWN`].
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// assert_eq!(Date::ZERO, (0, 0, 0));
 	/// assert_eq!(Date::ZERO, "????-??-??");
 	/// assert_eq!(Date::ZERO, Date::UNKNOWN);
@@ -282,7 +283,7 @@ impl Date {
 	/// Returned on error situations.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// assert_eq!(Date::UNKNOWN, (0, 0, 0));
 	/// assert_eq!(Date::UNKNOWN, "????-??-??");
 	/// ```
@@ -321,7 +322,7 @@ impl Date {
 	#[must_use]
 	/// Returns `true` if the inner year is valid.
 	/// ```rust
-	/// # use readable::Date;
+	/// # use readable::date::*;
 	/// let a = Date::from_y(2022).unwrap();
 	/// let b = Date::UNKNOWN;
 	///
@@ -336,7 +337,7 @@ impl Date {
 	#[must_use]
 	/// Returns `true` if the inner month is valid.
 	/// ```rust
-	/// # use readable::Date;
+	/// # use readable::date::*;
 	/// let a = Date::from_ym(2022, 12).unwrap();
 	/// let b = Date::UNKNOWN;
 	///
@@ -351,7 +352,7 @@ impl Date {
 	#[must_use]
 	/// Returns `true` if the inner day is valid.
 	/// ```rust
-	/// # use readable::Date;
+	/// # use readable::date::*;
 	/// let a = Date::from_ymd(2022, 12, 31).unwrap();
 	/// let b = Date::UNKNOWN;
 	///
@@ -366,7 +367,7 @@ impl Date {
 	#[must_use]
 	/// Returns `true` if the inner `(year, month, day)` are all valid.
 	/// ```rust
-	/// # use readable::Date;
+	/// # use readable::date::*;
 	/// let a = Date::from_ymd(2022, 12, 31).unwrap();
 	/// let b = Date::UNKNOWN;
 	///
@@ -488,7 +489,7 @@ impl Date {
 	/// for calcualtion.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// // Christmas in 1999 was on a Saturday.
 	/// assert_eq!(
 	///     Date::from_ymd(1999, 12, 25).unwrap().weekday().unwrap().as_str(),
@@ -516,7 +517,7 @@ impl Date {
 	/// (Seconds after `January 1st, 1970 UTC`).
 	//
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// let date = Date::from_unix(1698019200).unwrap();
 	/// assert_eq!(date, "2023-10-23");
 	/// assert_eq!(date, (2023, 10, 23));
@@ -527,7 +528,7 @@ impl Date {
 	/// `unix_timestamp` is a date with a year larger than `9999` or less than `1000`.
 	///
 	/// ```rust,should_panic
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// // Would be `12732-1-28`.
 	/// Date::from_unix(339618217000).unwrap();
 	/// ```
@@ -566,7 +567,7 @@ impl Date {
 	/// - `2023-04` would equal to `2023-04-01` (April 1st, 2023)
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// let date = Date::from_ymd(2023, 10, 23).unwrap();
 	/// assert_eq!(date.as_unix(), 1698019200);
 	///
@@ -585,7 +586,7 @@ impl Date {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// let date = Date::from_ymd(2012, 10, 25).unwrap();
 	/// assert_eq!(date.as_str_year(), "2012");
 	/// ```
@@ -603,7 +604,7 @@ impl Date {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// let date = Date::from_ymd(2012, 10, 25).unwrap();
 	/// assert_eq!(date.as_str_month(), "10");
 	///
@@ -628,7 +629,7 @@ impl Date {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// let date = Date::from_ymd(2012, 10, 25).unwrap();
 	/// assert_eq!(date.as_str_day(), "25");
 	///
@@ -663,7 +664,7 @@ impl Date {
 	///
 	/// # Example
 	/// ```rust
-	/// # use readable::Date;
+	/// # use readable::date::*;
 	/// // Parsed as `YYYY-M` (2022-9)
 	/// let a = Date::from_str("2022-99-99").unwrap();
 	/// // Parsed as `YYYY-MM` (2022-03)
@@ -684,7 +685,7 @@ impl Date {
 	/// set with [`Self::UNKNOWN`] which looks like: `????-??-??`.
 	///
 	/// ```rust
-	/// # use readable::Date;
+	/// # use readable::date::*;
 	/// let a = Date::from_str("2022-3-31").unwrap();
 	/// assert!(a == "2022-03-31");
 	/// ```
@@ -1009,7 +1010,7 @@ impl Date {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::date::*;
 	/// assert!(Date::UNKNOWN.is_unknown());
 	/// ```
 	pub const fn is_unknown(&self) -> bool {
@@ -1240,8 +1241,8 @@ impl From<nichi::Date> for Date {
 	}
 }
 
-impl From<crate::Nichi> for Date {
-	fn from(value: crate::Nichi) -> Self {
+impl From<crate::date::Nichi> for Date {
+	fn from(value: crate::date::Nichi) -> Self {
 		if value.is_unknown() {
 			Self::UNKNOWN
 		} else {
@@ -1251,8 +1252,8 @@ impl From<crate::Nichi> for Date {
 	}
 }
 
-impl From<crate::NichiFull> for Date {
-	fn from(value: crate::NichiFull) -> Self {
+impl From<crate::date::NichiFull> for Date {
+	fn from(value: crate::date::NichiFull) -> Self {
 		if value.is_unknown() {
 			Self::UNKNOWN
 		} else {

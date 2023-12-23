@@ -14,7 +14,7 @@ pub trait SysDate {
 	/// ```rust
 	/// # use readable::date::*;
 	/// // Introduce trait into scope.
-	/// use readable::SysDate;
+	/// use readable::date::SysDate;
 	///
 	/// // Capture the _current_ system date,
 	/// // and format it into a `Date`.

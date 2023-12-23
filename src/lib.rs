@@ -1,7 +1,7 @@
 #![doc = include_str!("../README.md")]
 
 //---------------------------------------------------------------------------------------------------- Docs
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 //---------------------------------------------------------------------------------------------------- Lints
 #![forbid(
@@ -109,42 +109,34 @@
 
 //---------------------------------------------------------------------------------------------------- Hidden imports
 pub(crate) mod macros;
-
+// Everything relies on `str` and `toa`, so they're always enabled.
 pub mod str;
-pub use str::{
-	Str,HeadTail,
-};
-
-pub mod num;
-pub use num::{
-	Unsigned,Int,Float,Percent,
-};
+pub mod toa;
 pub(crate) use toa::Itoa64;
 
+#[cfg(feature = "borsh")]
+pub(crate) mod borsh_serde;
+
+#[cfg(feature = "num")]
+#[cfg_attr(docsrs, doc(cfg(feature = "num")))]
+pub mod num;
+
+#[cfg(feature = "run")]
+#[cfg_attr(docsrs, doc(cfg(feature = "run")))]
 pub mod run;
-pub use run::{
-	Runtime,RuntimePad,RuntimeMilli,RuntimeUnion,
-};
 
+#[cfg(feature = "up")]
+#[cfg_attr(docsrs, doc(cfg(feature = "up")))]
 pub mod up;
-pub use up::{
-	Uptime,UptimeFull,Htop,SysUptime,
-};
 
+#[cfg(feature = "time")]
+#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
 pub mod time;
-pub use time::{
-	SysTime,Time,TimeUnit,Military,
-};
 
+#[cfg(feature = "date")]
+#[cfg_attr(docsrs, doc(cfg(feature = "date")))]
 pub mod date;
-pub use date::{
-	Date,Nichi,NichiFull,SysDate,
-};
 
-pub mod toa;
-pub use toa::{
-	Itoa,ItoaTmp,Dtoa,DtoaTmp,
-};
-
+#[cfg(feature = "byte")]
+#[cfg_attr(docsrs, doc(cfg(feature = "byte")))]
 pub mod byte;
-pub use byte::Byte;

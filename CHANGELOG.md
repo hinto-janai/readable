@@ -16,7 +16,13 @@ Types of changes:
 
 
 # readable Unreleased
+## Added
+- Impl `borsh::{BorshSerialize, BorshDeserialize}` on most types
+
 ## Changed
+- Modules are now feature gated
+- Types are no longer re-exported, must be accessed through modules
+- `HeadTail` now requires `AsRef<str>`
 - `Str::invalid()` is now `const`
 - `Str::as_str()` now panics in debug mode when `Str::invalid()` returns `true`
 - `Str::from_bytes_exact()` takes `impl AsRef<[u8]>` instead of `&[u8]`

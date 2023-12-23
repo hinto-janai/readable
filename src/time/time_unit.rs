@@ -4,7 +4,7 @@ use crate::time::{Time,Military};
 use crate::macros::{
 	return_bad_float,impl_impl_math,impl_math,
 };
-use crate::Unsigned;
+use crate::num::Unsigned;
 
 //---------------------------------------------------------------------------------------------------- Use
 /// Unit of time
@@ -15,7 +15,7 @@ use crate::Unsigned;
 ///
 /// For example:
 /// ```rust
-/// # use readable::*;
+/// # use readable::time::*;
 /// assert_eq!(TimeUnit::from(1).seconds(), 1);
 /// assert_eq!(TimeUnit::from(60).minutes(), 1);
 /// assert_eq!(TimeUnit::from(3600).hours(), 1);
@@ -27,7 +27,7 @@ use crate::Unsigned;
 ///
 /// If a unit overflows it will carry over to the lower unit, for example:
 /// ```rust
-/// # use readable::*;
+/// # use readable::time::*;
 /// let unit = TimeUnit::from(
 ///     31536000 + // 1 year
 ///     5356800  + // 2 months
@@ -52,7 +52,7 @@ use crate::Unsigned;
 ///
 /// ## Size
 /// ```rust
-/// # use readable::*;
+/// # use readable::time::*;
 /// assert_eq!(std::mem::size_of::<TimeUnit>(), 12);
 /// ```
 ///
@@ -62,7 +62,7 @@ use crate::Unsigned;
 /// maintaining `unknown` variants:
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::{time::*,up::*};
 /// // Uptime
 /// let time = Uptime::from(86461);
 /// assert_eq!(time, "1d, 1m, 1s");
@@ -95,6 +95,7 @@ use crate::Unsigned;
 /// This is incorrect as not all months are 31 days long and leap years exist.
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct TimeUnit {
 	unknown: bool,
@@ -113,7 +114,7 @@ impl_math!(TimeUnit, u32);
 //---------------------------------------------------------------------------------------------------- Constants
 impl TimeUnit {
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::UNKNOWN.inner(),   0);
 	/// assert_eq!(TimeUnit::UNKNOWN.years(),   0);
 	/// assert_eq!(TimeUnit::UNKNOWN.months(),  0);
@@ -129,14 +130,14 @@ impl TimeUnit {
 	/// ```
 	pub const UNKNOWN: Self = Self { inner: 0, unknown: true, years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
 		/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::ZERO.inner(), 0);
 	/// assert_eq!(TimeUnit::ZERO, TimeUnit::from(0));
 	/// ```
 	pub const ZERO: Self = Self { inner: 0, unknown: false, years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::SECOND.inner(), 1);
 	/// assert_eq!(TimeUnit::SECOND.seconds(), 1);
 	/// assert_eq!(TimeUnit::SECOND, TimeUnit::from(1));
@@ -144,7 +145,7 @@ impl TimeUnit {
 	pub const SECOND: Self = Self { inner: 1, unknown: false, years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 1 };
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::MINUTE.inner(), 60);
 	/// assert_eq!(TimeUnit::MINUTE.minutes(), 1);
 	/// assert_eq!(TimeUnit::MINUTE, TimeUnit::from(60));
@@ -152,7 +153,7 @@ impl TimeUnit {
 	pub const MINUTE: Self = Self { inner: 60, unknown: false, years: 0, months: 0, weeks: 0, days: 0, hours: 0, minutes: 1, seconds: 0 };
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::HOUR.inner(), 3600);
 	/// assert_eq!(TimeUnit::HOUR.hours(), 1);
 	/// assert_eq!(TimeUnit::HOUR, TimeUnit::from(3600));
@@ -160,7 +161,7 @@ impl TimeUnit {
 	pub const HOUR: Self = Self { inner: 3600, unknown: false, years: 0, months: 0, weeks: 0, days: 0, hours: 1, minutes: 0, seconds: 0 };
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::DAY.inner(), 86400);
 	/// assert_eq!(TimeUnit::DAY.days(), 1);
 	/// assert_eq!(TimeUnit::DAY, TimeUnit::from(86400));
@@ -168,7 +169,7 @@ impl TimeUnit {
 	pub const DAY: Self = Self { inner: 86400, unknown: false, years: 0, months: 0, weeks: 0, days: 1, hours: 0, minutes: 0, seconds: 0 };
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::WEEK.inner(), 604800);
 	/// assert_eq!(TimeUnit::WEEK.weeks(), 1);
 	/// assert_eq!(TimeUnit::WEEK, TimeUnit::from(604800));
@@ -176,7 +177,7 @@ impl TimeUnit {
 	pub const WEEK: Self = Self { inner: 604800, unknown: false, years: 0, months: 0, weeks: 1, days: 0, hours: 0, minutes: 0, seconds: 0 };
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::MONTH.inner(), 2678400);
 	/// assert_eq!(TimeUnit::MONTH.months(), 1);
 	/// assert_eq!(TimeUnit::MONTH, TimeUnit::from(2678400));
@@ -184,7 +185,7 @@ impl TimeUnit {
 	pub const MONTH: Self = Self { inner: 2678400, unknown: false, years: 0, months: 1, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::YEAR.inner(), 31536000);
 	/// assert_eq!(TimeUnit::YEAR.years(), 1);
 	/// assert_eq!(TimeUnit::YEAR, TimeUnit::from(31536000));
@@ -192,7 +193,7 @@ impl TimeUnit {
 	pub const YEAR: Self = Self { inner: 31536000, unknown: false, years: 1, months: 0, weeks: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::MAX.inner(),   u32::MAX);
 	/// assert_eq!(TimeUnit::MAX.years(),   136);
 	/// assert_eq!(TimeUnit::MAX.months(),  2);
@@ -220,7 +221,7 @@ impl TimeUnit {
 	/// for example `62` as input would lead to `1 minute` and `2 seconds`.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// let unit = TimeUnit::from(62);
 	/// assert_eq!(unit.minutes(), 1);
 	/// assert_eq!(unit.seconds(), 2);
@@ -266,7 +267,7 @@ impl TimeUnit {
 	/// Create [`Self`] with minutes as input
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// let unit = TimeUnit::from_minutes(1);
 	/// assert_eq!(unit.inner(), 60);
 	/// ```
@@ -280,7 +281,7 @@ impl TimeUnit {
 	/// Create [`Self`] with hours as input
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// let unit = TimeUnit::from_hours(1);
 	/// assert_eq!(unit.inner(), 3_600);
 	/// ```
@@ -294,7 +295,7 @@ impl TimeUnit {
 	/// Create [`Self`] with days as input
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// let unit = TimeUnit::from_days(1);
 	/// assert_eq!(unit.inner(), 86_400);
 	/// ```
@@ -308,7 +309,7 @@ impl TimeUnit {
 	/// Create [`Self`] with weeks as input
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// let unit = TimeUnit::from_weeks(1);
 	/// assert_eq!(unit.inner(), 604_800);
 	/// ```
@@ -322,7 +323,7 @@ impl TimeUnit {
 	/// Create [`Self`] with months as input
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// let unit = TimeUnit::from_months(1);
 	/// assert_eq!(unit.inner(), 2_678_400);
 	/// ```
@@ -336,7 +337,7 @@ impl TimeUnit {
 	/// Create [`Self`] with years as input
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// let unit = TimeUnit::from_years(1);
 	/// assert_eq!(unit.inner(), 31_536_000);
 	/// ```
@@ -357,7 +358,7 @@ impl TimeUnit {
 	///
 	/// ## Examples
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// let unit = TimeUnit::new_variety(
 	///     0, // years   (0s)
 	///     1, // months  (2678400s)
@@ -381,7 +382,7 @@ impl TimeUnit {
 	///
 	/// Example of saturating inputs.
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// let unit = TimeUnit::new_variety(
 	///     172,   // years
 	///     134,   // months
@@ -433,7 +434,7 @@ impl TimeUnit {
 	///
 	/// # Example
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// let (
 	///     unknown,
 	///     inner,
@@ -497,13 +498,13 @@ impl TimeUnit {
 	/// Although all inner numbers are all set to `0`,
 	/// a flag is set internally such that:
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert!(TimeUnit::ZERO != TimeUnit::UNKNOWN);
 	/// ```
 	///
 	/// # Examples
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::{time::*,up::*};
 	/// assert!(TimeUnit::UNKNOWN.is_unknown());
 	/// assert!(TimeUnit::from(Uptime::UNKNOWN).is_unknown());
 	/// assert!(TimeUnit::from(f32::NAN).is_unknown());
@@ -516,7 +517,7 @@ impl TimeUnit {
 	/// Returns the _total_ amount of seconds this [`TimeUnit`] represents.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// let unit = TimeUnit::from(123);
 	///
 	/// assert_eq!(unit.minutes(), 2);
@@ -530,7 +531,7 @@ impl TimeUnit {
 	/// Returns the remaining amount of years this [`TimeUnit`] represents.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::from(86400 * 364).years(), 0);
 	/// assert_eq!(TimeUnit::from(86400 * 365).years(), 1);
 	/// ```
@@ -541,7 +542,7 @@ impl TimeUnit {
 	/// Returns the remaining amount of months this [`TimeUnit`] represents.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::from(86400 * 30).months(), 0);
 	/// assert_eq!(TimeUnit::from(86400 * 31).months(), 1);
 	/// ```
@@ -551,7 +552,7 @@ impl TimeUnit {
 	/// Returns the remaining amount of weeks this [`TimeUnit`] represents.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::from(86400 * 6).weeks(), 0);
 	/// assert_eq!(TimeUnit::from(86400 * 7).weeks(), 1);
 	/// ```
@@ -562,7 +563,7 @@ impl TimeUnit {
 	/// Returns the remaining amount of days this [`TimeUnit`] represents.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::from(86399).days(), 0);
 	/// assert_eq!(TimeUnit::from(86400).days(), 1);
 	/// ```
@@ -573,7 +574,7 @@ impl TimeUnit {
 	/// Returns the remaining amount of hours this [`TimeUnit`] represents.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::from(3599).hours(), 0);
 	/// assert_eq!(TimeUnit::from(3600).hours(), 1);
 	/// ```
@@ -584,7 +585,7 @@ impl TimeUnit {
 	/// Returns the remaining amount of minutes this [`TimeUnit`] represents.
 	///
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// assert_eq!(TimeUnit::from(59).minutes(), 0);
 	/// assert_eq!(TimeUnit::from(60).minutes(), 1);
 	/// ```
@@ -596,7 +597,7 @@ impl TimeUnit {
 	///
 	/// This is the _remaining_ amount of seconds, not the _total_ amount of seconds.
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::time::*;
 	/// // `0` is returned since `60` is == `1 minute`.
 	/// assert_eq!(TimeUnit::from(60).seconds(), 0);
 	/// assert_eq!(TimeUnit::from(60).minutes(), 1);

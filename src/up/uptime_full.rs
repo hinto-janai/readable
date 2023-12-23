@@ -16,7 +16,7 @@ use crate::itoa;
 /// words specifying the time will not be abbreviated
 /// and will be pluralized, e.g:
 /// ```rust
-/// # use readable::*;
+/// # use readable::up::*;
 /// assert_eq!(UptimeFull::from(0), "0 seconds");
 /// assert_eq!(UptimeFull::from(1), "1 second");
 /// assert_eq!(UptimeFull::from(2), "2 seconds");
@@ -26,13 +26,13 @@ use crate::itoa;
 /// [`Str<63>`] is used internally to represent the string.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::up::*;
 /// assert_eq!(std::mem::size_of::<UptimeFull>(), 68);
 /// ```
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::*;
+/// # use readable::up::*;
 /// assert_eq!(UptimeFull::from(0_u32),        "0 seconds");
 /// assert_eq!(UptimeFull::from(1_u32),        "1 second");
 /// assert_eq!(UptimeFull::from(2_u32),        "2 seconds");
@@ -72,6 +72,7 @@ use crate::itoa;
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct UptimeFull(pub(super) u32, pub(super) Str<{ UptimeFull::MAX_LEN }>);
 
@@ -81,70 +82,70 @@ impl_traits!(UptimeFull, u32);
 //---------------------------------------------------------------------------------------------------- Constants
 impl UptimeFull {
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// let time = "--- years, -- months, -- days, -- hours, -- minutes, -- seconds";
 	/// assert_eq!(time.len(), UptimeFull::MAX_LEN);
 	/// ```
 	pub const MAX_LEN: usize = 63;
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(UptimeFull::UNKNOWN, 0);
 	/// assert_eq!(UptimeFull::UNKNOWN, "(unknown)");
 	/// ```
 	pub const UNKNOWN: Self = Self(0, Str::from_static_str("(unknown)"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(UptimeFull::ZERO, 0);
 	/// assert_eq!(UptimeFull::ZERO, "0 seconds");
 	/// ```
 	pub const ZERO: Self = Self(0, Str::from_static_str("0 seconds"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(UptimeFull::SECOND, 1);
 	/// assert_eq!(UptimeFull::SECOND, "1 second");
 	/// ```
 	pub const SECOND: Self = Self(1, Str::from_static_str("1 second"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(UptimeFull::MINUTE, 60);
 	/// assert_eq!(UptimeFull::MINUTE, "1 minute");
 	/// ```
 	pub const MINUTE: Self = Self(60, Str::from_static_str("1 minute"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(UptimeFull::HOUR, 3600);
 	/// assert_eq!(UptimeFull::HOUR, "1 hour");
 	/// ```
 	pub const HOUR: Self = Self(3600, Str::from_static_str("1 hour"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(UptimeFull::DAY, 86400);
 	/// assert_eq!(UptimeFull::DAY, "1 day");
 	/// ```
 	pub const DAY: Self = Self(86400, Str::from_static_str("1 day"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(UptimeFull::MONTH, 86400);
 	/// assert_eq!(UptimeFull::MONTH, "1 month");
 	/// ```
 	pub const MONTH: Self = Self(86400, Str::from_static_str("1 month"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(UptimeFull::YEAR, 31_536_000);
 	/// assert_eq!(UptimeFull::YEAR, "1 year");
 	/// ```
 	pub const YEAR: Self = Self(31_536_000, Str::from_static_str("1 year"));
 
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert_eq!(UptimeFull::MAX, u32::MAX);
 	/// assert_eq!(UptimeFull::MAX, "136 years, 2 months, 8 days, 6 hours, 28 minutes, 15 seconds");
 	/// ```
@@ -160,7 +161,7 @@ impl UptimeFull {
 	#[inline]
 	#[must_use]
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// assert!(UptimeFull::UNKNOWN.is_unknown());
 	/// assert!(!UptimeFull::ZERO.is_unknown());
 	/// ```

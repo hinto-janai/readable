@@ -25,9 +25,9 @@ pub trait SysUptime: private::Sealed {
 	///
 	/// ## Example
 	/// ```rust
-	/// # use readable::*;
+	/// # use readable::up::*;
 	/// // Introduce trait into scope.
-	/// use readable::SysUptime;
+	/// use readable::up::SysUptime;
 	///
 	/// // Capture the _current_ system uptime,
 	/// // and format it into a `Uptime`.
@@ -57,6 +57,8 @@ pub trait SysUptime: private::Sealed {
 pub fn uptime() -> u32 {
 	#[cfg(target_os = "windows")]
 	{
+		use target_os_lib as windows;
+
 		// SAFETY: calling C
 		let milliseconds = unsafe { windows::Win32::System::SystemInformation::GetTickCount64() };
 		return (milliseconds as f64 / 1000.0) as u32;
@@ -64,6 +66,7 @@ pub fn uptime() -> u32 {
 
 	#[cfg(all(target_os = "unix", not(target_os = "linux")))]
 	{
+		use target_os_lib as libc;
 		use std::time::{Duration,SystemTime};
 
 		let mut request = [libc::CTL_KERN, libc::KERN_BOOTTIME];
@@ -94,6 +97,8 @@ pub fn uptime() -> u32 {
 
 	#[cfg(target_os = "linux")]
 	{
+		use target_os_lib as libc;
+
 		let mut timespec = libc::timespec {
 			tv_sec: 0,
 			tv_nsec: 0,

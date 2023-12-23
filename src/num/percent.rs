@@ -27,7 +27,7 @@ use crate::macros::{
 /// creating the [`Percent`], or converting an existing [`Percent`], for example:
 ///
 /// ```rust
-/// # use readable::Percent;
+/// # use readable::num::Percent;
 /// let f0 = Percent::new_0(3.0);
 /// let f2 = Percent::from(3.0);
 /// let f3 = Percent::new_3(3.0);
@@ -43,14 +43,14 @@ use crate::macros::{
 /// This type may or may not be heap allocated.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::num::*;
 /// assert_eq!(std::mem::size_of::<Percent>(), 32);
 /// ```
 ///
 /// ## Cloning
 /// [`Clone`] may be a heap allocation clone:
 /// ```rust
-/// # use readable::Percent;
+/// # use readable::num::Percent;
 /// // Probably cheap (stack allocated string).
 /// let a = Percent::from(100.0);
 /// let b = a.clone();
@@ -84,7 +84,7 @@ use crate::macros::{
 /// it is just calling `.inner() $OPERATOR $NUMBER`.
 ///
 /// ```rust
-/// # use readable::*;
+/// # use readable::num::*;
 /// assert_eq!(Percent::from(10.0) + 10.0, Percent::from(20.0));
 /// assert_eq!(Percent::from(10.0) - 10.0, Percent::from(0.0));
 /// assert_eq!(Percent::from(10.0) / 10.0, Percent::from(1.0));
@@ -93,14 +93,14 @@ use crate::macros::{
 /// ```
 /// Overflow example (floats don't panic in this case):
 /// ```rust
-/// # use readable::*;
+/// # use readable::num::*;
 /// let n = Percent::from(f64::MAX) + f64::MAX;
 /// assert!(n.inner().is_infinite());
 /// ```
 ///
 /// ## Examples
 /// ```rust
-/// # use readable::Percent;
+/// # use readable::num::Percent;
 /// assert_eq!(Percent::ZERO,    "0.00%");
 /// assert_eq!(Percent::UNKNOWN, "?.??%");
 ///
@@ -120,8 +120,17 @@ use crate::macros::{
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct Percent(f64, #[cfg_attr(feature = "bincode", bincode(with_serde))] CompactString);
+pub struct Percent(
+	f64,
+	#[cfg_attr(feature = "bincode", bincode(with_serde))]
+	#[cfg_attr(feature = "borsh", borsh(
+		serialize_with = "crate::borsh_serde::ser_compact_string",
+		deserialize_with = "crate::borsh_serde::de_compact_string",
+	))]
+	CompactString
+);
 
 impl_math!(Percent, f64);
 impl_traits!(Percent, f64);
