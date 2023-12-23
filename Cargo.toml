@@ -15,6 +15,7 @@ exclude = [
 	"CHANGELOG.md",
 ]
 categories = ["value-formatting"]
+rust-version = "1.71.0"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -32,25 +33,30 @@ toa     = []
 up      = ["dep:target_os_lib"]
 
 [dependencies]
-paste = { version = "1.0.14" }
+paste = { version = "1" }
 
 # (De)serialization
-serde       = { version = "1.0.193", features = ["derive"], optional = true }
+serde       = { version = "1", features = ["derive"], optional = true }
 bincode     = { version = "2.0.0-rc.3", features = ["serde", "derive"], optional = true }
-borsh       = { version = "1.3.0", features = ["derive"], optional = true }
+borsh       = { version = "1", features = ["derive"], optional = true }
 
 # Num
-compact_str = { version = "0.7.1", features = ["bytes", "serde"], optional = true }
-seq-macro   = { version = "0.3.5", optional = true }
+compact_str = { version = "0.7", features = ["bytes", "serde"], optional = true }
+seq-macro   = { version = "0.3", optional = true }
 
 # Date
-regex       = { version = "1.10.2", optional = true }
-once_cell   = { version = "1.19.0", optional = true }
-nichi       = { version = "0.5.1", optional = true }
-chrono      = { version = "0.4.31", optional = true }
+regex       = { version = "1", optional = true }
+once_cell   = { version = "1", optional = true }
+nichi       = { version = "0.5", optional = true }
+chrono      = { version = "0.4", optional = true }
 
 # Uptime
 [target.'cfg(not(windows))'.dependencies]
-target_os_lib = { package = "libc", version = "0.2.151", optional = true }
+target_os_lib = { package = "libc", version = "0.2", optional = true }
 [target.'cfg(windows)'.dependencies]
-target_os_lib = { package = "windows", version = "0.52.0", features = ["Win32_System_SystemInformation"], optional = true }
+target_os_lib = { package = "windows", version = "0.52", features = ["Win32_System_SystemInformation"], optional = true }
+
+[dev-dependencies]
+serde   = { version = "1", features = ["derive"] }
+bincode = { version = "2.0.0-rc.3", features = ["serde", "derive"] }
+borsh   = { version = "1", features = ["derive"] }

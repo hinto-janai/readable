@@ -140,4 +140,4 @@ These features are for (de)serialization.
 | `borsh`      | Enables [`borsh`](https://docs.rs/borsh)'s `BorshSerialize` & `BorshDeserialize`
 
 ## MSRV
-The Minimum Supported Rust Version is `1.70.0`.
+The Minimum Supported Rust Version is `1.71.0`.

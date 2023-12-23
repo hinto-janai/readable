@@ -7,3 +7,4 @@
 /fuzz/artifacts
 /fuzz/target
 /fuzz/corpus
+Cargo.lock

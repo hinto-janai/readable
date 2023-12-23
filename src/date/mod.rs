@@ -91,7 +91,7 @@ mod date;
 pub use date::*;
 
 mod nichi;
-pub use nichi::*;
+pub use self::nichi::*;
 
 mod nichi_full;
 pub use nichi_full::*;

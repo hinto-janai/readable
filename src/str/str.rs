@@ -1777,7 +1777,7 @@ impl<const N: usize> borsh::BorshDeserialize for Str<N> {
 	fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> borsh::io::Result<Self> {
 		let s: String = borsh::BorshDeserialize::deserialize_reader(reader)?;
 		#[allow(clippy::map_err_ignore)]
-		Self::try_from(s).map_err(|_| borsh::io::Error::other("Str::try_from() failed"))
+		Self::try_from(s).map_err(|_| borsh::io::Error::new(borsh::io::ErrorKind::Other, "Str::try_from() failed"))
 	}
 }
 

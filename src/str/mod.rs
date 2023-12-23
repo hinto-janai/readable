@@ -6,7 +6,7 @@
 //! It also contains some general string utilities.
 
 mod str;
-pub use str::Str;
+pub use self::str::Str;
 
 mod headtail;
 pub use headtail::{

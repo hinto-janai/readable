@@ -52,6 +52,7 @@ use crate::macros::{
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub struct RuntimeMilli(pub(super) f32, pub(super) Str<{ RuntimeMilli::MAX_LEN }>);
 
