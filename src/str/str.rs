@@ -1387,6 +1387,8 @@ macro_rules! impl_from_str {
 				/// // Input string is 4 in length, we can't copy it.
 				/// // There is 1 extra byte that can't fit.
 				/// assert_eq!(Str::<3>::try_from("abcd"), Err(1));
+				///
+				/// assert_eq!(Str::<3>::try_from("abc").unwrap(), "abc");
 				/// ```
 				///
 				/// ## Compile-time panic
@@ -1423,6 +1425,71 @@ impl_from_str! {
 	Rc<str>, &Rc<str>,
 	Cow<'_, str>, &Cow<'_, str>,
 	String, &String
+}
+
+/// This is a macro for now since `TryFrom<AsRef<[u8]>>` has some conflicts.
+macro_rules! impl_from_bytes {
+	($($bytes:ty),*) => {
+		$(
+			impl<const N: usize> TryFrom<$bytes> for Str<N> {
+				type Error = usize;
+
+				#[inline]
+				/// This takes in a [`[u8]`] of any length (equal to or less than N)
+				/// and will return a `Str` with that same string.
+				///
+				/// If this function fails, [`Result::Err`] is returned with how many extra bytes couldn't fit.
+				///
+				/// If the [`Err`] is `0`, that means the string was not valid UTF-8.
+				///
+				/// ```rust
+				/// # use readable::str::*;
+				/// // Input string is 4 in length, we can't copy it.
+				/// // There is 1 extra byte that can't fit.
+				/// assert_eq!(Str::<3>::try_from(b"abcd"), Err(1));
+				///
+				/// assert_eq!(Str::<3>::try_from(b"abc").unwrap(), "abc");
+				/// ```
+				///
+				/// ## Compile-time panic
+				/// This function will panic at compile time if `N > 255`.
+				/// ```rust,ignore
+				/// # use readable::str::*;
+				/// // Compile error!
+				/// Str::<256>::try_from(b"");
+				/// ```
+				fn try_from(bytes: $bytes) -> Result<Self, Self::Error> {
+					let Ok(s) = std::str::from_utf8(&bytes) else {
+						return Err(0);
+					};
+
+					Self::try_from(s)
+				}
+			}
+		)*
+	};
+}
+impl_from_bytes! {
+	&[u8],
+	Arc<[u8]>, &Arc<[u8]>,
+	Box<[u8]>, &Box<[u8]>,
+	Rc<[u8]>, &Rc<[u8]>,
+	Cow<'_, [u8]>, &Cow<'_, [u8]>,
+	Vec<u8>, &Vec<u8>
+}
+impl<const N: usize, const ARRAY: usize> TryFrom<[u8; ARRAY]> for Str<N> {
+	type Error = usize;
+	#[inline]
+	fn try_from(bytes: [u8; ARRAY]) -> Result<Self, Self::Error> {
+		TryFrom::<&[u8]>::try_from(&bytes)
+	}
+}
+impl<const N: usize, const ARRAY: usize> TryFrom<&[u8; ARRAY]> for Str<N> {
+	type Error = usize;
+	#[inline]
+	fn try_from(bytes: &[u8; ARRAY]) -> Result<Self, Self::Error> {
+		TryFrom::<&[u8]>::try_from(bytes)
+	}
 }
 
 //---------------------------------------------------------------------------------------------------- Traits
@@ -1679,6 +1746,13 @@ impl<const N: usize> std::fmt::Write for Str<N> {
 impl<const N: usize> serde::Serialize for Str<N>
 {
 	#[inline]
+	/// ```rust
+	/// # use readable::str::*;
+	///
+	/// let s: Str<5> = Str::from_str_exact("hello");
+	/// let json = serde_json::to_string(&s).unwrap();
+	/// assert_eq!(json, "\"hello\"");
+	/// ```
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: serde::Serializer
     {
@@ -1690,6 +1764,19 @@ impl<const N: usize> serde::Serialize for Str<N>
 impl<'de, const N: usize> serde::Deserialize<'de> for Str<N>
 {
 	#[inline]
+	/// ```rust
+	/// # use readable::str::*;
+	///
+	/// let s: Str<5> = Str::from_str_exact("hello");
+	/// let json = serde_json::to_string(&s).unwrap();
+	/// assert_eq!(json, "\"hello\"");
+	///
+	/// let s: Str<5> = serde_json::from_str(&json).unwrap();
+	/// assert_eq!(s, "hello");
+	///
+	/// // Too long.
+	/// assert!(serde_json::from_str::<Str<4>>(&json).is_err());
+	/// ```
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: serde::Deserializer<'de>
     {
@@ -1708,30 +1795,15 @@ impl<'de, const N: usize> serde::Deserialize<'de> for Str<N>
             fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
                 where E: de::Error,
             {
-				let v_len = v.len();
-				if v_len > N {
-					return Err(E::invalid_length(v_len, &self));
-				}
-				let mut s = Str::new();
-				s.push_str_panic(v);
-				Ok(s)
+				#[allow(clippy::map_err_ignore)]
+				Str::try_from(v).map_err(|_| E::invalid_length(v.len(), &self))
             }
 
             fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
                 where E: de::Error,
             {
-				let Ok(v) = std::str::from_utf8(v) else {
-					return Err(E::invalid_value(de::Unexpected::Bytes(v), &self));
-				};
-
-				let v_len = v.len();
-				if v_len > N {
-					return Err(E::invalid_length(v_len, &self));
-				}
-
-				let mut s = Str::new();
-				s.push_str_panic(v);
-				Ok(s)
+				#[allow(clippy::map_err_ignore)]
+				Str::try_from(v).map_err(|_| E::invalid_length(v.len(), &self))
             }
         }
 
@@ -1742,6 +1814,14 @@ impl<'de, const N: usize> serde::Deserialize<'de> for Str<N>
 #[cfg(feature = "bincode")]
 impl<const N: usize> bincode::Encode for Str<N> {
 	#[inline]
+	/// ```rust
+	/// # use readable::str::*;
+	///
+	/// let s: Str<5> = Str::from_str_exact("hello");
+	/// let config = bincode::config::standard();
+	/// let bytes = bincode::encode_to_vec(&s, config).unwrap();
+	/// assert_eq!(bytes, bincode::encode_to_vec(&"hello", config).unwrap());
+	/// ```
 	fn encode<E: bincode::enc::Encoder>(&self, encoder: &mut E) -> Result<(), bincode::error::EncodeError> {
 		bincode::Encode::encode(self.as_str(), encoder)
 	}
@@ -1750,6 +1830,20 @@ impl<const N: usize> bincode::Encode for Str<N> {
 #[cfg(feature = "bincode")]
 impl<const N: usize> bincode::Decode for Str<N> {
 	#[inline]
+	/// ```rust
+	/// # use readable::str::*;
+	///
+	/// let s: Str<5> = Str::from_str_exact("hello");
+	/// let config = bincode::config::standard();
+	/// let bytes = bincode::encode_to_vec(&s, config).unwrap();
+	/// assert_eq!(bytes, bincode::encode_to_vec(&"hello", config).unwrap());
+	///
+	/// let s: Str<5> = bincode::decode_from_slice(&bytes, config).unwrap().0;
+	/// assert_eq!(s, "hello");
+	///
+	/// // Too long.
+	/// assert!(bincode::decode_from_slice::<Str<4>, _>(&bytes, config).is_err());
+	/// ```
 	fn decode<D: bincode::de::Decoder>(decoder: &mut D) -> Result<Self, bincode::error::DecodeError> {
 		let s: String = bincode::Decode::decode(decoder)?;
 		#[allow(clippy::map_err_ignore)]
@@ -1766,6 +1860,14 @@ impl<'de, const N: usize> bincode::BorrowDecode<'de> for Str<N> {
 #[cfg(feature = "borsh")]
 impl<const N: usize> borsh::BorshSerialize for Str<N> {
 	#[inline]
+	/// ```rust
+	/// # use readable::str::*;
+	///
+	/// let s: Str<5> = Str::from_str_exact("hello");
+	///
+	/// let bytes = borsh::to_vec(&s).unwrap();
+	/// assert_eq!(bytes, borsh::to_vec(&"hello").unwrap());
+	/// ```
 	fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
 		borsh::BorshSerialize::serialize(self.as_str(), writer)
 	}
@@ -1774,6 +1876,19 @@ impl<const N: usize> borsh::BorshSerialize for Str<N> {
 #[cfg(feature = "borsh")]
 impl<const N: usize> borsh::BorshDeserialize for Str<N> {
 	#[inline]
+		/// ```rust
+	/// # use readable::str::*;
+	///
+	/// let s: Str<5> = Str::from_str_exact("hello");
+	///
+	/// let bytes = borsh::to_vec(&s).unwrap();
+	/// assert_eq!(bytes, borsh::to_vec(&"hello").unwrap());
+	///
+	/// let s: Str<5> = borsh::from_slice(&bytes).unwrap();
+	/// assert_eq!(s, "hello");
+	///
+	/// assert!(borsh::from_slice::<Str<4>>(&bytes).is_err());
+	/// ```
 	fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> borsh::io::Result<Self> {
 		let s: String = borsh::BorshDeserialize::deserialize_reader(reader)?;
 		#[allow(clippy::map_err_ignore)]

@@ -17,6 +17,7 @@ Types of changes:
 
 # readable Unreleased
 ## Added
+- Impl `TryFrom<[u8]>` for `Str`
 - Impl `borsh::{BorshSerialize, BorshDeserialize}` on most types
 
 ## Changed
@@ -29,6 +30,7 @@ Types of changes:
 
 ## Removed
 - `Str::capacity()`
+
 
 ---
 
