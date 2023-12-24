@@ -109,6 +109,7 @@ impl_serde! {
 	/// assert_eq!(json, "1000");
 	///
 	/// let this: Byte = serde_json::from_str(&json).unwrap();
+	/// assert_eq!(this, 1000);
 	/// assert_eq!(this, "1.000 KB");
 	///
 	/// // Bad bytes.
@@ -122,6 +123,7 @@ impl_serde! {
 	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
 	///
 	/// let this: Byte = bincode::decode_from_slice(&bytes, config).unwrap().0;
+	/// assert_eq!(this, 1000);
 	/// assert_eq!(this, "1.000 KB");
 	/// ```
 	borsh =>
@@ -131,6 +133,7 @@ impl_serde! {
 	/// let bytes = borsh::to_vec(&this).unwrap();
 	///
 	/// let this: Byte = borsh::from_slice(&bytes).unwrap();
+	/// assert_eq!(this, 1000);
 	/// assert_eq!(this, "1.000 KB");
 	///
 	/// // Bad bytes.

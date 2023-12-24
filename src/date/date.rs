@@ -261,6 +261,7 @@ impl_serde! {
 	/// assert_eq!(json, "[2024,1,1]");
 	///
 	/// let this: Date = serde_json::from_str(&json).unwrap();
+	/// assert_eq!(this, (2024, 1, 1));
 	/// assert_eq!(this, "2024-01-01");
 	///
 	/// // Bad bytes.
@@ -274,6 +275,7 @@ impl_serde! {
 	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
 	///
 	/// let this: Date = bincode::decode_from_slice(&bytes, config).unwrap().0;
+	/// assert_eq!(this, (2024, 1, 1));
 	/// assert_eq!(this, "2024-01-01");
 	/// ```
 	borsh =>
@@ -283,6 +285,7 @@ impl_serde! {
 	/// let bytes = borsh::to_vec(&this).unwrap();
 	///
 	/// let this: Date = borsh::from_slice(&bytes).unwrap();
+	/// assert_eq!(this, (2024, 1, 1));
 	/// assert_eq!(this, "2024-01-01");
 	///
 	/// // Bad bytes.

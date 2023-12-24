@@ -8,7 +8,7 @@ use crate::macros::{
 	impl_common,impl_not_const,
 	impl_usize,impl_isize,
 	impl_math,impl_traits,
-	impl_impl_math,
+	impl_impl_math,impl_serde,
 };
 
 //---------------------------------------------------------------------------------------------------- Percent
@@ -118,22 +118,54 @@ use crate::macros::{
 /// assert_eq!(Percent::from(-1_000_i32),  "-1,000.00%");
 /// assert_eq!(Percent::from(-10_000_i32), "-10,000.00%");
 /// ```
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
-#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct Percent(
-	f64,
-	#[cfg_attr(feature = "bincode", bincode(with_serde))]
-	#[cfg_attr(feature = "borsh", borsh(
-		serialize_with = "crate::borsh_serde::ser_compact_string",
-		deserialize_with = "crate::borsh_serde::de_compact_string",
-	))]
-	CompactString
-);
+pub struct Percent(f64, CompactString);
 
 impl_math!(Percent, f64);
 impl_traits!(Percent, f64);
+impl_serde! {
+	serde =>
+	/// ```rust
+	/// # use readable::num::*;
+	/// let this: Percent = Percent::from(1.0);
+	/// let json = serde_json::to_string(&this).unwrap();
+	/// assert_eq!(json, "1.0");
+	///
+	/// let this: Percent = serde_json::from_str(&json).unwrap();
+	/// assert_eq!(this, 1.0);
+	/// assert_eq!(this, "1.00%");
+	///
+	/// // Bad bytes.
+	/// assert!(serde_json::from_str::<Percent>(&"---").is_err());
+	/// ```
+	bincode =>
+	/// ```rust
+	/// # use readable::num::*;
+	/// let this: Percent = Percent::from(1.0);
+	/// let config = bincode::config::standard();
+	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
+	///
+	/// let this: Percent = bincode::decode_from_slice(&bytes, config).unwrap().0;
+	/// assert_eq!(this, 1.0);
+	/// assert_eq!(this, "1.00%");
+	/// ```
+	borsh =>
+	/// ```rust
+	/// # use readable::num::*;
+	/// let this: Percent = Percent::from(1.0);
+	/// let bytes = borsh::to_vec(&this).unwrap();
+	///
+	/// let this: Percent = borsh::from_slice(&bytes).unwrap();
+	/// assert_eq!(this, 1.0);
+	/// assert_eq!(this, "1.00%");
+	///
+	/// // Bad bytes.
+	/// assert!(borsh::from_slice::<Percent>(b"bad .-;[]124/ bytes").is_err());
+	/// ```
+	f64,
+	Percent,
+	from,
+}
 
 //---------------------------------------------------------------------------------------------------- Percent Constants
 impl Percent {
