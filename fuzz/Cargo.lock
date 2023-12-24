@@ -278,9 +278,8 @@ dependencies = [
 
 [[package]]
 name = "readable"
-version = "0.14.0"
+version = "0.15.0"
 dependencies = [
- "bincode",
  "chrono",
  "compact_str",
  "libc",
@@ -289,7 +288,6 @@ dependencies = [
  "paste",
  "regex",
  "seq-macro",
- "serde",
  "windows",
 ]
 

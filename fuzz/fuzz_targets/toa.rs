@@ -1,6 +1,7 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
+use readable::toa::*;
 
 fuzz_target!(|data: (
 	u64,
@@ -10,10 +11,10 @@ fuzz_target!(|data: (
 	f32,
 	f64,
 )| {
-	let _ = readable::Itoa::from(data.0);
-	let _ = readable::Itoa::from(data.1);
-	let _ = readable::Itoa::from(data.2);
-	let _ = readable::Itoa::from(data.3);
-	let _ = readable::Dtoa::from(data.4);
-	let _ = readable::Dtoa::from(data.5);
+	let _ = Itoa::from(data.0);
+	let _ = Itoa::from(data.1);
+	let _ = Itoa::from(data.2);
+	let _ = Itoa::from(data.3);
+	let _ = Dtoa::from(data.4);
+	let _ = Dtoa::from(data.5);
 });
