@@ -2,7 +2,7 @@
 use crate::str::Str;
 use crate::run::{Runtime,RuntimePad,RuntimeMilli};
 use crate::macros::{
-	impl_math,impl_impl_math,
+	impl_math,impl_impl_math,impl_serde,
 };
 
 //---------------------------------------------------------------------------------------------------- RuntimeUnion
@@ -63,9 +63,6 @@ use crate::macros::{
 /// assert_eq!(RuntimeUnion::from(f64::INFINITY).as_str_pad(),      "??:??:??");
 /// assert_eq!(RuntimeUnion::from(f32::NEG_INFINITY).as_str_milli(), "??:??:??.???");
 /// ```
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
-#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub struct RuntimeUnion {
 	pub(super) float: f32,
@@ -82,6 +79,55 @@ crate::run::runtime::impl_runtime! {
 }
 
 impl_math!(RuntimeUnion, f32);
+impl_serde! {
+	serde =>
+	/// ```rust
+	/// # use readable::run::*;
+	/// let this: RuntimeUnion = RuntimeUnion::from(111.999);
+	/// let json = serde_json::to_string(&this).unwrap();
+	/// assert_eq!(json, "111.999");
+	///
+	/// let this: RuntimeUnion = serde_json::from_str(&json).unwrap();
+	/// assert_eq!(this, 111.999);
+	/// assert_eq!(this.as_str(), "1:51");
+	/// assert_eq!(this.as_str_pad(), "00:01:51");
+	/// assert_eq!(this.as_str_milli(), "00:01:51.999");
+	///
+	/// // Bad bytes.
+	/// assert!(serde_json::from_str::<RuntimeUnion>(&"---").is_err());
+	/// ```
+	bincode =>
+	/// ```rust
+	/// # use readable::run::*;
+	/// let this: RuntimeUnion = RuntimeUnion::from(111.999);
+	/// let config = bincode::config::standard();
+	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
+	///
+	/// let this: RuntimeUnion = bincode::decode_from_slice(&bytes, config).unwrap().0;
+	/// assert_eq!(this, 111.999);
+	/// assert_eq!(this.as_str(), "1:51");
+	/// assert_eq!(this.as_str_pad(), "00:01:51");
+	/// assert_eq!(this.as_str_milli(), "00:01:51.999");
+	/// ```
+	borsh =>
+	/// ```rust
+	/// # use readable::run::*;
+	/// let this: RuntimeUnion = RuntimeUnion::from(111.999);
+	/// let bytes = borsh::to_vec(&this).unwrap();
+	///
+	/// let this: RuntimeUnion = borsh::from_slice(&bytes).unwrap();
+	/// assert_eq!(this, 111.999);
+	/// assert_eq!(this.as_str(), "1:51");
+	/// assert_eq!(this.as_str_pad(), "00:01:51");
+	/// assert_eq!(this.as_str_milli(), "00:01:51.999");
+	///
+	/// // Bad bytes.
+	/// assert!(borsh::from_slice::<RuntimeUnion>(b"bad .-;[]124/ bytes").is_err());
+	/// ```
+	f32,
+	RuntimeUnion,
+	from,
+}
 
 //---------------------------------------------------------------------------------------------------- RuntimeUnion Constants
 impl RuntimeUnion {

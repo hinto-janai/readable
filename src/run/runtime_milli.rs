@@ -2,7 +2,7 @@
 use crate::str::Str;
 use crate::run::{Runtime,RuntimePad,RuntimeUnion};
 use crate::macros::{
-	impl_common,impl_const,
+	impl_common,impl_const,impl_serde,
 	impl_traits,impl_math,impl_impl_math,
 };
 
@@ -50,9 +50,6 @@ use crate::macros::{
 /// assert_eq!(RuntimeMilli::from(f32::NAN),      "??:??:??.???");
 /// assert_eq!(RuntimeMilli::from(f64::INFINITY), "??:??:??.???");
 /// ```
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
-#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub struct RuntimeMilli(pub(super) f32, pub(super) Str<{ RuntimeMilli::MAX_LEN }>);
 
@@ -66,6 +63,49 @@ crate::run::runtime::impl_runtime! {
 }
 impl_math!(RuntimeMilli, f32);
 impl_traits!(RuntimeMilli, f32);
+impl_serde! {
+	serde =>
+	/// ```rust
+	/// # use readable::run::*;
+	/// let this: RuntimeMilli = RuntimeMilli::from(111.999);
+	/// let json = serde_json::to_string(&this).unwrap();
+	/// assert_eq!(json, "111.999");
+	///
+	/// let this: RuntimeMilli = serde_json::from_str(&json).unwrap();
+	/// assert_eq!(this, 111.999);
+	/// assert_eq!(this, "00:01:51.999");
+	///
+	/// // Bad bytes.
+	/// assert!(serde_json::from_str::<RuntimeMilli>(&"---").is_err());
+	/// ```
+	bincode =>
+	/// ```rust
+	/// # use readable::run::*;
+	/// let this: RuntimeMilli = RuntimeMilli::from(111.999);
+	/// let config = bincode::config::standard();
+	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
+	///
+	/// let this: RuntimeMilli = bincode::decode_from_slice(&bytes, config).unwrap().0;
+	/// assert_eq!(this, 111.999);
+	/// assert_eq!(this, "00:01:51.999");
+	/// ```
+	borsh =>
+	/// ```rust
+	/// # use readable::run::*;
+	/// let this: RuntimeMilli = RuntimeMilli::from(111.999);
+	/// let bytes = borsh::to_vec(&this).unwrap();
+	///
+	/// let this: RuntimeMilli = borsh::from_slice(&bytes).unwrap();
+	/// assert_eq!(this, 111.999);
+	/// assert_eq!(this, "00:01:51.999");
+	///
+	/// // Bad bytes.
+	/// assert!(borsh::from_slice::<RuntimeMilli>(b"bad .-;[]124/ bytes").is_err());
+	/// ```
+	f32,
+	RuntimeMilli,
+	from,
+}
 
 //---------------------------------------------------------------------------------------------------- RuntimeMilli Constants
 impl RuntimeMilli {
