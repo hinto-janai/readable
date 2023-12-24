@@ -2,7 +2,7 @@
 use crate::str::Str;
 use crate::macros::{
 	impl_traits,impl_common,
-	impl_const,
+	impl_const,impl_serde,
 };
 use crate::date::free::{
 	ok_year,ok,
@@ -36,13 +36,50 @@ use crate::date::Nichi; // docs
 /// assert_eq!(NichiFull::new(1999, 12, 25).unwrap(), "Saturday, December 25th, 1999");
 /// assert_eq!(NichiFull::new(2018, 4, 25).unwrap(),  "Wednesday, April 25th, 2018");
 /// ```
-#[cfg_attr(feature = "serde",derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode",derive(bincode::Encode, bincode::Decode))]
-#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct NichiFull((u16, u8, u8), Str<{ NichiFull::MAX_LEN }>);
 
 impl_traits!(NichiFull, (u16, u8, u8));
+impl_serde! {
+	serde =>
+	/// ```rust
+	/// # use readable::date::*;
+	/// let this: NichiFull = NichiFull::try_from((2024, 1, 1)).unwrap();
+	/// let json = serde_json::to_string(&this).unwrap();
+	/// assert_eq!(json, "[2024,1,1]");
+	///
+	/// let this: NichiFull = serde_json::from_str(&json).unwrap();
+	/// assert_eq!(this, "Monday, January 1st, 2024");
+	///
+	/// // Bad bytes.
+	/// assert!(serde_json::from_str::<NichiFull>(&"---").is_err());
+	/// ```
+	bincode =>
+	/// ```rust
+	/// # use readable::date::*;
+	/// let this: NichiFull = NichiFull::try_from((2024, 1, 1)).unwrap();
+	/// let config = bincode::config::standard();
+	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
+	///
+	/// let this: NichiFull = bincode::decode_from_slice(&bytes, config).unwrap().0;
+	/// assert_eq!(this, "Monday, January 1st, 2024");
+	/// ```
+	borsh =>
+	/// ```rust
+	/// # use readable::date::*;
+	/// let this: NichiFull = NichiFull::try_from((2024, 1, 1)).unwrap();
+	/// let bytes = borsh::to_vec(&this).unwrap();
+	///
+	/// let this: NichiFull = borsh::from_slice(&bytes).unwrap();
+	/// assert_eq!(this, "Monday, January 1st, 2024");
+	///
+	/// // Bad bytes.
+	/// assert!(borsh::from_slice::<NichiFull>(b"bad .-;[]124/ bytes").is_err());
+	/// ```
+	(u16, u8, u8),
+	NichiFull,
+	__new_silent,
+}
 
 //---------------------------------------------------------------------------------------------------- NichiFull Constants
 impl NichiFull {
@@ -180,6 +217,12 @@ impl NichiFull {
 		} else {
 			Self::unknown()
 		}
+	}
+
+	#[inline]
+	// Private function for serde.
+	fn __new_silent(t: (u16, u8, u8)) -> Self {
+		Self::new_silent(t.0, t.1, t.2)
 	}
 
 	#[inline]

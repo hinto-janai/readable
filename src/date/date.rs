@@ -256,7 +256,7 @@ impl_serde! {
 	serde =>
 	/// ```rust
 	/// # use readable::date::*;
-	/// let this: Date = Date::from((2024, 1, 1));
+	/// let this: Date = Date::try_from((2024, 1, 1)).unwrap();
 	/// let json = serde_json::to_string(&this).unwrap();
 	/// assert_eq!(json, "[2024,1,1]");
 	///
@@ -269,7 +269,7 @@ impl_serde! {
 	bincode =>
 	/// ```rust
 	/// # use readable::date::*;
-	/// let this: Date = Date::from((2024, 1, 1));
+	/// let this: Date = Date::try_from((2024, 1, 1)).unwrap();
 	/// let config = bincode::config::standard();
 	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
 	///
@@ -279,7 +279,7 @@ impl_serde! {
 	borsh =>
 	/// ```rust
 	/// # use readable::date::*;
-	/// let this: Date = Date::from((2024, 1, 1));
+	/// let this: Date = Date::try_from((2024, 1, 1)).unwrap();
 	/// let bytes = borsh::to_vec(&this).unwrap();
 	///
 	/// let this: Date = borsh::from_slice(&bytes).unwrap();
@@ -290,7 +290,7 @@ impl_serde! {
 	/// ```
 	(u16, u8, u8),
 	Date,
-	from,
+	__serde,
 }
 
 //---------------------------------------------------------------------------------------------------- Date Constants
@@ -512,6 +512,24 @@ impl Date {
 	pub fn from_ymd_silent(year: u16, month: u8, day: u8) -> Self {
 		if ok(year, month, day) {
 			Self::priv_ymd_num(year, month, day)
+		} else {
+			Self::UNKNOWN
+		}
+	}
+
+	#[inline]
+	// Private function for serde.
+	fn __serde(t: (u16, u8, u8)) -> Self {
+		let ok_year  = ok_year(t.0);
+		let ok_month = ok_month(t.1);
+		let ok_day   = ok_day(t.2);
+
+		if ok_year && ok_month && ok_day {
+			Self::priv_ymd_num(t.0, t.1, t.2)
+		} else if ok_year && ok_month {
+			Self::priv_ym_num(t.0, t.1)
+		} else if ok_year {
+			Self::priv_y_num(t.0)
 		} else {
 			Self::UNKNOWN
 		}
@@ -1246,25 +1264,28 @@ impl Date {
 }
 
 //---------------------------------------------------------------------------------------------------- TESTS
-impl From<(u16, u8, u8)> for Date {
+impl TryFrom<(u16, u8, u8)> for Date {
+	type Error = Self;
 	#[inline]
-	// Calls [`Self::from_ymd_silent`].
-	fn from(t: (u16, u8, u8)) -> Self {
-		Self::from_ymd_silent(t.0, t.1, t.2)
+	// Calls [`Self::from_ymd`].
+	fn try_from(t: (u16, u8, u8)) -> Result<Self, Self> {
+		Self::from_ymd(t.0, t.1, t.2)
 	}
 }
-impl From<(u16, u8)> for Date {
+impl TryFrom<(u16, u8)> for Date {
+	type Error = Self;
 	#[inline]
-	// Calls [`Self::from_ym_silent`].
-	fn from(t: (u16, u8)) -> Self {
-		Self::from_ym_silent(t.0, t.1)
+	// Calls [`Self::from_ym`].
+	fn try_from(t: (u16, u8)) -> Result<Self, Self> {
+		Self::from_ym(t.0, t.1)
 	}
 }
-impl From<u16> for Date {
+impl TryFrom<u16> for Date {
+	type Error = Self;
 	#[inline]
-	// Calls [`Self::from_y_silent`].
-	fn from(t: u16) -> Self {
-		Self::from_y_silent(t)
+	// Calls [`Self::from_y`].
+	fn try_from(t: u16) -> Result<Self, Self> {
+		Self::from_y(t)
 	}
 }
 

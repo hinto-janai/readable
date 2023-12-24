@@ -27,7 +27,6 @@ Types of changes:
 - `Str::invalid()` is now `const`
 - `Str::as_str()` now panics in debug mode when `Str::invalid()` returns `true`
 - `Str::from_bytes_exact()` takes `impl AsRef<[u8]>` instead of `&[u8]`
-- `Date::try_from` -> `Date::from`
 
 ## Removed
 - `Str::capacity()`
