@@ -402,3 +402,86 @@ macro_rules! handle_over_u32 {
 	};
 }
 pub(crate) use handle_over_u32;
+
+//---------------------------------------------------------------------------------------------------- serde impl
+// Macro to implement all the serde functions.
+macro_rules! impl_serde {
+	(
+		serde =>             // Serde test/docs
+		$(#[$serde:meta])*   //
+		bincode =>           // Bincode test/docs
+		$(#[$bincode:meta])* //
+		borsh =>             // Borsh test/docs
+		$(#[$borsh:meta])*   //
+		$inner:ty,           // Inner number representation of the string type
+		$name:ty,            // Name of the actual type being implemented on
+		$new:ident           // Constructor function
+		$(,)?
+	) => {
+		#[cfg(feature = "serde")]
+		impl serde::Serialize for $name {
+			#[inline]
+			fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+				where S: serde::Serializer
+			{
+				self.inner().serialize(serializer)
+			}
+		}
+
+		#[cfg(feature = "serde")]
+		impl<'de> serde::Deserialize<'de> for $name {
+			#[inline]
+			$(#[$serde])*
+			fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+				where D: serde::Deserializer<'de>
+			{
+				let inner: $inner = serde::Deserialize::deserialize(deserializer)?;
+				Ok(Self::$new(inner))
+			}
+		}
+
+		#[cfg(feature = "bincode")]
+		impl bincode::Encode for $name {
+			#[inline]
+			fn encode<E: bincode::enc::Encoder>(&self, encoder: &mut E) -> Result<(), bincode::error::EncodeError> {
+				self.inner().encode(encoder)
+			}
+		}
+
+		#[cfg(feature = "bincode")]
+		impl bincode::Decode for $name {
+			#[inline]
+			$(#[$bincode])*
+			fn decode<D: bincode::de::Decoder>(decoder: &mut D) -> Result<Self, bincode::error::DecodeError> {
+				let inner: $inner = bincode::Decode::decode(decoder)?;
+				Ok(Self::$new(inner))
+			}
+		}
+		#[cfg(feature = "bincode")]
+		impl<'de> bincode::BorrowDecode<'de> for $name {
+			#[inline]
+			fn borrow_decode<D: bincode::de::BorrowDecoder<'de>>(decoder: &mut D) -> Result<Self, bincode::error::DecodeError> {
+				bincode::Decode::decode(decoder)
+			}
+		}
+
+		#[cfg(feature = "borsh")]
+		impl borsh::BorshSerialize for $name {
+			#[inline]
+			fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+				self.inner().serialize(writer)
+			}
+		}
+
+		#[cfg(feature = "borsh")]
+		impl borsh::BorshDeserialize for $name {
+			#[inline]
+			$(#[$borsh])*
+			fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> borsh::io::Result<Self> {
+				let inner: $inner = borsh::BorshDeserialize::deserialize_reader(reader)?;
+				Ok(Self::$new(inner))
+			}
+		}
+	};
+}
+pub(crate) use impl_serde;
