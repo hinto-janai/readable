@@ -628,11 +628,9 @@ macro_rules! impl_nonu {
 		)*
 	}
 }
-impl_noni! {
-	NonZeroU64,&NonZeroU64,
-}
+impl_nonu!(NonZeroU64,&NonZeroU64);
 #[cfg(target_pointer_width = "64")]
-impl_noni!(NonZeroUsize,&NonZeroUsize);
+impl_nonu!(NonZeroUsize,&NonZeroUsize);
 
 //---------------------------------------------------------------------------------------------------- From `f32/f64`
 macro_rules! impl_f {

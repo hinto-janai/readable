@@ -323,46 +323,6 @@ impl RuntimeMilli {
 	}
 
 	#[inline]
-	pub(super) fn priv_from_inner(runtime: f32) -> Option<(f32, f32, f32)> {
-		// Zero Self::MAXgth_LEN.
-		if runtime <= 0.0 {
-			return Some((0.0, 0.0, 0.0));
-		}
-
-		// Return unknown if over max.
-		if runtime > Self::MAX_F32 {
-			return None;
-		}
-
-	    let mut hours = (runtime / 60.0) / 60.0;
-
-		let mut minutes = ((runtime / 60.0) % 60.0) + hours.fract();
-		// Add remainders.
-		if minutes >= 60.0 {
-			hours += 1.0;
-			minutes -= 60.0;
-		}
-
-		let mut seconds = (runtime % 60.0) + minutes.fract();
-		// Add remainders.
-		if seconds >= 60.0 {
-			minutes += 1.0;
-			seconds -= 60.0;
-			if minutes >= 60.0 {
-				hours += 1.0;
-				minutes -= 60.0;
-			}
-		}
-
-		if hours >= 100.0 {
-			hours = 99.0;
-		}
-
-
-		Some((hours, minutes, seconds))
-	}
-
-	#[inline]
 	// 0 Padding for `hh:mm:ss` according to `RuntimeMilli` rules.
 	fn format(buf: &mut [u8; Self::MAX_LEN], hour: u8, min: u8, sec: u8, milli: u16) {
 		const Z: u8 = b'0';

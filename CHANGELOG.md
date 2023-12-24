@@ -31,6 +31,9 @@ Types of changes:
 ## Removed
 - `Str::capacity()`
 
+## Fixed
+- `Int::try_from()` a `NonZeroU*`
+
 
 ---
 
