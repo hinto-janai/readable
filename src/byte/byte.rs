@@ -8,7 +8,7 @@ use std::num::{
 use crate::str::Str;
 use crate::macros::{
 	impl_traits,impl_impl_math,impl_usize,
-	impl_math, impl_common, impl_const,
+	impl_math, impl_common, impl_const, impl_serde,
 };
 
 //---------------------------------------------------------------------------------------------------- Byte
@@ -95,14 +95,51 @@ use crate::macros::{
 /// // We can still use 'a'
 /// assert_eq!(a, 100_000);
 /// ```
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
-#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Byte(u64, Str<{ Byte::MAX_LEN }>);
 
 impl_math!(Byte, u64);
 impl_traits!(Byte, u64);
+impl_serde! {
+	serde =>
+	/// ```rust
+	/// # use readable::byte::*;
+	/// let this: Byte = Byte::from(1000);
+	/// let json = serde_json::to_string(&this).unwrap();
+	/// assert_eq!(json, "1000");
+	///
+	/// let this: Byte = serde_json::from_str(&json).unwrap();
+	/// assert_eq!(this, "1.000 KB");
+	///
+	/// // Bad bytes.
+	/// assert!(serde_json::from_str::<Byte>(&"---").is_err());
+	/// ```
+	bincode =>
+	/// ```rust
+	/// # use readable::byte::*;
+	/// let this: Byte = Byte::from(1000);
+	/// let config = bincode::config::standard();
+	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
+	///
+	/// let this: Byte = bincode::decode_from_slice(&bytes, config).unwrap().0;
+	/// assert_eq!(this, "1.000 KB");
+	/// ```
+	borsh =>
+	/// ```rust
+	/// # use readable::byte::*;
+	/// let this: Byte = Byte::from(1000);
+	/// let bytes = borsh::to_vec(&this).unwrap();
+	///
+	/// let this: Byte = borsh::from_slice(&bytes).unwrap();
+	/// assert_eq!(this, "1.000 KB");
+	///
+	/// // Bad bytes.
+	/// assert!(borsh::from_slice::<Byte>(b"bad .-;[]124/ bytes").is_err());
+	/// ```
+	u64,
+	Byte,
+	from_priv,
+}
 
 //---------------------------------------------------------------------------------------------------- Constants
 /// 1 `byte`

@@ -1748,7 +1748,6 @@ impl<const N: usize> serde::Serialize for Str<N>
 	#[inline]
 	/// ```rust
 	/// # use readable::str::*;
-	///
 	/// let s: Str<5> = Str::from_str_exact("hello");
 	/// let json = serde_json::to_string(&s).unwrap();
 	/// assert_eq!(json, "\"hello\"");
@@ -1766,7 +1765,6 @@ impl<'de, const N: usize> serde::Deserialize<'de> for Str<N>
 	#[inline]
 	/// ```rust
 	/// # use readable::str::*;
-	///
 	/// let s: Str<5> = Str::from_str_exact("hello");
 	/// let json = serde_json::to_string(&s).unwrap();
 	/// assert_eq!(json, "\"hello\"");
@@ -1816,7 +1814,6 @@ impl<const N: usize> bincode::Encode for Str<N> {
 	#[inline]
 	/// ```rust
 	/// # use readable::str::*;
-	///
 	/// let s: Str<5> = Str::from_str_exact("hello");
 	/// let config = bincode::config::standard();
 	/// let bytes = bincode::encode_to_vec(&s, config).unwrap();
@@ -1832,7 +1829,6 @@ impl<const N: usize> bincode::Decode for Str<N> {
 	#[inline]
 	/// ```rust
 	/// # use readable::str::*;
-	///
 	/// let s: Str<5> = Str::from_str_exact("hello");
 	/// let config = bincode::config::standard();
 	/// let bytes = bincode::encode_to_vec(&s, config).unwrap();
@@ -1862,7 +1858,6 @@ impl<const N: usize> borsh::BorshSerialize for Str<N> {
 	#[inline]
 	/// ```rust
 	/// # use readable::str::*;
-	///
 	/// let s: Str<5> = Str::from_str_exact("hello");
 	///
 	/// let bytes = borsh::to_vec(&s).unwrap();
@@ -1878,7 +1873,6 @@ impl<const N: usize> borsh::BorshDeserialize for Str<N> {
 	#[inline]
 		/// ```rust
 	/// # use readable::str::*;
-	///
 	/// let s: Str<5> = Str::from_str_exact("hello");
 	///
 	/// let bytes = borsh::to_vec(&s).unwrap();
