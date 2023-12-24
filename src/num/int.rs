@@ -7,7 +7,7 @@ use crate::num::{
 use crate::macros::{
 	impl_common,impl_const,
 	impl_isize,impl_math,
-	impl_traits,impl_impl_math,impl_serde,
+	impl_traits,impl_impl_math,
 };
 use std::num::{
 	NonZeroU8,NonZeroU16,NonZeroU32,
@@ -100,6 +100,9 @@ use std::num::{
 /// assert!(Int::try_from(100_000.123).unwrap() == "100,000");
 /// assert!(Int::try_from(100_000.123).unwrap() == "100,000");
 /// ```
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Int(i64, Str<LEN>);
 
@@ -107,49 +110,6 @@ const LEN: usize = 26;
 
 impl_math!(Int, i64);
 impl_traits!(Int, i64);
-impl_serde! {
-	serde =>
-	/// ```rust
-	/// # use readable::num::*;
-	/// let this: Int = Int::from(-1000);
-	/// let json = serde_json::to_string(&this).unwrap();
-	/// assert_eq!(json, "-1000");
-	///
-	/// let this: Int = serde_json::from_str(&json).unwrap();
-	/// assert_eq!(this, -1000);
-	/// assert_eq!(this, "-1,000");
-	///
-	/// // Bad bytes.
-	/// assert!(serde_json::from_str::<Int>(&"---").is_err());
-	/// ```
-	bincode =>
-	/// ```rust
-	/// # use readable::num::*;
-	/// let this: Int = Int::from(-1000);
-	/// let config = bincode::config::standard();
-	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
-	///
-	/// let this: Int = bincode::decode_from_slice(&bytes, config).unwrap().0;
-	/// assert_eq!(this, -1000);
-	/// assert_eq!(this, "-1,000");
-	/// ```
-	borsh =>
-	/// ```rust
-	/// # use readable::num::*;
-	/// let this: Int = Int::from(-1000);
-	/// let bytes = borsh::to_vec(&this).unwrap();
-	///
-	/// let this: Int = borsh::from_slice(&bytes).unwrap();
-	/// assert_eq!(this, -1000);
-	/// assert_eq!(this, "-1,000");
-	///
-	/// // Bad bytes.
-	/// assert!(borsh::from_slice::<Int>(b"bad .-;[]124/ bytes").is_err());
-	/// ```
-	i64,
-	Int,
-	from,
-}
 
 //---------------------------------------------------------------------------------------------------- Int Constants
 impl Int {
@@ -628,9 +588,11 @@ macro_rules! impl_nonu {
 		)*
 	}
 }
-impl_nonu!(NonZeroU64,&NonZeroU64);
+impl_noni! {
+	NonZeroU64,&NonZeroU64,
+}
 #[cfg(target_pointer_width = "64")]
-impl_nonu!(NonZeroUsize,&NonZeroUsize);
+impl_noni!(NonZeroUsize,&NonZeroUsize);
 
 //---------------------------------------------------------------------------------------------------- From `f32/f64`
 macro_rules! impl_f {
@@ -733,5 +695,46 @@ mod tests {
 		assert_eq!(Int::try_from(f64::NAN),          Err(Int::UNKNOWN));
 		assert_eq!(Int::try_from(f64::INFINITY),     Err(Int::UNKNOWN));
 		assert_eq!(Int::try_from(f64::NEG_INFINITY), Err(Int::UNKNOWN));
+	}
+
+	#[test]
+	#[cfg(feature = "serde")]
+	fn serde() {
+		let this: Int = Int::from(-1000);
+		let json = serde_json::to_string(&this).unwrap();
+		assert_eq!(json, r#"[-1000,"-1,000"]"#);
+
+		let this: Int = serde_json::from_str(&json).unwrap();
+		assert_eq!(this, -1000);
+		assert_eq!(this, "-1,000");
+
+		// Bad bytes.
+		assert!(serde_json::from_str::<Int>(&"---").is_err());
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn bincode() {
+		let this: Int = Int::from(-1000);
+		let config = bincode::config::standard();
+		let bytes = bincode::encode_to_vec(&this, config).unwrap();
+
+		let this: Int = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert_eq!(this, -1000);
+		assert_eq!(this, "-1,000");
+	}
+
+	#[test]
+	#[cfg(feature = "borsh")]
+	fn borsh() {
+		let this: Int = Int::from(-1000);
+		let bytes = borsh::to_vec(&this).unwrap();
+
+		let this: Int = borsh::from_slice(&bytes).unwrap();
+		assert_eq!(this, -1000);
+		assert_eq!(this, "-1,000");
+
+		// Bad bytes.
+		assert!(borsh::from_slice::<Int>(b"bad .-;[]124/ bytes").is_err());
 	}
 }

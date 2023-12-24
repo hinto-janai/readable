@@ -1,5 +1,7 @@
 use std::fmt;
 use std::borrow::Cow;
+#[allow(unused_imports)] // docs
+use std::fmt::Display;
 
 //---------------------------------------------------------------------------------------------------- Impl
 impl<T: AsRef<str>> HeadTail for T {}

@@ -23,6 +23,7 @@ Types of changes:
 ## Changed
 - Modules are now feature gated
 - Types are no longer re-exported, must be accessed through modules
+- `Float` and `Percent` now use `Str` internally, allows `const`, fixed-size stack usage, and `Copy`
 - `HeadTail` now requires `AsRef<str>`
 - `Str::invalid()` is now `const`
 - `Str::as_str()` now panics in debug mode when `Str::invalid()` returns `true`

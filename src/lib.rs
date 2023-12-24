@@ -114,9 +114,6 @@ pub mod str;
 pub mod toa;
 pub(crate) use toa::Itoa64;
 
-#[cfg(feature = "borsh")]
-pub(crate) mod borsh_serde;
-
 #[cfg(feature = "num")]
 #[cfg_attr(docsrs, doc(cfg(feature = "num")))]
 pub mod num;

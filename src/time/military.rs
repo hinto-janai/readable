@@ -5,7 +5,7 @@ use crate::time::Time;
 use crate::macros::{
 	impl_common,impl_const,
 	impl_traits,impl_usize,impl_math,impl_impl_math,
-	handle_over_u32,impl_serde
+	handle_over_u32,
 };
 
 //---------------------------------------------------------------------------------------------------- Military
@@ -71,54 +71,14 @@ use crate::macros::{
 /// assert_eq!(Military::from((3600 * 24) + 3599), "00:59:59");
 /// assert_eq!(Military::from((3600 * 24) + 1830), "00:30:30");
 /// ```
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Military(pub(super) u32, pub(super) Str<{ Military::MAX_LEN }>);
 
 impl_traits!(Military, u32);
 impl_math!(Military, u32);
-impl_serde! {
-	serde =>
-	/// ```rust
-	/// # use readable::time::*;
-	/// let this: Military = Military::from(3599);
-	/// let json = serde_json::to_string(&this).unwrap();
-	/// assert_eq!(json, "3599");
-	///
-	/// let this: Military = serde_json::from_str(&json).unwrap();
-	/// assert_eq!(this, 3599);
-	/// assert_eq!(this, "00:59:59");
-	///
-	/// // Bad bytes.
-	/// assert!(serde_json::from_str::<Military>(&"---").is_err());
-	/// ```
-	bincode =>
-	/// ```rust
-	/// # use readable::time::*;
-	/// let this: Military = Military::from(3599);
-	/// let config = bincode::config::standard();
-	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
-	///
-	/// let this: Military = bincode::decode_from_slice(&bytes, config).unwrap().0;
-	/// assert_eq!(this, 3599);
-	/// assert_eq!(this, "00:59:59");
-	/// ```
-	borsh =>
-	/// ```rust
-	/// # use readable::time::*;
-	/// let this: Military = Military::from(3599);
-	/// let bytes = borsh::to_vec(&this).unwrap();
-	///
-	/// let this: Military = borsh::from_slice(&bytes).unwrap();
-	/// assert_eq!(this, 3599);
-	/// assert_eq!(this, "00:59:59");
-	///
-	/// // Bad bytes.
-	/// assert!(borsh::from_slice::<Military>(b"bad .-;[]124/ bytes").is_err());
-	/// ```
-	u32,
-	Military,
-	from,
-}
 
 //---------------------------------------------------------------------------------------------------- Military Constants
 impl Military {
@@ -432,109 +392,48 @@ impl From<&Military> for std::time::Duration {
 }
 
 //---------------------------------------------------------------------------------------------------- TESTS
-// #[cfg(test)]
-// mod tests {
-// 	use super::*;
+#[cfg(test)]
+mod tests {
+	use super::*;
 
-// 	#[test]
-// 	fn _format_hms() {
-// 		fn s(b: &[u8]) -> &str {
-// 			std::str::from_utf8(&b).unwrap()
-// 		}
+	#[test]
+	#[cfg(feature = "serde")]
+	fn serde() {
+		let this: Military = Military::from(3599);
+		let json = serde_json::to_string(&this).unwrap();
+		assert_eq!(json, r#"[3599,"00:59:59"]"#);
 
-// 		let mut buf = [0; Military::MAX_LEN];
-// 		let buf = &mut buf;
+		let this: Military = serde_json::from_str(&json).unwrap();
+		assert_eq!(this, 3599);
+		assert_eq!(this, "00:59:59");
 
-// 		// 0:0:0
-// 		Military::format(buf, 1, 1, 1);
-// 		assert_eq!(s(buf), "01:01:01");
+		// Bad bytes.
+		assert!(serde_json::from_str::<Military>(&"---").is_err());
+	}
 
-// 		// 0:00:0
-// 		Military::format(buf, 1, 10, 1);
-// 		assert_eq!(s(buf), "01:10:01");
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn bincode() {
+		let this: Military = Military::from(3599);
+		let config = bincode::config::standard();
+		let bytes = bincode::encode_to_vec(&this, config).unwrap();
 
-// 		// 0:0:00
-// 		Military::format(buf, 1, 1, 10);
-// 		assert_eq!(s(buf), "01:01:10");
+		let this: Military = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert_eq!(this, 3599);
+		assert_eq!(this, "00:59:59");
+	}
 
-// 		// 0:00:00
-// 		Military::format(buf, 1, 10, 10);
-// 		assert_eq!(s(buf), "01:10:10");
+	#[test]
+	#[cfg(feature = "borsh")]
+	fn borsh() {
+		let this: Military = Military::from(3599);
+		let bytes = borsh::to_vec(&this).unwrap();
 
-// 		// 00:0:0
-// 		Military::format(buf, 10, 1, 1);
-// 		assert_eq!(s(buf), "10:01:01");
+		let this: Military = borsh::from_slice(&bytes).unwrap();
+		assert_eq!(this, 3599);
+		assert_eq!(this, "00:59:59");
 
-// 		// 00:00:0
-// 		Military::format(buf, 10, 10, 1);
-// 		assert_eq!(s(buf), "10:10:01");
-
-// 		// 00:0:00
-// 		Military::format(buf, 10, 1, 10);
-// 		assert_eq!(s(buf), "10:01:10");
-
-// 		// 00:00:00
-// 		Military::format(buf, 10, 10, 10);
-// 		assert_eq!(s(buf), "10:10:10");
-
-// 		// 0:0
-// 		Military::format(buf, 0, 1, 1);
-// 		assert_eq!(s(buf), "00:01:01");
-
-// 		// 00:0
-// 		Military::format(buf, 0, 10, 1);
-// 		assert_eq!(s(buf), "00:10:01");
-
-// 		// 0:00
-// 		Military::format(buf, 0, 1, 10);
-// 		assert_eq!(s(buf), "00:01:10");
-
-// 		// 00:00
-// 		Military::format(buf, 0, 10, 10);
-// 		assert_eq!(s(buf), "00:10:10");
-// 	}
-
-// 	#[test]
-// 	fn all_uint() {
-// 		for i in 0..Military::MAX_F32 as u32 {
-// 			let rt = Military::from(i);
-// 			println!("rt:{} - i: {}", rt, i);
-// 			assert_eq!(rt.inner() as u32, i);
-// 			assert_eq!(rt.inner() as u32, i);
-// 			println!("{}", rt);
-// 		}
-// 	}
-
-// 	#[test]
-// 	fn all_floats() {
-// 		let mut f = 0;
-// 		while f <= Military::MAX_F32 {
-// 			let rt = Military::from(f);
-// 			println!("rt: {} - f: {}", rt.inner(), f);
-// 			assert_eq!(rt, f);
-// 			f += 0.1;
-// 		}
-// 	}
-
-// 	#[test]
-// 	fn overflow_float() {
-// 		assert_eq!(Military::from(Military::MAX_F32 + 1.0), 0);
-// 		assert_eq!(Military::from(Military::MAX_F32 + 1.0), Military::unknown());
-// 	}
-
-// 	#[test]
-// 	fn overflow_uint() {
-// 		assert_eq!(Military::from(Military::MAX_F32 + 1.0), 0);
-// 		assert_eq!(Military::from(Military::MAX_F32 + 1.0), Military::unknown());
-// 	}
-
-// 	#[test]
-// 	fn special() {
-// 		assert_eq!(Military::from(f32::NAN),          Military::unknown());
-// 		assert_eq!(Military::from(f32::INFINITY),     Military::unknown());
-// 		assert_eq!(Military::from(f32::NEG_INFINITY), Military::unknown());
-// 		assert_eq!(Military::from(f64::NAN),          Military::unknown());
-// 		assert_eq!(Military::from(f64::INFINITY),     Military::unknown());
-// 		assert_eq!(Military::from(f64::NEG_INFINITY), Military::unknown());
-// 	}
-// }
+		// Bad bytes.
+		assert!(borsh::from_slice::<Military>(b"bad .-;[]124/ bytes").is_err());
+	}
+}

@@ -3,11 +3,12 @@ use compact_str::{format_compact,CompactString};
 use crate::num::constants::{NAN,INFINITY};
 use crate::macros::{
 	return_bad_float,str_u64,str_i64,
-	impl_common,impl_not_const,
+	impl_common,impl_const,
 	impl_usize,impl_isize,
 	impl_math,impl_traits,
-	impl_impl_math,impl_serde,
+	impl_impl_math,
 };
+use crate::str::Str;
 #[allow(unused_imports)]
 use crate::num::{Int,Unsigned}; // docs
 
@@ -39,35 +40,36 @@ use crate::num::{Int,Unsigned}; // docs
 ///
 /// [`Float`] internally converts to a `u64` to add commas and as such
 /// the maximum input values for [`Float`] before it starts becoming
-/// inaccurate is somewhere right before [`u64::MAX`].
+/// inaccurate is around 14 decimal points (to the left and right combined).
 ///
 /// Formatting [`Float`] is also quite slower than [`Unsigned`] and [`Int`].
 ///
 /// ## Size
-/// This type may or may not be heap allocated.
+/// [`Str<20>`] is used internally to represent the string.
 ///
 /// ```rust
 /// # use readable::num::*;
 /// assert_eq!(std::mem::size_of::<Float>(), 32);
 /// ```
 ///
-/// ## Cloning
-/// [`Clone`] may be a heap allocation clone:
-/// ```rust
-/// # use readable::num::Float;
-/// // Stack allocated string.
-/// let a = Float::from(100.0);
-/// let b = a.clone();
-///
-/// // Heap allocated string.
-/// let a = Float::from(f64::MAX);
-/// let b = a.clone();
-/// ```
+/// ## Copy
+/// [`Copy`] is available.
 ///
 /// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
-/// but a [`CompactString`](https://docs.rs/compact_str) so that any string 24 bytes (12 bytes on 32-bit) or less are _stack_ allocated instead of _heap_ allocated.
+/// but a 22 byte array string, literally: [`Str<22>`].
 ///
-/// The documentation will still refer to the inner string as a `String`. Anything returned will also be a `String`.
+/// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also either a [`String`].
+/// ```rust
+/// # use readable::num::Float;
+/// let a = Float::from(100_000.0);
+///
+/// // Copy 'a', use 'b'.
+/// let b = a;
+/// assert!(b == 100_000.0);
+///
+/// // We can still use 'a'
+/// assert!(a == 100_000.0);
+/// ```
 ///
 /// ## Float Errors
 /// Inputting [`f64::NAN`], [`f64::INFINITY`], [`f64::NEG_INFINITY`] or the [`f32`] variants returns errors
@@ -104,54 +106,16 @@ use crate::num::{Int,Unsigned}; // docs
 /// // To prevent that, use 4 point.
 /// assert_eq!(Float::from_4(1234.5678), "1,234.5678");
 /// ```
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct Float(f64, CompactString);
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
+pub struct Float(f64, Str<{ Float::MAX_LEN }>);
+
+const LEN: usize = 22; // 14 decimal point accuracy + 8 extra chars
 
 impl_math!(Float, f64);
 impl_traits!(Float, f64);
-impl_serde! {
-	serde =>
-	/// ```rust
-	/// # use readable::num::*;
-	/// let this: Float = Float::from(1.0);
-	/// let json = serde_json::to_string(&this).unwrap();
-	/// assert_eq!(json, "1.0");
-	///
-	/// let this: Float = serde_json::from_str(&json).unwrap();
-	/// assert_eq!(this, 1.0);
-	/// assert_eq!(this, "1.000");
-	///
-	/// // Bad bytes.
-	/// assert!(serde_json::from_str::<Float>(&"---").is_err());
-	/// ```
-	bincode =>
-	/// ```rust
-	/// # use readable::num::*;
-	/// let this: Float = Float::from(1.0);
-	/// let config = bincode::config::standard();
-	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
-	///
-	/// let this: Float = bincode::decode_from_slice(&bytes, config).unwrap().0;
-	/// assert_eq!(this, 1.0);
-	/// assert_eq!(this, "1.000");
-	/// ```
-	borsh =>
-	/// ```rust
-	/// # use readable::num::*;
-	/// let this: Float = Float::from(1.0);
-	/// let bytes = borsh::to_vec(&this).unwrap();
-	///
-	/// let this: Float = borsh::from_slice(&bytes).unwrap();
-	/// assert_eq!(this, 1.0);
-	/// assert_eq!(this, "1.000");
-	///
-	/// // Bad bytes.
-	/// assert!(borsh::from_slice::<Float>(b"bad .-;[]124/ bytes").is_err());
-	/// ```
-	f64,
-	Float,
-	from,
-}
 
 //---------------------------------------------------------------------------------------------------- Float Constants
 impl Float {
@@ -160,28 +124,36 @@ impl Float {
 	/// assert_eq!(Float::ZERO, 0.0);
 	/// assert_eq!(Float::ZERO, "0.000");
 	/// ```
-	pub const ZERO: Self = Self(0.0, CompactString::new_inline("0.000"));
+	pub const ZERO: Self = Self(0.0, Str::from_static_str("0.000"));
 
 	/// ```rust
 	/// # use readable::num::*;
 	/// assert_eq!(Float::NAN, "NaN");
 	/// assert!(Float::NAN.is_nan());
 	/// ```
-	pub const NAN: Self = Self(f64::NAN, CompactString::new_inline(NAN));
+	pub const NAN: Self = Self(f64::NAN, Str::from_static_str(NAN));
 
 	/// ```rust
 	/// # use readable::num::*;
 	/// assert_eq!(Float::INFINITY, "inf");
 	/// assert!(Float::INFINITY.is_infinite());
 	/// ```
-	pub const INFINITY: Self = Self(f64::INFINITY, CompactString::new_inline(INFINITY));
+	pub const INFINITY: Self = Self(f64::INFINITY, Str::from_static_str(INFINITY));
 
 	/// ```rust
 	/// # use readable::num::*;
 	/// assert_eq!(Float::UNKNOWN, 0.0);
 	/// assert_eq!(Float::UNKNOWN, "?.???");
 	/// ```
-	pub const UNKNOWN: Self = Self(0.0, CompactString::new_inline("?.???"));
+	pub const UNKNOWN: Self = Self(0.0, Str::from_static_str("?.???"));
+
+	/// The maximum string length of a [`Float`].
+	///
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Float::MAX_LEN, 22);
+	/// ```
+	pub const MAX_LEN: usize = LEN;
 }
 
 //---------------------------------------------------------------------------------------------------- Float Impl
@@ -195,7 +167,14 @@ macro_rules! impl_new {
 				return_bad_float!(f, Self::NAN, Self::INFINITY);
 
 				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
-				Self(f, format_compact!("{}.{}", str_u64!(f as u64), fract))
+				let string = format_compact!("{}.{}", str_u64!(f as u64), fract);
+				if string.len() > Self::MAX_LEN {
+					Self::UNKNOWN
+				} else {
+					let mut s = Str::new();
+					s.push_str_panic(string);
+					Self(f, s)
+				}
 			}
 		}
 	}
@@ -203,7 +182,7 @@ macro_rules! impl_new {
 
 impl Float {
 	impl_common!(f64);
-	impl_not_const!();
+	impl_const!();
 	impl_usize!();
 	impl_isize!();
 
@@ -223,6 +202,17 @@ impl Float {
 
 	#[inline]
 	#[must_use]
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert!(Float::UNKNOWN.is_unknown());
+	/// assert!(!Float::ZERO.is_unknown());
+	/// ```
+	pub const fn is_unknown(&self) -> bool {
+		matches!(self.as_str().as_bytes(), b"?.???")
+	}
+
+	#[inline]
+	#[must_use]
 	/// Same as [`Float::from`] but with no floating point on the inner [`String`].
 	///
 	/// The inner [`f64`] stays the same as the input.
@@ -237,7 +227,14 @@ impl Float {
 	/// | 100.1  | `100`
 	pub fn from_0(f: f64) -> Self {
 		return_bad_float!(f, Self::NAN, Self::INFINITY);
-		Self(f, CompactString::from(str_u64!(f as u64)))
+		let string = crate::num::Unsigned::from_priv_inner(f as u64);
+		if string.len() > Self::MAX_LEN {
+			Self::UNKNOWN
+		} else {
+			let mut s = Str::new();
+			s.push_str_panic(string);
+			Self(f, s)
+		}
 	}
 
 	seq_macro::seq!(N in 1..=14 {
@@ -253,7 +250,14 @@ macro_rules! impl_u {
 			impl From<$number> for Float {
 				#[inline]
 				fn from(number: $number) -> Self {
-					Self(number as f64, format_compact!("{}.000", str_u64!(number as u64)))
+					let string = format_compact!("{}.000", str_u64!(number as u64));
+					if string.len() > Self::MAX_LEN {
+						Self::UNKNOWN
+					} else {
+						let mut s = Str::new();
+						s.push_str_panic(string);
+						Self(number as f64, s)
+					}
 				}
 			}
 		)*
@@ -268,7 +272,14 @@ macro_rules! impl_i {
 			impl From<$number> for Float {
 				#[inline]
 				fn from(number: $number) -> Self {
-					Self(number as f64, format_compact!("{}.000", str_i64!(number as i64)))
+					let string = format_compact!("{}.000", str_i64!(number as i64));
+					if string.len() > Self::MAX_LEN {
+						Self::UNKNOWN
+					} else {
+						let mut s = Str::new();
+						s.push_str_panic(string);
+						Self(number as f64, s)
+					}
 				}
 			}
 		)*
@@ -292,8 +303,14 @@ impl From<f64> for Float {
 		return_bad_float!(f, Self::NAN, Self::INFINITY);
 
 		let fract = &format_compact!("{:.3}", f.fract())[2..];
-
-		Self(f, format_compact!("{}.{}", str_u64!(f as u64), fract))
+		let string = format_compact!("{}.{}", str_u64!(f as u64), fract);
+		if string.len() > Self::MAX_LEN {
+			Self::UNKNOWN
+		} else {
+			let mut s = Str::new();
+			s.push_str_panic(string);
+			Self(f, s)
+		}
 	}
 }
 
@@ -335,5 +352,46 @@ mod tests {
 		assert_eq!(Float::from_12(0.000000000001),   "0.000000000001");
 		assert_eq!(Float::from_13(0.0000000000001),  "0.0000000000001");
 		assert_eq!(Float::from_14(0.00000000000001), "0.00000000000001");
+	}
+
+	#[test]
+	#[cfg(feature = "serde")]
+	fn serde() {
+		let this: Float = Float::from(1.0);
+		let json = serde_json::to_string(&this).unwrap();
+		assert_eq!(json, r#"[1.0,"1.000"]"#);
+
+		let this: Float = serde_json::from_str(&json).unwrap();
+		assert_eq!(this, 1.0);
+		assert_eq!(this, "1.000");
+
+		// Bad bytes.
+		assert!(serde_json::from_str::<Float>(&"---").is_err());
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn bincode() {
+		let this: Float = Float::from(1.0);
+		let config = bincode::config::standard();
+		let bytes = bincode::encode_to_vec(&this, config).unwrap();
+
+		let this: Float = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert_eq!(this, 1.0);
+		assert_eq!(this, "1.000");
+	}
+
+	#[test]
+	#[cfg(feature = "borsh")]
+	fn borsh() {
+		let this: Float = Float::from(1.0);
+		let bytes = borsh::to_vec(&this).unwrap();
+
+		let this: Float = borsh::from_slice(&bytes).unwrap();
+		assert_eq!(this, 1.0);
+		assert_eq!(this, "1.000");
+
+		// Bad bytes.
+		assert!(borsh::from_slice::<Float>(b"bad .-;[]124/ bytes").is_err());
 	}
 }

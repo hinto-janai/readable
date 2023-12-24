@@ -4,7 +4,7 @@ use crate::run::{RuntimePad,RuntimeMilli,RuntimeUnion};
 use crate::macros::{
 	impl_common,impl_const,
 	impl_traits,impl_usize,impl_math,
-	impl_impl_math,impl_serde,
+	impl_impl_math,
 };
 
 //---------------------------------------------------------------------------------------------------- Runtime
@@ -44,6 +44,9 @@ use crate::macros::{
 /// assert_eq!(Runtime::from(f32::NAN),      "?:??");
 /// assert_eq!(Runtime::from(f64::INFINITY), "?:??");
 /// ```
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub struct Runtime(pub(super) f32, pub(super) Str<{ Runtime::MAX_LEN }>);
 
@@ -57,49 +60,6 @@ impl_runtime! { // This macro is defined below.
 }
 impl_math!(Runtime, f32);
 impl_traits!(Runtime, f32);
-impl_serde! {
-	serde =>
-	/// ```rust
-	/// # use readable::run::*;
-	/// let this: Runtime = Runtime::from(111.999);
-	/// let json = serde_json::to_string(&this).unwrap();
-	/// assert_eq!(json, "111.999");
-	///
-	/// let this: Runtime = serde_json::from_str(&json).unwrap();
-	/// assert_eq!(this, 111.999);
-	/// assert_eq!(this, "1:51");
-	///
-	/// // Bad bytes.
-	/// assert!(serde_json::from_str::<Runtime>(&"---").is_err());
-	/// ```
-	bincode =>
-	/// ```rust
-	/// # use readable::run::*;
-	/// let this: Runtime = Runtime::from(111.999);
-	/// let config = bincode::config::standard();
-	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
-	///
-	/// let this: Runtime = bincode::decode_from_slice(&bytes, config).unwrap().0;
-	/// assert_eq!(this, 111.999);
-	/// assert_eq!(this, "1:51");
-	/// ```
-	borsh =>
-	/// ```rust
-	/// # use readable::run::*;
-	/// let this: Runtime = Runtime::from(111.999);
-	/// let bytes = borsh::to_vec(&this).unwrap();
-	///
-	/// let this: Runtime = borsh::from_slice(&bytes).unwrap();
-	/// assert_eq!(this, 111.999);
-	/// assert_eq!(this, "1:51");
-	///
-	/// // Bad bytes.
-	/// assert!(borsh::from_slice::<Runtime>(b"bad .-;[]124/ bytes").is_err());
-	/// ```
-	f32,
-	Runtime,
-	from,
-}
 
 //---------------------------------------------------------------------------------------------------- Runtime Constants
 impl Runtime {
@@ -751,5 +711,46 @@ mod tests {
 		assert_eq!(Runtime::from(f64::NAN),          Runtime::UNKNOWN);
 		assert_eq!(Runtime::from(f64::INFINITY),     Runtime::UNKNOWN);
 		assert_eq!(Runtime::from(f64::NEG_INFINITY), Runtime::UNKNOWN);
+	}
+
+	#[test]
+	#[cfg(feature = "serde")]
+	fn serde() {
+		let this: Runtime = Runtime::from(111.999);
+		let json = serde_json::to_string(&this).unwrap();
+		assert_eq!(json, r#"[111.999,"1:51"]"#);
+
+		let this: Runtime = serde_json::from_str(&json).unwrap();
+		assert_eq!(this, 111.999);
+		assert_eq!(this, "1:51");
+
+		// Bad bytes.
+		assert!(serde_json::from_str::<Runtime>(&"---").is_err());
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn bincode() {
+		let this: Runtime = Runtime::from(111.999);
+		let config = bincode::config::standard();
+		let bytes = bincode::encode_to_vec(&this, config).unwrap();
+
+		let this: Runtime = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert_eq!(this, 111.999);
+		assert_eq!(this, "1:51");
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn borsh() {
+		let this: Runtime = Runtime::from(111.999);
+		let bytes = borsh::to_vec(&this).unwrap();
+
+		let this: Runtime = borsh::from_slice(&bytes).unwrap();
+		assert_eq!(this, 111.999);
+		assert_eq!(this, "1:51");
+
+		// Bad bytes.
+		assert!(borsh::from_slice::<Runtime>(b"bad .-;[]124/ bytes").is_err());
 	}
 }

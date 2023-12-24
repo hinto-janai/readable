@@ -449,4 +449,45 @@ mod tests {
 		assert_eq!(Htop::from(f64::INFINITY),     Htop::UNKNOWN);
 		assert_eq!(Htop::from(f64::NEG_INFINITY), Htop::UNKNOWN);
 	}
+
+	#[test]
+	#[cfg(feature = "serde")]
+	fn serde() {
+		let this: Htop = Htop::from(8726400_u32);
+		let json = serde_json::to_string(&this).unwrap();
+		assert_eq!(json, r#"[8726400,"101 days(!), 00:00:00"]"#);
+
+		let this: Htop = serde_json::from_str(&json).unwrap();
+		assert_eq!(this, 8726400_u32);
+		assert_eq!(this, "101 days(!), 00:00:00");
+
+		// Bad bytes.
+		assert!(serde_json::from_str::<Htop>(&"---").is_err());
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn bincode() {
+		let this: Htop = Htop::from(8726400_u32);
+		let config = bincode::config::standard();
+		let bytes = bincode::encode_to_vec(&this, config).unwrap();
+
+		let this: Htop = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert_eq!(this, 8726400_u32);
+		assert_eq!(this, "101 days(!), 00:00:00");
+	}
+
+	#[test]
+	#[cfg(feature = "borsh")]
+	fn borsh() {
+		let this: Htop = Htop::from(8726400_u32);
+		let bytes = borsh::to_vec(&this).unwrap();
+
+		let this: Htop = borsh::from_slice(&bytes).unwrap();
+		assert_eq!(this, 8726400_u32);
+		assert_eq!(this, "101 days(!), 00:00:00");
+
+		// Bad bytes.
+		assert!(borsh::from_slice::<Htop>(b"bad .-;[]124/ bytes").is_err());
+	}
 }

@@ -7,7 +7,7 @@ use crate::num::{
 use crate::macros::{
 	impl_common,impl_const,
 	impl_usize,impl_math,
-	impl_traits,impl_impl_math,impl_serde,
+	impl_traits,impl_impl_math,
 };
 use std::num::{
 	NonZeroU8,NonZeroU16,NonZeroU32,
@@ -124,56 +124,16 @@ use std::num::{
 /// assert_eq!(Unsigned::try_from(1_000_000_i64),  Ok(Unsigned::from(1_000_000_u32)));
 /// assert_eq!(Unsigned::try_from(-1_000_000_i64), Err(Unsigned::UNKNOWN));
 /// ```
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub struct Unsigned(u64, Str<LEN>);
+pub struct Unsigned(u64, Str<{ Unsigned::MAX_LEN }>);
 
 const LEN: usize = 26;
 
 impl_math!(Unsigned, u64);
 impl_traits!(Unsigned, u64);
-impl_serde! {
-	serde =>
-	/// ```rust
-	/// # use readable::num::*;
-	/// let this: Unsigned = Unsigned::from(1000_u64);
-	/// let json = serde_json::to_string(&this).unwrap();
-	/// assert_eq!(json, "1000");
-	///
-	/// let this: Unsigned = serde_json::from_str(&json).unwrap();
-	/// assert_eq!(this, 1000);
-	/// assert_eq!(this, "1,000");
-	///
-	/// // Bad bytes.
-	/// assert!(serde_json::from_str::<Unsigned>(&"---").is_err());
-	/// ```
-	bincode =>
-	/// ```rust
-	/// # use readable::num::*;
-	/// let this: Unsigned = Unsigned::from(1000_u64);
-	/// let config = bincode::config::standard();
-	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
-	///
-	/// let this: Unsigned = bincode::decode_from_slice(&bytes, config).unwrap().0;
-	/// assert_eq!(this, 1000);
-	/// assert_eq!(this, "1,000");
-	/// ```
-	borsh =>
-	/// ```rust
-	/// # use readable::num::*;
-	/// let this: Unsigned = Unsigned::from(1000_u64);
-	/// let bytes = borsh::to_vec(&this).unwrap();
-	///
-	/// let this: Unsigned = borsh::from_slice(&bytes).unwrap();
-	/// assert_eq!(this, 1000);
-	/// assert_eq!(this, "1,000");
-	///
-	/// // Bad bytes.
-	/// assert!(borsh::from_slice::<Unsigned>(b"bad .-;[]124/ bytes").is_err());
-	/// ```
-	u64,
-	Unsigned,
-	from,
-}
 
 //---------------------------------------------------------------------------------------------------- Unsigned Constants
 impl Unsigned {
@@ -753,5 +713,46 @@ mod tests {
 		assert_eq!(Unsigned::try_from(f64::NAN),          Err(Unsigned::UNKNOWN));
 		assert_eq!(Unsigned::try_from(f64::INFINITY),     Err(Unsigned::UNKNOWN));
 		assert_eq!(Unsigned::try_from(f64::NEG_INFINITY), Err(Unsigned::UNKNOWN));
+	}
+
+	#[test]
+	#[cfg(feature = "serde")]
+	fn serde() {
+		let this: Unsigned = Unsigned::from(1000_u64);
+		let json = serde_json::to_string(&this).unwrap();
+		assert_eq!(json, r#"[1000,"1,000"]"#);
+
+		let this: Unsigned = serde_json::from_str(&json).unwrap();
+		assert_eq!(this, 1000);
+		assert_eq!(this, "1,000");
+
+		// Bad bytes.
+		assert!(serde_json::from_str::<Unsigned>(&"---").is_err());
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn bincode() {
+		let this: Unsigned = Unsigned::from(1000_u64);
+		let config = bincode::config::standard();
+		let bytes = bincode::encode_to_vec(&this, config).unwrap();
+
+		let this: Unsigned = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert_eq!(this, 1000);
+		assert_eq!(this, "1,000");
+	}
+
+	#[test]
+	#[cfg(feature = "borsh")]
+	fn borsh() {
+		let this: Unsigned = Unsigned::from(1000_u64);
+		let bytes = borsh::to_vec(&this).unwrap();
+
+		let this: Unsigned = borsh::from_slice(&bytes).unwrap();
+		assert_eq!(this, 1000);
+		assert_eq!(this, "1,000");
+
+		// Bad bytes.
+		assert!(borsh::from_slice::<Unsigned>(b"bad .-;[]124/ bytes").is_err());
 	}
 }

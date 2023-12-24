@@ -479,4 +479,45 @@ mod tests {
 		assert_eq!(Uptime::from(f64::INFINITY),     Uptime::UNKNOWN);
 		assert_eq!(Uptime::from(f64::NEG_INFINITY), Uptime::UNKNOWN);
 	}
+
+	#[test]
+	#[cfg(feature = "serde")]
+	fn serde() {
+		let this: Uptime = Uptime::from(3283199_u32);
+		let json = serde_json::to_string(&this).unwrap();
+		assert_eq!(json, r#"[3283199,"1m, 6d, 23h, 59m, 59s"]"#);
+
+		let this: Uptime = serde_json::from_str(&json).unwrap();
+		assert_eq!(this, 3283199_u32);
+		assert_eq!(this, "1m, 6d, 23h, 59m, 59s");
+
+		// Bad bytes.
+		assert!(serde_json::from_str::<Uptime>(&"---").is_err());
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn bincode() {
+		let this: Uptime = Uptime::from(3283199_u32);
+		let config = bincode::config::standard();
+		let bytes = bincode::encode_to_vec(&this, config).unwrap();
+
+		let this: Uptime = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert_eq!(this, 3283199_u32);
+		assert_eq!(this, "1m, 6d, 23h, 59m, 59s");
+	}
+
+	#[test]
+	#[cfg(feature = "borsh")]
+	fn borsh() {
+		let this: Uptime = Uptime::from(3283199_u32);
+		let bytes = borsh::to_vec(&this).unwrap();
+
+		let this: Uptime = borsh::from_slice(&bytes).unwrap();
+		assert_eq!(this, 3283199_u32);
+		assert_eq!(this, "1m, 6d, 23h, 59m, 59s");
+
+		// Bad bytes.
+		assert!(borsh::from_slice::<Uptime>(b"bad .-;[]124/ bytes").is_err());
+	}
 }

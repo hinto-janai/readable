@@ -835,3 +835,51 @@ impl std::default::Default for TimeUnit {
 		Self::ZERO
 	}
 }
+
+
+//---------------------------------------------------------------------------------------------------- TESTS
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	#[cfg(feature = "serde")]
+	fn serde() {
+		let this: TimeUnit = TimeUnit::from(39071167);
+		let json = serde_json::to_string(&this).unwrap();
+		assert_eq!(
+			json,
+			r#"{"unknown":false,"inner":39071167,"years":1,"months":2,"weeks":3,"days":4,"hours":5,"minutes":6,"seconds":7}"#
+		);
+
+		let this: TimeUnit = serde_json::from_str(&json).unwrap();
+		assert_eq!(this.inner(), 39071167);
+
+		// Bad bytes.
+		assert!(serde_json::from_str::<TimeUnit>(&"---").is_err());
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn bincode() {
+		let this: TimeUnit = TimeUnit::from(39071167);
+		let config = bincode::config::standard();
+		let bytes = bincode::encode_to_vec(&this, config).unwrap();
+
+		let this: TimeUnit = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert_eq!(this.inner(), 39071167);
+	}
+
+	#[test]
+	#[cfg(feature = "borsh")]
+	fn borsh() {
+		let this: TimeUnit = TimeUnit::from(39071167);
+		let bytes = borsh::to_vec(&this).unwrap();
+
+		let this: TimeUnit = borsh::from_slice(&bytes).unwrap();
+		assert_eq!(this.inner(), 39071167);
+
+		// Bad bytes.
+		assert!(borsh::from_slice::<TimeUnit>(b"bad .-;[]124/ bytes").is_err());
+	}
+}

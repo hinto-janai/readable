@@ -1,14 +1,15 @@
 //---------------------------------------------------------------------------------------------------- Use
-use compact_str::{format_compact,CompactString};
+use compact_str::format_compact;
 use crate::num::constants::{
 	NAN,INFINITY,
 };
+use crate::str::Str;
 use crate::macros::{
 	return_bad_float,str_u64,str_i64,
-	impl_common,impl_not_const,
+	impl_common,impl_const,
 	impl_usize,impl_isize,
 	impl_math,impl_traits,
-	impl_impl_math,impl_serde,
+	impl_impl_math,
 };
 
 //---------------------------------------------------------------------------------------------------- Percent
@@ -40,24 +41,30 @@ use crate::macros::{
 ///```
 ///
 /// ## Size
-/// This type may or may not be heap allocated.
+/// [`Str<20>`] is used internally to represent the string.
 ///
 /// ```rust
 /// # use readable::num::*;
 /// assert_eq!(std::mem::size_of::<Percent>(), 32);
 /// ```
 ///
-/// ## Cloning
-/// [`Clone`] may be a heap allocation clone:
+/// ## Copy
+/// [`Copy`] is available.
+///
+/// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
+/// but a 22 byte array string, literally: [`Str<22>`].
+///
+/// The documentation will still refer to the inner buffer as a [`String`]. Anything returned will also either a [`String`].
 /// ```rust
 /// # use readable::num::Percent;
-/// // Probably cheap (stack allocated string).
-/// let a = Percent::from(100.0);
-/// let b = a.clone();
+/// let a = Percent::from(100_000.0);
 ///
-/// // Probably expensive (heap allocated string).
-/// let a = Percent::from(f64::MAX);
-/// let b = a.clone();
+/// // Copy 'a', use 'b'.
+/// let b = a;
+/// assert!(b == 100_000.0);
+///
+/// // We can still use 'a'
+/// assert!(a == 100_000.0);
 /// ```
 ///
 /// The actual string used internally is not a [`String`](https://doc.rust-lang.org/std/string/struct.String.html),
@@ -95,7 +102,7 @@ use crate::macros::{
 /// ```rust
 /// # use readable::num::*;
 /// let n = Percent::from(f64::MAX) + f64::MAX;
-/// assert!(n.inner().is_infinite());
+/// assert!(n.is_unknown());
 /// ```
 ///
 /// ## Examples
@@ -118,54 +125,16 @@ use crate::macros::{
 /// assert_eq!(Percent::from(-1_000_i32),  "-1,000.00%");
 /// assert_eq!(Percent::from(-10_000_i32), "-10,000.00%");
 /// ```
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub struct Percent(f64, CompactString);
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
+pub struct Percent(f64, Str<{ Percent::MAX_LEN }>);
+
+const LEN: usize = 22; // 14 decimal point accuracy + 8 extra chars
 
 impl_math!(Percent, f64);
 impl_traits!(Percent, f64);
-impl_serde! {
-	serde =>
-	/// ```rust
-	/// # use readable::num::*;
-	/// let this: Percent = Percent::from(1.0);
-	/// let json = serde_json::to_string(&this).unwrap();
-	/// assert_eq!(json, "1.0");
-	///
-	/// let this: Percent = serde_json::from_str(&json).unwrap();
-	/// assert_eq!(this, 1.0);
-	/// assert_eq!(this, "1.00%");
-	///
-	/// // Bad bytes.
-	/// assert!(serde_json::from_str::<Percent>(&"---").is_err());
-	/// ```
-	bincode =>
-	/// ```rust
-	/// # use readable::num::*;
-	/// let this: Percent = Percent::from(1.0);
-	/// let config = bincode::config::standard();
-	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
-	///
-	/// let this: Percent = bincode::decode_from_slice(&bytes, config).unwrap().0;
-	/// assert_eq!(this, 1.0);
-	/// assert_eq!(this, "1.00%");
-	/// ```
-	borsh =>
-	/// ```rust
-	/// # use readable::num::*;
-	/// let this: Percent = Percent::from(1.0);
-	/// let bytes = borsh::to_vec(&this).unwrap();
-	///
-	/// let this: Percent = borsh::from_slice(&bytes).unwrap();
-	/// assert_eq!(this, 1.0);
-	/// assert_eq!(this, "1.00%");
-	///
-	/// // Bad bytes.
-	/// assert!(borsh::from_slice::<Percent>(b"bad .-;[]124/ bytes").is_err());
-	/// ```
-	f64,
-	Percent,
-	from,
-}
 
 //---------------------------------------------------------------------------------------------------- Percent Constants
 impl Percent {
@@ -174,28 +143,36 @@ impl Percent {
 	/// assert_eq!(Percent::ZERO, 0.0);
 	/// assert_eq!(Percent::ZERO, "0.00%");
 	/// ```
-	pub const ZERO: Self = Self(0.0, CompactString::new_inline("0.00%"));
+	pub const ZERO: Self = Self(0.0, Str::from_static_str("0.00%"));
 
 	/// ```rust
 	/// # use readable::num::*;
 	/// assert_eq!(Percent::NAN, "NaN");
 	/// assert!(Percent::NAN.is_nan());
 	/// ```
-	pub const NAN: Self = Self(f64::NAN, CompactString::new_inline(NAN));
+	pub const NAN: Self = Self(f64::NAN, Str::from_static_str(NAN));
 
 	/// ```rust
 	/// # use readable::num::*;
 	/// assert_eq!(Percent::INFINITY, "inf");
 	/// assert!(Percent::INFINITY.is_infinite());
 	/// ```
-	pub const INFINITY: Self = Self(f64::INFINITY, CompactString::new_inline(INFINITY));
+	pub const INFINITY: Self = Self(f64::INFINITY, Str::from_static_str(INFINITY));
 
 	/// ```rust
 	/// # use readable::num::*;
 	/// assert_eq!(Percent::UNKNOWN, 0.0);
 	/// assert_eq!(Percent::UNKNOWN, "?.??%");
 	/// ```
-	pub const UNKNOWN: Self = Self(0.0, CompactString::new_inline("?.??%"));
+	pub const UNKNOWN: Self = Self(0.0, Str::from_static_str("?.??%"));
+
+	/// The maximum string length of a [`Percent`].
+	///
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert_eq!(Percent::MAX_LEN, 22);
+	/// ```
+	pub const MAX_LEN: usize = LEN;
 }
 
 //---------------------------------------------------------------------------------------------------- Macros
@@ -209,20 +186,14 @@ macro_rules! impl_new {
 				return_bad_float!(f, Self::NAN, Self::INFINITY);
 
 				let fract = &format_compact!(concat!("{:.", $num, "}"), f.fract())[2..];
-				Self(f, format_compact!("{}.{}%", str_u64!(f as u64), fract))
-			}
-		}
-	}
-}
-
-// Implements `const_X` functions.
-macro_rules! impl_const {
-	( $num:tt ) => {
-		paste::item! {
-			#[doc = "Returns a [`Percent`] with the [`f64`] value of `" $num ".0`. \n\n\
-			The [`String`] is set to `" $num ".00%`."]
-			pub const fn [<const_ $num>]() -> Self {
-				Self($num as f64, CompactString::new_inline(concat!($num, ".00%")))
+				let string = format_compact!("{}.{}%", str_u64!(f as u64), fract);
+				if string.len() > Self::MAX_LEN {
+					Self::UNKNOWN
+				} else {
+					let mut s = Str::new();
+					s.push_str_panic(string);
+					Self(f, s)
+				}
 			}
 		}
 	}
@@ -231,7 +202,7 @@ macro_rules! impl_const {
 //---------------------------------------------------------------------------------------------------- Percent Impl
 impl Percent {
 	impl_common!(f64);
-	impl_not_const!();
+	impl_const!();
 	impl_usize!();
 	impl_isize!();
 
@@ -251,6 +222,17 @@ impl Percent {
 
 	#[inline]
 	#[must_use]
+	/// ```rust
+	/// # use readable::num::*;
+	/// assert!(Percent::UNKNOWN.is_unknown());
+	/// assert!(!Percent::ZERO.is_unknown());
+	/// ```
+	pub const fn is_unknown(&self) -> bool {
+		matches!(self.as_str().as_bytes(), b"?.??%")
+	}
+
+	#[inline]
+	#[must_use]
 	/// Same as [`Self::from`] but with no floating point on the inner [`String`].
 	///
 	/// The inner [`f64`] stays the same as the input.
@@ -265,7 +247,14 @@ impl Percent {
 	/// | 100.1  | `100%`
 	pub fn new_0(f: f64) -> Self {
 		return_bad_float!(f, Self::NAN, Self::INFINITY);
-		Self(f, format_compact!("{}%", str_u64!(f as u64)))
+		let string = format_compact!("{}%", str_u64!(f as u64));
+		if string.len() > Self::MAX_LEN {
+			Self::UNKNOWN
+		} else {
+			let mut s = Str::new();
+			s.push_str_panic(string);
+			Self(f, s)
+		}
 	}
 
 	impl_new!(1);
@@ -281,15 +270,20 @@ macro_rules! impl_u {
 			impl From<$number> for Percent {
 				#[inline]
 				fn from(number: $number) -> Self {
-					let f = number as f64;
-
-					Self(f, format_compact!("{}.00%", str_u64!(number as u64)))
+					let string = format_compact!("{}.00%", str_u64!(number as u64));
+					if string.len() > Self::MAX_LEN {
+						Self::UNKNOWN
+					} else {
+						let mut s = Str::new();
+						s.push_str_panic(string);
+						Self(number as f64, s)
+					}
 				}
 			}
 		)*
 	}
 }
-impl_u!(u8,u16,u32);
+impl_u!(u8,u16,u32,u64,usize);
 
 // Implementation Macro.
 macro_rules! impl_i {
@@ -298,15 +292,20 @@ macro_rules! impl_i {
 			impl From<$number> for Percent {
 				#[inline]
 				fn from(number: $number) -> Self {
-					let f = number as f64;
-
-					Self(f, format_compact!("{}.00%", str_i64!(number as i64)))
+					let string = format_compact!("{}.00%", str_i64!(number as i64));
+					if string.len() > Self::MAX_LEN {
+						Self::UNKNOWN
+					} else {
+						let mut s = Str::new();
+						s.push_str_panic(string);
+						Self(number as f64, s)
+					}
 				}
 			}
 		)*
 	}
 }
-impl_i!(i8,i16,i32);
+impl_i!(i8,i16,i32,i64,isize);
 
 impl From<f32> for Percent {
 	#[inline]
@@ -323,8 +322,14 @@ impl From<f64> for Percent {
 		return_bad_float!(f, Self::NAN, Self::INFINITY);
 
 		let fract = &format_compact!("{:.2}", f.fract())[2..];
-
-		Self(f, format_compact!("{}.{}%", str_u64!(f as u64), fract))
+		let string = format_compact!("{}.{}%", str_u64!(f as u64), fract);
+		if string.len() > Self::MAX_LEN {
+			Self::UNKNOWN
+		} else {
+			let mut s = Str::new();
+			s.push_str_panic(string);
+			Self(f, s)
+		}
 	}
 }
 
@@ -388,5 +393,46 @@ mod tests {
 		assert_eq!(Percent::from(-10_000_i32),    "-10,000.00%");
 		assert_eq!(Percent::from(-100_000_i32),   "-100,000.00%");
 		assert_eq!(Percent::from(-1_000_000_i32), "-1,000,000.00%");
+	}
+
+	#[test]
+	#[cfg(feature = "serde")]
+	fn serde() {
+		let this: Percent = Percent::from(1.0);
+		let json = serde_json::to_string(&this).unwrap();
+		assert_eq!(json, r#"[1.0,"1.00%"]"#);
+
+		let this: Percent = serde_json::from_str(&json).unwrap();
+		assert_eq!(this, 1.0);
+		assert_eq!(this, "1.00%");
+
+		// Bad bytes.
+		assert!(serde_json::from_str::<Percent>(&"---").is_err());
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn bincode() {
+		let this: Percent = Percent::from(1.0);
+		let config = bincode::config::standard();
+		let bytes = bincode::encode_to_vec(&this, config).unwrap();
+
+		let this: Percent = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert_eq!(this, 1.0);
+		assert_eq!(this, "1.00%");
+	}
+
+	#[test]
+	#[cfg(feature = "borsh")]
+	fn borsh() {
+		let this: Percent = Percent::from(1.0);
+		let bytes = borsh::to_vec(&this).unwrap();
+
+		let this: Percent = borsh::from_slice(&bytes).unwrap();
+		assert_eq!(this, 1.0);
+		assert_eq!(this, "1.00%");
+
+		// Bad bytes.
+		assert!(borsh::from_slice::<Percent>(b"bad .-;[]124/ bytes").is_err());
 	}
 }

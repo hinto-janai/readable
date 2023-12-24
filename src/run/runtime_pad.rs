@@ -3,8 +3,8 @@ use crate::str::Str;
 use crate::run::{Runtime,RuntimeMilli,RuntimeUnion};
 use crate::macros::{
 	impl_common,impl_const,
-	impl_traits,impl_serde,
-	impl_usize,impl_math,impl_impl_math,
+	impl_traits,impl_usize,
+	impl_math,impl_impl_math,
 };
 
 //---------------------------------------------------------------------------------------------------- RuntimePad
@@ -57,6 +57,9 @@ use crate::macros::{
 /// assert_eq!(RuntimePad::from(f32::NAN),      "??:??:??");
 /// assert_eq!(RuntimePad::from(f64::INFINITY), "??:??:??");
 /// ```
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub struct RuntimePad(pub(super) f32, pub(super) Str<{ RuntimePad::MAX_LEN }>);
 
@@ -70,49 +73,6 @@ crate::run::runtime::impl_runtime! {
 }
 impl_math!(RuntimePad, f32);
 impl_traits!(RuntimePad, f32);
-impl_serde! {
-	serde =>
-	/// ```rust
-	/// # use readable::run::*;
-	/// let this: RuntimePad = RuntimePad::from(111.999);
-	/// let json = serde_json::to_string(&this).unwrap();
-	/// assert_eq!(json, "111.999");
-	///
-	/// let this: RuntimePad = serde_json::from_str(&json).unwrap();
-	/// assert_eq!(this, 111.999);
-	/// assert_eq!(this, "00:01:51");
-	///
-	/// // Bad bytes.
-	/// assert!(serde_json::from_str::<RuntimePad>(&"---").is_err());
-	/// ```
-	bincode =>
-	/// ```rust
-	/// # use readable::run::*;
-	/// let this: RuntimePad = RuntimePad::from(111.999);
-	/// let config = bincode::config::standard();
-	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
-	///
-	/// let this: RuntimePad = bincode::decode_from_slice(&bytes, config).unwrap().0;
-	/// assert_eq!(this, 111.999);
-	/// assert_eq!(this, "00:01:51");
-	/// ```
-	borsh =>
-	/// ```rust
-	/// # use readable::run::*;
-	/// let this: RuntimePad = RuntimePad::from(111.999);
-	/// let bytes = borsh::to_vec(&this).unwrap();
-	///
-	/// let this: RuntimePad = borsh::from_slice(&bytes).unwrap();
-	/// assert_eq!(this, 111.999);
-	/// assert_eq!(this, "00:01:51");
-	///
-	/// // Bad bytes.
-	/// assert!(borsh::from_slice::<RuntimePad>(b"bad .-;[]124/ bytes").is_err());
-	/// ```
-	f32,
-	RuntimePad,
-	from,
-}
 
 //---------------------------------------------------------------------------------------------------- RuntimePad Constants
 impl RuntimePad {
@@ -405,5 +365,46 @@ mod tests {
 		assert_eq!(RuntimePad::from(f64::NAN),          RuntimePad::UNKNOWN);
 		assert_eq!(RuntimePad::from(f64::INFINITY),     RuntimePad::UNKNOWN);
 		assert_eq!(RuntimePad::from(f64::NEG_INFINITY), RuntimePad::UNKNOWN);
+	}
+
+	#[test]
+	#[cfg(feature = "serde")]
+	fn serde() {
+		let this: RuntimePad = RuntimePad::from(111.999);
+		let json = serde_json::to_string(&this).unwrap();
+		assert_eq!(json, r#"[111.999,"00:01:51"]"#);
+
+		let this: RuntimePad = serde_json::from_str(&json).unwrap();
+		assert_eq!(this, 111.999);
+		assert_eq!(this, "00:01:51");
+
+		// Bad bytes.
+		assert!(serde_json::from_str::<RuntimePad>(&"---").is_err());
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn bincode() {
+		let this: RuntimePad = RuntimePad::from(111.999);
+		let config = bincode::config::standard();
+		let bytes = bincode::encode_to_vec(&this, config).unwrap();
+
+		let this: RuntimePad = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert_eq!(this, 111.999);
+		assert_eq!(this, "00:01:51");
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn borsh() {
+		let this: RuntimePad = RuntimePad::from(111.999);
+		let bytes = borsh::to_vec(&this).unwrap();
+
+		let this: RuntimePad = borsh::from_slice(&bytes).unwrap();
+		assert_eq!(this, 111.999);
+		assert_eq!(this, "00:01:51");
+
+		// Bad bytes.
+		assert!(borsh::from_slice::<RuntimePad>(b"bad .-;[]124/ bytes").is_err());
 	}
 }

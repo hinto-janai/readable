@@ -5,7 +5,7 @@ use crate::time::Military;
 use crate::macros::{
 	impl_common,impl_const,
 	impl_traits,impl_usize,impl_math,
-	impl_impl_math,handle_over_u32,impl_serde,
+	impl_impl_math,handle_over_u32,
 };
 
 //---------------------------------------------------------------------------------------------------- Time
@@ -71,54 +71,14 @@ use crate::macros::{
 /// assert_eq!(Time::from((3600 * 24) + 3599), "12:59:59 AM");
 /// assert_eq!(Time::from((3600 * 24) + 1830), "12:30:30 AM");
 /// ```
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Time(pub(super) u32, pub(super) Str<{ Time::MAX_LEN }>);
 
 impl_traits!(Time, u32);
 impl_math!(Time, u32);
-impl_serde! {
-	serde =>
-	/// ```rust
-	/// # use readable::time::*;
-	/// let this: Time = Time::from(3599);
-	/// let json = serde_json::to_string(&this).unwrap();
-	/// assert_eq!(json, "3599");
-	///
-	/// let this: Time = serde_json::from_str(&json).unwrap();
-	/// assert_eq!(this, 3599);
-	/// assert_eq!(this, "12:59:59 AM");
-	///
-	/// // Bad bytes.
-	/// assert!(serde_json::from_str::<Time>(&"---").is_err());
-	/// ```
-	bincode =>
-	/// ```rust
-	/// # use readable::time::*;
-	/// let this: Time = Time::from(3599);
-	/// let config = bincode::config::standard();
-	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
-	///
-	/// let this: Time = bincode::decode_from_slice(&bytes, config).unwrap().0;
-	/// assert_eq!(this, 3599);
-	/// assert_eq!(this, "12:59:59 AM");
-	/// ```
-	borsh =>
-	/// ```rust
-	/// # use readable::time::*;
-	/// let this: Time = Time::from(3599);
-	/// let bytes = borsh::to_vec(&this).unwrap();
-	///
-	/// let this: Time = borsh::from_slice(&bytes).unwrap();
-	/// assert_eq!(this, 3599);
-	/// assert_eq!(this, "12:59:59 AM");
-	///
-	/// // Bad bytes.
-	/// assert!(borsh::from_slice::<Time>(b"bad .-;[]124/ bytes").is_err());
-	/// ```
-	u32,
-	Time,
-	from,
-}
 
 //---------------------------------------------------------------------------------------------------- Time Constants
 impl Time {
@@ -510,109 +470,48 @@ impl From<&Time> for std::time::Duration {
 }
 
 //---------------------------------------------------------------------------------------------------- TESTS
-// #[cfg(test)]
-// mod tests {
-// 	use super::*;
+#[cfg(test)]
+mod tests {
+	use super::*;
 
-// 	#[test]
-// 	fn _format_hms() {
-// 		fn s(b: &[u8]) -> &str {
-// 			std::str::from_utf8(&b).unwrap()
-// 		}
+	#[test]
+	#[cfg(feature = "serde")]
+	fn serde() {
+		let this: Time = Time::from(3599);
+		let json = serde_json::to_string(&this).unwrap();
+		assert_eq!(json, r#"[3599,"12:59:59 AM"]"#);
 
-// 		let mut buf = [0; Time::MAX_LEN];
-// 		let buf = &mut buf;
+		let this: Time = serde_json::from_str(&json).unwrap();
+		assert_eq!(this, 3599);
+		assert_eq!(this, "12:59:59 AM");
 
-// 		// 0:0:0
-// 		Time::format(buf, 1, 1, 1);
-// 		assert_eq!(s(buf), "01:01:01");
+		// Bad bytes.
+		assert!(serde_json::from_str::<Time>(&"---").is_err());
+	}
 
-// 		// 0:00:0
-// 		Time::format(buf, 1, 10, 1);
-// 		assert_eq!(s(buf), "01:10:01");
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn bincode() {
+		let this: Time = Time::from(3599);
+		let config = bincode::config::standard();
+		let bytes = bincode::encode_to_vec(&this, config).unwrap();
 
-// 		// 0:0:00
-// 		Time::format(buf, 1, 1, 10);
-// 		assert_eq!(s(buf), "01:01:10");
+		let this: Time = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert_eq!(this, 3599);
+		assert_eq!(this, "12:59:59 AM");
+	}
 
-// 		// 0:00:00
-// 		Time::format(buf, 1, 10, 10);
-// 		assert_eq!(s(buf), "01:10:10");
+	#[test]
+	#[cfg(feature = "borsh")]
+	fn borsh() {
+		let this: Time = Time::from(3599);
+		let bytes = borsh::to_vec(&this).unwrap();
 
-// 		// 00:0:0
-// 		Time::format(buf, 10, 1, 1);
-// 		assert_eq!(s(buf), "10:01:01");
+		let this: Time = borsh::from_slice(&bytes).unwrap();
+		assert_eq!(this, 3599);
+		assert_eq!(this, "12:59:59 AM");
 
-// 		// 00:00:0
-// 		Time::format(buf, 10, 10, 1);
-// 		assert_eq!(s(buf), "10:10:01");
-
-// 		// 00:0:00
-// 		Time::format(buf, 10, 1, 10);
-// 		assert_eq!(s(buf), "10:01:10");
-
-// 		// 00:00:00
-// 		Time::format(buf, 10, 10, 10);
-// 		assert_eq!(s(buf), "10:10:10");
-
-// 		// 0:0
-// 		Time::format(buf, 0, 1, 1);
-// 		assert_eq!(s(buf), "00:01:01");
-
-// 		// 00:0
-// 		Time::format(buf, 0, 10, 1);
-// 		assert_eq!(s(buf), "00:10:01");
-
-// 		// 0:00
-// 		Time::format(buf, 0, 1, 10);
-// 		assert_eq!(s(buf), "00:01:10");
-
-// 		// 00:00
-// 		Time::format(buf, 0, 10, 10);
-// 		assert_eq!(s(buf), "00:10:10");
-// 	}
-
-// 	#[test]
-// 	fn all_uint() {
-// 		for i in 0..Time::MAX_F32 as u32 {
-// 			let rt = Time::from(i);
-// 			println!("rt:{} - i: {}", rt, i);
-// 			assert_eq!(rt.inner() as u32, i);
-// 			assert_eq!(rt.inner() as u32, i);
-// 			println!("{}", rt);
-// 		}
-// 	}
-
-// 	#[test]
-// 	fn all_floats() {
-// 		let mut f = 0;
-// 		while f <= Time::MAX_F32 {
-// 			let rt = Time::from(f);
-// 			println!("rt: {} - f: {}", rt.inner(), f);
-// 			assert_eq!(rt, f);
-// 			f += 0.1;
-// 		}
-// 	}
-
-// 	#[test]
-// 	fn overflow_float() {
-// 		assert_eq!(Time::from(Time::MAX_F32 + 1.0), 0);
-// 		assert_eq!(Time::from(Time::MAX_F32 + 1.0), Time::unknown());
-// 	}
-
-// 	#[test]
-// 	fn overflow_uint() {
-// 		assert_eq!(Time::from(Time::MAX_F32 + 1.0), 0);
-// 		assert_eq!(Time::from(Time::MAX_F32 + 1.0), Time::unknown());
-// 	}
-
-// 	#[test]
-// 	fn special() {
-// 		assert_eq!(Time::from(f32::NAN),          Time::unknown());
-// 		assert_eq!(Time::from(f32::INFINITY),     Time::unknown());
-// 		assert_eq!(Time::from(f32::NEG_INFINITY), Time::unknown());
-// 		assert_eq!(Time::from(f64::NAN),          Time::unknown());
-// 		assert_eq!(Time::from(f64::INFINITY),     Time::unknown());
-// 		assert_eq!(Time::from(f64::NEG_INFINITY), Time::unknown());
-// 	}
-// }
+		// Bad bytes.
+		assert!(borsh::from_slice::<Time>(b"bad .-;[]124/ bytes").is_err());
+	}
+}

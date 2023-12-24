@@ -6,7 +6,7 @@ use crate::str::Str;
 use crate::itoa;
 use crate::macros::{
 	impl_traits,impl_common,
-	impl_const,impl_serde,
+	impl_const,
 };
 use crate::date::free::{
 	ok_year,ok_month,ok_day,ok,
@@ -248,53 +248,13 @@ pub(super) static DDMMY: Lazy<Regex> = Lazy::new(|| Regex::new(r"^(0[1-9]|[12][0
 /// # use readable::date::*;
 /// assert_eq!(std::mem::size_of::<Date>(), 16);
 /// ```
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Date((u16, u8, u8), Str<{ Date::MAX_LEN }>);
 
 impl_traits!(Date, (u16, u8, u8));
-impl_serde! {
-	serde =>
-	/// ```rust
-	/// # use readable::date::*;
-	/// let this: Date = Date::try_from((2024, 1, 1)).unwrap();
-	/// let json = serde_json::to_string(&this).unwrap();
-	/// assert_eq!(json, "[2024,1,1]");
-	///
-	/// let this: Date = serde_json::from_str(&json).unwrap();
-	/// assert_eq!(this, (2024, 1, 1));
-	/// assert_eq!(this, "2024-01-01");
-	///
-	/// // Bad bytes.
-	/// assert!(serde_json::from_str::<Date>(&"---").is_err());
-	/// ```
-	bincode =>
-	/// ```rust
-	/// # use readable::date::*;
-	/// let this: Date = Date::try_from((2024, 1, 1)).unwrap();
-	/// let config = bincode::config::standard();
-	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
-	///
-	/// let this: Date = bincode::decode_from_slice(&bytes, config).unwrap().0;
-	/// assert_eq!(this, (2024, 1, 1));
-	/// assert_eq!(this, "2024-01-01");
-	/// ```
-	borsh =>
-	/// ```rust
-	/// # use readable::date::*;
-	/// let this: Date = Date::try_from((2024, 1, 1)).unwrap();
-	/// let bytes = borsh::to_vec(&this).unwrap();
-	///
-	/// let this: Date = borsh::from_slice(&bytes).unwrap();
-	/// assert_eq!(this, (2024, 1, 1));
-	/// assert_eq!(this, "2024-01-01");
-	///
-	/// // Bad bytes.
-	/// assert!(borsh::from_slice::<Date>(b"bad .-;[]124/ bytes").is_err());
-	/// ```
-	(u16, u8, u8),
-	Date,
-	__serde,
-}
 
 //---------------------------------------------------------------------------------------------------- Date Constants
 impl Date {
@@ -1460,5 +1420,46 @@ mod tests {
 		assert_eq!(Date::from_str("25/12/2020").unwrap(), EXPECTED);
 		assert_eq!(Date::from_str("25.12.2020").unwrap(), EXPECTED);
 		assert_eq!(Date::from_str("25_12_2020").unwrap(), EXPECTED);
+	}
+
+	#[test]
+	#[cfg(feature = "serde")]
+	fn serde() {
+		let this: Date = Date::try_from((2024, 1, 1)).unwrap();
+		let json = serde_json::to_string(&this).unwrap();
+		assert_eq!(json, r#"[[2024,1,1],"2024-01-01"]"#);
+
+		let this: Date = serde_json::from_str(&json).unwrap();
+		assert_eq!(this, (2024, 1, 1));
+		assert_eq!(this, "2024-01-01");
+
+		// Bad bytes.
+		assert!(serde_json::from_str::<Date>(&"---").is_err());
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn bincode() {
+		let this: Date = Date::try_from((2024, 1, 1)).unwrap();
+		let config = bincode::config::standard();
+		let bytes = bincode::encode_to_vec(&this, config).unwrap();
+
+		let this: Date = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert_eq!(this, (2024, 1, 1));
+		assert_eq!(this, "2024-01-01");
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn borsh() {
+		let this: Date = Date::try_from((2024, 1, 1)).unwrap();
+		let bytes = borsh::to_vec(&this).unwrap();
+
+		let this: Date = borsh::from_slice(&bytes).unwrap();
+		assert_eq!(this, (2024, 1, 1));
+		assert_eq!(this, "2024-01-01");
+
+		// Bad bytes.
+		assert!(borsh::from_slice::<Date>(b"bad .-;[]124/ bytes").is_err());
 	}
 }

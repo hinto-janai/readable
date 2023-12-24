@@ -2,7 +2,7 @@
 use crate::str::Str;
 use crate::run::{Runtime,RuntimePad,RuntimeMilli};
 use crate::macros::{
-	impl_math,impl_impl_math,impl_serde,
+	impl_math,impl_impl_math,
 };
 
 //---------------------------------------------------------------------------------------------------- RuntimeUnion
@@ -63,12 +63,15 @@ use crate::macros::{
 /// assert_eq!(RuntimeUnion::from(f64::INFINITY).as_str_pad(),      "??:??:??");
 /// assert_eq!(RuntimeUnion::from(f32::NEG_INFINITY).as_str_milli(), "??:??:??.???");
 /// ```
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
+#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub struct RuntimeUnion {
-	pub(super) float: f32,
+	pub(super) inner:   f32,
 	pub(super) runtime: Str<{ Runtime::MAX_LEN }>,
-	pub(super) runtime_pad: Str<{ RuntimePad::MAX_LEN }>,
-	pub(super) runtime_milli: Str<{ RuntimeMilli::MAX_LEN }>,
+	pub(super) pad:     Str<{ RuntimePad::MAX_LEN }>,
+	pub(super) milli:   Str<{ RuntimeMilli::MAX_LEN }>,
 }
 
 crate::run::runtime::impl_runtime! {
@@ -79,55 +82,6 @@ crate::run::runtime::impl_runtime! {
 }
 
 impl_math!(RuntimeUnion, f32);
-impl_serde! {
-	serde =>
-	/// ```rust
-	/// # use readable::run::*;
-	/// let this: RuntimeUnion = RuntimeUnion::from(111.999);
-	/// let json = serde_json::to_string(&this).unwrap();
-	/// assert_eq!(json, "111.999");
-	///
-	/// let this: RuntimeUnion = serde_json::from_str(&json).unwrap();
-	/// assert_eq!(this, 111.999);
-	/// assert_eq!(this.as_str(), "1:51");
-	/// assert_eq!(this.as_str_pad(), "00:01:51");
-	/// assert_eq!(this.as_str_milli(), "00:01:51.999");
-	///
-	/// // Bad bytes.
-	/// assert!(serde_json::from_str::<RuntimeUnion>(&"---").is_err());
-	/// ```
-	bincode =>
-	/// ```rust
-	/// # use readable::run::*;
-	/// let this: RuntimeUnion = RuntimeUnion::from(111.999);
-	/// let config = bincode::config::standard();
-	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
-	///
-	/// let this: RuntimeUnion = bincode::decode_from_slice(&bytes, config).unwrap().0;
-	/// assert_eq!(this, 111.999);
-	/// assert_eq!(this.as_str(), "1:51");
-	/// assert_eq!(this.as_str_pad(), "00:01:51");
-	/// assert_eq!(this.as_str_milli(), "00:01:51.999");
-	/// ```
-	borsh =>
-	/// ```rust
-	/// # use readable::run::*;
-	/// let this: RuntimeUnion = RuntimeUnion::from(111.999);
-	/// let bytes = borsh::to_vec(&this).unwrap();
-	///
-	/// let this: RuntimeUnion = borsh::from_slice(&bytes).unwrap();
-	/// assert_eq!(this, 111.999);
-	/// assert_eq!(this.as_str(), "1:51");
-	/// assert_eq!(this.as_str_pad(), "00:01:51");
-	/// assert_eq!(this.as_str_milli(), "00:01:51.999");
-	///
-	/// // Bad bytes.
-	/// assert!(borsh::from_slice::<RuntimeUnion>(b"bad .-;[]124/ bytes").is_err());
-	/// ```
-	f32,
-	RuntimeUnion,
-	from,
-}
 
 //---------------------------------------------------------------------------------------------------- RuntimeUnion Constants
 impl RuntimeUnion {
@@ -157,10 +111,10 @@ impl RuntimeUnion {
 	/// assert_eq!(RuntimeUnion::UNKNOWN.as_str_milli(), "??:??:??.???");
 	/// ```
 	pub const UNKNOWN: Self = Self {
-		float: Runtime::ZERO_F32,
+		inner: Runtime::ZERO_F32,
 		runtime: Runtime::UNKNOWN.1,
-		runtime_pad: RuntimePad::UNKNOWN.1,
-		runtime_milli: RuntimeMilli::UNKNOWN.1,
+		pad: RuntimePad::UNKNOWN.1,
+		milli: RuntimeMilli::UNKNOWN.1,
 	};
 
 	/// ```rust
@@ -172,10 +126,10 @@ impl RuntimeUnion {
 	/// assert_eq!(RuntimeUnion::ZERO, RuntimeUnion::from(0.0));
 	/// ```
 	pub const ZERO: Self = Self {
-		float: Runtime::ZERO_F32,
+		inner: Runtime::ZERO_F32,
 		runtime: Runtime::ZERO.1,
-		runtime_pad: RuntimePad::ZERO.1,
-		runtime_milli: RuntimeMilli::ZERO.1,
+		pad: RuntimePad::ZERO.1,
+		milli: RuntimeMilli::ZERO.1,
 	};
 
 	/// ```rust
@@ -187,10 +141,10 @@ impl RuntimeUnion {
 	/// assert_eq!(RuntimeUnion::SECOND, RuntimeUnion::from(1.0));
 	/// ```
 	pub const SECOND: Self = Self {
-		float: Runtime::SECOND_F32,
+		inner: Runtime::SECOND_F32,
 		runtime: Runtime::SECOND.1,
-		runtime_pad: RuntimePad::SECOND.1,
-		runtime_milli: RuntimeMilli::SECOND.1,
+		pad: RuntimePad::SECOND.1,
+		milli: RuntimeMilli::SECOND.1,
 	};
 
 	/// ```rust
@@ -202,10 +156,10 @@ impl RuntimeUnion {
 	/// assert_eq!(RuntimeUnion::MINUTE, RuntimeUnion::from(60.0));
 	/// ```
 	pub const MINUTE: Self = Self {
-		float: Runtime::MINUTE_F32,
+		inner: Runtime::MINUTE_F32,
 		runtime: Runtime::MINUTE.1,
-		runtime_pad: RuntimePad::MINUTE.1,
-		runtime_milli: RuntimeMilli::MINUTE.1,
+		pad: RuntimePad::MINUTE.1,
+		milli: RuntimeMilli::MINUTE.1,
 	};
 
 	/// ```rust
@@ -217,10 +171,10 @@ impl RuntimeUnion {
 	/// assert_eq!(RuntimeUnion::HOUR, RuntimeUnion::from(3600.0));
 	/// ```
 	pub const HOUR: Self = Self {
-		float: Runtime::HOUR_F32,
+		inner: Runtime::HOUR_F32,
 		runtime: Runtime::HOUR.1,
-		runtime_pad: RuntimePad::HOUR.1,
-		runtime_milli: RuntimeMilli::HOUR.1,
+		pad: RuntimePad::HOUR.1,
+		milli: RuntimeMilli::HOUR.1,
 	};
 
 	/// ```rust
@@ -232,10 +186,10 @@ impl RuntimeUnion {
 	/// assert_eq!(RuntimeUnion::DAY, RuntimeUnion::from(86400.0));
 	/// ```
 	pub const DAY: Self = Self {
-		float: Runtime::DAY_F32,
+		inner: Runtime::DAY_F32,
 		runtime: Runtime::DAY.1,
-		runtime_pad: RuntimePad::DAY.1,
-		runtime_milli: RuntimeMilli::DAY.1,
+		pad: RuntimePad::DAY.1,
+		milli: RuntimeMilli::DAY.1,
 	};
 
 	/// ```rust
@@ -247,10 +201,10 @@ impl RuntimeUnion {
 	/// assert_eq!(RuntimeUnion::MAX, RuntimeUnion::from(359999.0));
 	/// ```
 	pub const MAX: Self = Self {
-		float: Runtime::MAX_F32,
+		inner: Runtime::MAX_F32,
 		runtime: Runtime::MAX.1,
-		runtime_pad: RuntimePad::MAX.1,
-		runtime_milli: RuntimeMilli::MAX.1,
+		pad: RuntimePad::MAX.1,
+		milli: RuntimeMilli::MAX.1,
 	};
 }
 
@@ -260,7 +214,7 @@ impl RuntimeUnion {
 	#[must_use]
 	/// Returns the inner number.
 	pub const fn inner(&self) -> f32 {
-		self.float
+		self.inner
 	}
 
 	#[inline]
@@ -280,7 +234,7 @@ impl RuntimeUnion {
 	/// assert_eq!(RuntimeUnion::from(65.555).as_str_pad(), "00:01:05");
 	/// ```
 	pub const fn as_str_pad(&self) -> &str {
-		self.runtime_pad.as_str()
+		self.pad.as_str()
 	}
 
 	#[inline]
@@ -290,7 +244,7 @@ impl RuntimeUnion {
 	/// assert_eq!(RuntimeUnion::from(65.555).as_str_milli(), "00:01:05.555");
 	/// ```
 	pub const fn as_str_milli(&self) -> &str {
-		self.runtime_milli.as_str()
+		self.milli.as_str()
 	}
 
 	#[inline]
@@ -302,7 +256,7 @@ impl RuntimeUnion {
 	/// assert_eq!(RuntimeUnion::from(65.555).to_runtime(), Runtime::from(65.555));
 	/// ```
 	pub const fn to_runtime(&self) -> Runtime {
-		Runtime(self.float, self.runtime)
+		Runtime(self.inner, self.runtime)
 	}
 
 	#[inline]
@@ -314,7 +268,7 @@ impl RuntimeUnion {
 	/// assert_eq!(RuntimeUnion::from(65.555).to_pad(), RuntimePad::from(65.555));
 	/// ```
 	pub const fn to_pad(&self) -> RuntimePad {
-		RuntimePad(self.float, self.runtime_pad)
+		RuntimePad(self.inner, self.pad)
 	}
 
 	#[inline]
@@ -326,7 +280,7 @@ impl RuntimeUnion {
 	/// assert_eq!(RuntimeUnion::from(65.555).to_milli(), RuntimeMilli::from(65.555));
 	/// ```
 	pub const fn to_milli(&self) -> RuntimeMilli {
-		RuntimeMilli(self.float, self.runtime_milli)
+		RuntimeMilli(self.inner, self.milli)
 	}
 
 	#[inline]
@@ -343,9 +297,9 @@ impl RuntimeUnion {
 	/// ```
 	pub const fn into_inner(self) -> (Runtime, RuntimePad, RuntimeMilli) {
 		(
-			Runtime(self.float, self.runtime),
-			RuntimePad(self.float, self.runtime_pad),
-			RuntimeMilli(self.float, self.runtime_milli),
+			Runtime(self.inner, self.runtime),
+			RuntimePad(self.inner, self.pad),
+			RuntimeMilli(self.inner, self.milli),
 		)
 	}
 
@@ -359,8 +313,8 @@ impl RuntimeUnion {
 	pub const fn is_unknown(&self) -> bool {
 		let bytes = (
 			self.runtime.as_bytes(),
-			self.runtime_pad.as_bytes(),
-			self.runtime_milli.as_bytes(),
+			self.pad.as_bytes(),
+			self.milli.as_bytes(),
 		);
 		matches!(bytes, (b"?:??", b"??:??:??", b"??:??:??.???"))
 	}
@@ -370,28 +324,23 @@ impl RuntimeUnion {
 impl RuntimeUnion {
 	#[allow(unreachable_code)]
 	#[inline]
-	// Private function used in float `From`.
-	fn priv_from(float: f32) -> Self {
-		let runtime = Runtime::priv_from(float);
+	// Private function used in inner `From`.
+	fn priv_from(inner: f32) -> Self {
+		let runtime = Runtime::priv_from(inner);
 		if runtime == Runtime::UNKNOWN {
 			return Self::UNKNOWN;
 		}
 
-		let runtime_pad = RuntimePad::priv_from(float);
-		if runtime_pad == RuntimePad::UNKNOWN {
-			return Self::UNKNOWN;
-		}
-
-		let runtime_milli = RuntimeMilli::priv_from(float);
-		if runtime_milli == RuntimeMilli::UNKNOWN {
-			return Self::UNKNOWN;
-		}
+		// The above UNKNOWN check should preclude
+		// the need for checking the below.
+		let pad = RuntimePad::priv_from(inner).1;
+		let milli = RuntimeMilli::priv_from(inner).1;
 
 		Self {
-			float,
+			inner,
 			runtime: runtime.1,
-			runtime_pad: runtime_pad.1,
-			runtime_milli: runtime_milli.1,
+			pad,
+			milli,
 		}
 	}
 }
@@ -400,27 +349,83 @@ impl RuntimeUnion {
 impl PartialEq<f32> for RuntimeUnion {
 	#[inline]
 	fn eq(&self, other: &f32) -> bool {
-		self.float == *other
+		self.inner == *other
 	}
 }
 
 impl PartialEq<RuntimeUnion> for f32 {
 	#[inline]
 	fn eq(&self, other: &RuntimeUnion) -> bool {
-		*self == other.float
+		*self == other.inner
 	}
 }
 
 impl PartialEq<f32> for &RuntimeUnion {
 	#[inline]
 	fn eq(&self, other: &f32) -> bool {
-		self.float == *other
+		self.inner == *other
 	}
 }
 
 impl PartialEq<&RuntimeUnion> for f32 {
 	#[inline]
 	fn eq(&self, other: &&RuntimeUnion) -> bool {
-		*self == other.float
+		*self == other.inner
+	}
+}
+
+//---------------------------------------------------------------------------------------------------- Tests
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	#[cfg(feature = "serde")]
+	fn serde() {
+		let this: RuntimeUnion = RuntimeUnion::from(111.999);
+		let json = serde_json::to_string(&this).unwrap();
+		assert_eq!(
+			json,
+			r#"{"inner":111.999,"runtime":"1:51","pad":"00:01:51","milli":"00:01:51.999"}"#,
+		);
+
+		let this: RuntimeUnion = serde_json::from_str(&json).unwrap();
+		assert_eq!(this, 111.999);
+		assert_eq!(this.as_str(), "1:51");
+		assert_eq!(this.as_str_pad(), "00:01:51");
+		assert_eq!(this.as_str_milli(), "00:01:51.999");
+
+		// Bad bytes.
+		assert!(serde_json::from_str::<RuntimeUnion>(&"---").is_err());
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn bincode() {
+		let this: RuntimeUnion = RuntimeUnion::from(111.999);
+		let config = bincode::config::standard();
+		let bytes = bincode::encode_to_vec(&this, config).unwrap();
+
+		let this: RuntimeUnion = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert_eq!(this, 111.999);
+		assert_eq!(this.as_str(), "1:51");
+		assert_eq!(this.as_str_pad(), "00:01:51");
+		assert_eq!(this.as_str_milli(), "00:01:51.999");
+	}
+
+	#[test]
+	#[cfg(feature = "bincode")]
+	fn borsh() {
+		let this: RuntimeUnion = RuntimeUnion::from(111.999);
+		let bytes = borsh::to_vec(&this).unwrap();
+
+		let this: RuntimeUnion = borsh::from_slice(&bytes).unwrap();
+		assert_eq!(this, 111.999);
+		assert_eq!(this.as_str(), "1:51");
+		assert_eq!(this.as_str_pad(), "00:01:51");
+		assert_eq!(this.as_str_milli(), "00:01:51.999");
+
+		// Bad bytes.
+		assert!(borsh::from_slice::<RuntimeUnion>(b"bad .-;[]124/ bytes").is_err());
 	}
 }
