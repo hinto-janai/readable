@@ -4,9 +4,8 @@ use crate::str::Str;
 use crate::time::Time;
 use crate::macros::{
 	impl_common,impl_const,
-	impl_traits,
-	impl_usize,impl_math,impl_impl_math,
-	handle_over_u32,
+	impl_traits,impl_usize,impl_math,impl_impl_math,
+	handle_over_u32,impl_serde
 };
 
 //---------------------------------------------------------------------------------------------------- Military
@@ -72,14 +71,54 @@ use crate::macros::{
 /// assert_eq!(Military::from((3600 * 24) + 3599), "00:59:59");
 /// assert_eq!(Military::from((3600 * 24) + 1830), "00:30:30");
 /// ```
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
-#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Military(pub(super) u32, pub(super) Str<{ Military::MAX_LEN }>);
 
 impl_traits!(Military, u32);
 impl_math!(Military, u32);
+impl_serde! {
+	serde =>
+	/// ```rust
+	/// # use readable::time::*;
+	/// let this: Military = Military::from(3599);
+	/// let json = serde_json::to_string(&this).unwrap();
+	/// assert_eq!(json, "3599");
+	///
+	/// let this: Military = serde_json::from_str(&json).unwrap();
+	/// assert_eq!(this, 3599);
+	/// assert_eq!(this, "00:59:59");
+	///
+	/// // Bad bytes.
+	/// assert!(serde_json::from_str::<Military>(&"---").is_err());
+	/// ```
+	bincode =>
+	/// ```rust
+	/// # use readable::time::*;
+	/// let this: Military = Military::from(3599);
+	/// let config = bincode::config::standard();
+	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
+	///
+	/// let this: Military = bincode::decode_from_slice(&bytes, config).unwrap().0;
+	/// assert_eq!(this, 3599);
+	/// assert_eq!(this, "00:59:59");
+	/// ```
+	borsh =>
+	/// ```rust
+	/// # use readable::time::*;
+	/// let this: Military = Military::from(3599);
+	/// let bytes = borsh::to_vec(&this).unwrap();
+	///
+	/// let this: Military = borsh::from_slice(&bytes).unwrap();
+	/// assert_eq!(this, 3599);
+	/// assert_eq!(this, "00:59:59");
+	///
+	/// // Bad bytes.
+	/// assert!(borsh::from_slice::<Military>(b"bad .-;[]124/ bytes").is_err());
+	/// ```
+	u32,
+	Military,
+	from,
+}
 
 //---------------------------------------------------------------------------------------------------- Military Constants
 impl Military {

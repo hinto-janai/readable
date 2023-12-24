@@ -5,7 +5,7 @@ use crate::time::Military;
 use crate::macros::{
 	impl_common,impl_const,
 	impl_traits,impl_usize,impl_math,
-	impl_impl_math,handle_over_u32,
+	impl_impl_math,handle_over_u32,impl_serde,
 };
 
 //---------------------------------------------------------------------------------------------------- Time
@@ -71,14 +71,54 @@ use crate::macros::{
 /// assert_eq!(Time::from((3600 * 24) + 3599), "12:59:59 AM");
 /// assert_eq!(Time::from((3600 * 24) + 1830), "12:30:30 AM");
 /// ```
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
-#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Time(pub(super) u32, pub(super) Str<{ Time::MAX_LEN }>);
 
 impl_traits!(Time, u32);
 impl_math!(Time, u32);
+impl_serde! {
+	serde =>
+	/// ```rust
+	/// # use readable::time::*;
+	/// let this: Time = Time::from(3599);
+	/// let json = serde_json::to_string(&this).unwrap();
+	/// assert_eq!(json, "3599");
+	///
+	/// let this: Time = serde_json::from_str(&json).unwrap();
+	/// assert_eq!(this, 3599);
+	/// assert_eq!(this, "12:59:59 AM");
+	///
+	/// // Bad bytes.
+	/// assert!(serde_json::from_str::<Time>(&"---").is_err());
+	/// ```
+	bincode =>
+	/// ```rust
+	/// # use readable::time::*;
+	/// let this: Time = Time::from(3599);
+	/// let config = bincode::config::standard();
+	/// let bytes = bincode::encode_to_vec(&this, config).unwrap();
+	///
+	/// let this: Time = bincode::decode_from_slice(&bytes, config).unwrap().0;
+	/// assert_eq!(this, 3599);
+	/// assert_eq!(this, "12:59:59 AM");
+	/// ```
+	borsh =>
+	/// ```rust
+	/// # use readable::time::*;
+	/// let this: Time = Time::from(3599);
+	/// let bytes = borsh::to_vec(&this).unwrap();
+	///
+	/// let this: Time = borsh::from_slice(&bytes).unwrap();
+	/// assert_eq!(this, 3599);
+	/// assert_eq!(this, "12:59:59 AM");
+	///
+	/// // Bad bytes.
+	/// assert!(borsh::from_slice::<Time>(b"bad .-;[]124/ bytes").is_err());
+	/// ```
+	u32,
+	Time,
+	from,
+}
 
 //---------------------------------------------------------------------------------------------------- Time Constants
 impl Time {

@@ -79,7 +79,7 @@ use crate::num::Unsigned;
 /// assert_eq!(unit.seconds(), 1);
 ///
 /// // Maintain the `unknown` variant.
-/// let time: Uptime     = Uptime::UNKNOWN;
+/// let time: Uptime   = Uptime::UNKNOWN;
 /// let unit: TimeUnit = TimeUnit::from(time);
 /// assert!(unit.is_unknown());
 /// let time: Uptime = Uptime::from(unit);
