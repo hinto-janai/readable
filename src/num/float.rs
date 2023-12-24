@@ -367,6 +367,11 @@ mod tests {
 
 		// Bad bytes.
 		assert!(serde_json::from_str::<Float>(&"---").is_err());
+
+		// Unknown.
+		let json = serde_json::to_string(&Float::UNKNOWN).unwrap();
+		assert_eq!(json, r#"[0.0,"?.???"]"#);
+		assert!(serde_json::from_str::<Float>(&json).unwrap().is_unknown());
 	}
 
 	#[test]
@@ -379,6 +384,11 @@ mod tests {
 		let this: Float = bincode::decode_from_slice(&bytes, config).unwrap().0;
 		assert_eq!(this, 1.0);
 		assert_eq!(this, "1.000");
+
+		// Unknown.
+		let bytes = bincode::encode_to_vec(&Float::UNKNOWN, config).unwrap();
+		let this: Float = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert!(this.is_unknown());
 	}
 
 	#[test]
@@ -393,5 +403,10 @@ mod tests {
 
 		// Bad bytes.
 		assert!(borsh::from_slice::<Float>(b"bad .-;[]124/ bytes").is_err());
+
+		// Unknown.
+		let bytes = borsh::to_vec(&Float::UNKNOWN).unwrap();
+		let this: Float = borsh::from_slice(&bytes).unwrap();
+		assert!(this.is_unknown());
 	}
 }

@@ -511,6 +511,11 @@ mod tests {
 
 		// Bad bytes.
 		assert!(serde_json::from_str::<Nichi>(&"---").is_err());
+
+		// Unknown.
+		let json = serde_json::to_string(&Nichi::UNKNOWN).unwrap();
+		assert_eq!(json, r#"[[0,0,0],"???"]"#);
+		assert!(serde_json::from_str::<Nichi>(&json).unwrap().is_unknown());
 	}
 
 	#[test]
@@ -523,6 +528,11 @@ mod tests {
 		let this: Nichi = bincode::decode_from_slice(&bytes, config).unwrap().0;
 		assert_eq!(this, (2024, 1, 1));
 		assert_eq!(this, "Mon, Jan 1, 2024");
+
+		// Unknown.
+		let bytes = bincode::encode_to_vec(&Nichi::UNKNOWN, config).unwrap();
+		let this: Nichi = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert!(this.is_unknown());
 	}
 
 	#[test]
@@ -537,5 +547,10 @@ mod tests {
 
 		// Bad bytes.
 		assert!(borsh::from_slice::<Nichi>(b"bad .-;[]124/ bytes").is_err());
+
+		// Unknown.
+		let bytes = borsh::to_vec(&Nichi::UNKNOWN).unwrap();
+		let this: Nichi = borsh::from_slice(&bytes).unwrap();
+		assert!(this.is_unknown());
 	}
 }

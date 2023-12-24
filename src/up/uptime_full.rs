@@ -485,6 +485,11 @@ mod tests {
 
 		// Bad bytes.
 		assert!(serde_json::from_str::<UptimeFull>(&"---").is_err());
+
+		// Unknown.
+		let json = serde_json::to_string(&UptimeFull::UNKNOWN).unwrap();
+		assert_eq!(json, r#"[0,"(unknown)"]"#);
+		assert!(serde_json::from_str::<UptimeFull>(&json).unwrap().is_unknown());
 	}
 
 	#[test]
@@ -497,6 +502,11 @@ mod tests {
 		let this: UptimeFull = bincode::decode_from_slice(&bytes, config).unwrap().0;
 		assert_eq!(this, 3283199_u32);
 		assert_eq!(this, "1 month, 6 days, 23 hours, 59 minutes, 59 seconds");
+
+		// Unknown.
+		let bytes = bincode::encode_to_vec(&UptimeFull::UNKNOWN, config).unwrap();
+		let this: UptimeFull = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert!(this.is_unknown());
 	}
 
 	#[test]
@@ -511,5 +521,10 @@ mod tests {
 
 		// Bad bytes.
 		assert!(borsh::from_slice::<UptimeFull>(b"bad .-;[]124/ bytes").is_err());
+
+		// Unknown.
+		let bytes = borsh::to_vec(&UptimeFull::UNKNOWN).unwrap();
+		let this: UptimeFull = borsh::from_slice(&bytes).unwrap();
+		assert!(this.is_unknown());
 	}
 }

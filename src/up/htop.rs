@@ -463,6 +463,11 @@ mod tests {
 
 		// Bad bytes.
 		assert!(serde_json::from_str::<Htop>(&"---").is_err());
+
+		// Unknown.
+		let json = serde_json::to_string(&Htop::UNKNOWN).unwrap();
+		assert_eq!(json, r#"[0,"(unknown)"]"#);
+		assert!(serde_json::from_str::<Htop>(&json).unwrap().is_unknown());
 	}
 
 	#[test]
@@ -475,6 +480,11 @@ mod tests {
 		let this: Htop = bincode::decode_from_slice(&bytes, config).unwrap().0;
 		assert_eq!(this, 8726400_u32);
 		assert_eq!(this, "101 days(!), 00:00:00");
+
+		// Unknown.
+		let bytes = bincode::encode_to_vec(&Htop::UNKNOWN, config).unwrap();
+		let this: Htop = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert!(this.is_unknown());
 	}
 
 	#[test]
@@ -489,5 +499,10 @@ mod tests {
 
 		// Bad bytes.
 		assert!(borsh::from_slice::<Htop>(b"bad .-;[]124/ bytes").is_err());
+
+		// Unknown.
+		let bytes = borsh::to_vec(&Htop::UNKNOWN).unwrap();
+		let this: Htop = borsh::from_slice(&bytes).unwrap();
+		assert!(this.is_unknown());
 	}
 }

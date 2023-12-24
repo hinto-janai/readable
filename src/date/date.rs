@@ -1435,6 +1435,11 @@ mod tests {
 
 		// Bad bytes.
 		assert!(serde_json::from_str::<Date>(&"---").is_err());
+
+		// Unknown.
+		let json = serde_json::to_string(&Date::UNKNOWN).unwrap();
+		assert_eq!(json, r#"[[0,0,0],"????-??-??"]"#);
+		assert!(serde_json::from_str::<Date>(&json).unwrap().is_unknown());
 	}
 
 	#[test]
@@ -1447,6 +1452,11 @@ mod tests {
 		let this: Date = bincode::decode_from_slice(&bytes, config).unwrap().0;
 		assert_eq!(this, (2024, 1, 1));
 		assert_eq!(this, "2024-01-01");
+
+		// Unknown.
+		let bytes = bincode::encode_to_vec(&Date::UNKNOWN, config).unwrap();
+		let this: Date = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert!(this.is_unknown());
 	}
 
 	#[test]
@@ -1461,5 +1471,10 @@ mod tests {
 
 		// Bad bytes.
 		assert!(borsh::from_slice::<Date>(b"bad .-;[]124/ bytes").is_err());
+
+		// Unknown.
+		let bytes = borsh::to_vec(&Date::UNKNOWN).unwrap();
+		let this: Date = borsh::from_slice(&bytes).unwrap();
+		assert!(this.is_unknown());
 	}
 }

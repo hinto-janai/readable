@@ -397,6 +397,14 @@ mod tests {
 
 		// Bad bytes.
 		assert!(serde_json::from_str::<RuntimeUnion>(&"---").is_err());
+
+		// Unknown.
+		let json = serde_json::to_string(&RuntimeUnion::UNKNOWN).unwrap();
+		assert_eq!(
+			json,
+			r#"{"inner":0.0,"runtime":"?:??","pad":"??:??:??","milli":"??:??:??.???"}"#,
+		);
+		assert!(serde_json::from_str::<RuntimeUnion>(&json).unwrap().is_unknown());
 	}
 
 	#[test]
@@ -411,6 +419,11 @@ mod tests {
 		assert_eq!(this.as_str(), "1:51");
 		assert_eq!(this.as_str_pad(), "00:01:51");
 		assert_eq!(this.as_str_milli(), "00:01:51.999");
+
+		// Unknown.
+		let bytes = bincode::encode_to_vec(&RuntimeUnion::UNKNOWN, config).unwrap();
+		let this: RuntimeUnion = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert!(this.is_unknown());
 	}
 
 	#[test]
@@ -427,5 +440,10 @@ mod tests {
 
 		// Bad bytes.
 		assert!(borsh::from_slice::<RuntimeUnion>(b"bad .-;[]124/ bytes").is_err());
+
+		// Unknown.
+		let bytes = borsh::to_vec(&RuntimeUnion::UNKNOWN).unwrap();
+		let this: RuntimeUnion = borsh::from_slice(&bytes).unwrap();
+		assert!(this.is_unknown());
 	}
 }

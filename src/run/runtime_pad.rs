@@ -380,6 +380,11 @@ mod tests {
 
 		// Bad bytes.
 		assert!(serde_json::from_str::<RuntimePad>(&"---").is_err());
+
+		// Unknown.
+		let json = serde_json::to_string(&RuntimePad::UNKNOWN).unwrap();
+		assert_eq!(json, r#"[0.0,"??:??:??"]"#);
+		assert!(serde_json::from_str::<RuntimePad>(&json).unwrap().is_unknown());
 	}
 
 	#[test]
@@ -392,6 +397,11 @@ mod tests {
 		let this: RuntimePad = bincode::decode_from_slice(&bytes, config).unwrap().0;
 		assert_eq!(this, 111.999);
 		assert_eq!(this, "00:01:51");
+
+		// Unknown.
+		let bytes = bincode::encode_to_vec(&RuntimePad::UNKNOWN, config).unwrap();
+		let this: RuntimePad = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert!(this.is_unknown());
 	}
 
 	#[test]
@@ -406,5 +416,10 @@ mod tests {
 
 		// Bad bytes.
 		assert!(borsh::from_slice::<RuntimePad>(b"bad .-;[]124/ bytes").is_err());
+
+		// Unknown.
+		let bytes = borsh::to_vec(&RuntimePad::UNKNOWN).unwrap();
+		let this: RuntimePad = borsh::from_slice(&bytes).unwrap();
+		assert!(this.is_unknown());
 	}
 }

@@ -487,6 +487,11 @@ mod tests {
 
 		// Bad bytes.
 		assert!(serde_json::from_str::<Time>(&"---").is_err());
+
+		// Unknown.
+		let json = serde_json::to_string(&Time::UNKNOWN).unwrap();
+		assert_eq!(json, r#"[0,"??:??:??"]"#);
+		assert!(serde_json::from_str::<Time>(&json).unwrap().is_unknown());
 	}
 
 	#[test]
@@ -499,6 +504,11 @@ mod tests {
 		let this: Time = bincode::decode_from_slice(&bytes, config).unwrap().0;
 		assert_eq!(this, 3599);
 		assert_eq!(this, "12:59:59 AM");
+
+		// Unknown.
+		let bytes = bincode::encode_to_vec(&Time::UNKNOWN, config).unwrap();
+		let this: Time = bincode::decode_from_slice(&bytes, config).unwrap().0;
+		assert!(this.is_unknown());
 	}
 
 	#[test]
@@ -513,5 +523,10 @@ mod tests {
 
 		// Bad bytes.
 		assert!(borsh::from_slice::<Time>(b"bad .-;[]124/ bytes").is_err());
+
+		// Unknown.
+		let bytes = borsh::to_vec(&Time::UNKNOWN).unwrap();
+		let this: Time = borsh::from_slice(&bytes).unwrap();
+		assert!(this.is_unknown());
 	}
 }
