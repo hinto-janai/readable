@@ -34,11 +34,17 @@ jobs:
         key: ${{ matrix.os }}
 
     - name: Clippy
-      run: cargo clippy --release
+      run: cargo clippy --release --all-features
 
     - name: Test
       shell: bash
-      run: cargo test --release -- --skip float::tests::special --skip int::tests::special --skip percent::tests::special --skip runtime::tests::special --skip unsigned::tests::special
+      run: cargo test --release --all-features -- --skip float::tests::special --skip int::tests::special --skip percent::tests::special --skip runtime::tests::special --skip unsigned::tests::special
 
     - name: Build
-      run: cargo build --release
+      shell: bash
+      run: |
+        cargo build --release --all-features
+        # Build all features, individually.
+        for feature in "byte" "date" "num" "run" "time" "up"; do
+          cargo build --release --no-default-features --features $feature
+        done
