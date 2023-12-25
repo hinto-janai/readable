@@ -24,13 +24,14 @@ rustdoc-args = ["--cfg", "docsrs"]
 [features]
 # Everything relies on `str` and `toa`, so they're always enabled.
 default = ["byte", "date", "num", "run", "time", "up"]
+full    = ["byte", "date", "num", "run", "time", "up", "serde", "bincode", "borsh"]
 byte    = []
-date    = ["dep:regex", "dep:once_cell", "dep:nichi", "dep:chrono"]
+date    = ["dep:regex", "dep:once_cell", "dep:nichi", "dep:chrono", "dep:compact_str"]
 num     = ["dep:compact_str", "dep:seq-macro"]
 run     = []
-time    = []
+time    = ["dep:chrono", "dep:nichi"]
 toa     = []
-up      = ["dep:target_os_lib"]
+up      = ["run", "dep:target_os_lib"]
 
 [dependencies]
 paste = { version = "1" }

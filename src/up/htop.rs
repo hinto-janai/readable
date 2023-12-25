@@ -1,7 +1,5 @@
 //---------------------------------------------------------------------------------------------------- Use
 use crate::up::{Uptime,UptimeFull};
-use crate::time::TimeUnit;
-use crate::run::RuntimePad;
 use crate::str::Str;
 use crate::macros::{
 	return_bad_float,impl_common,
@@ -9,6 +7,9 @@ use crate::macros::{
 	impl_usize,impl_traits,handle_over_u32,
 };
 use crate::itoa;
+#[cfg(feature = "time")]
+use crate::time::TimeUnit;
+use crate::run::RuntimePad; // needed in `from_priv`
 
 //---------------------------------------------------------------------------------------------------- Htop
 /// [`htop`](https://github.com/htop-dev/htop)-style uptime formatting
@@ -232,7 +233,9 @@ macro_rules! impl_from_time {
 		}
 	)*}
 }
-impl_from_time!(Htop => Uptime, UptimeFull, TimeUnit);
+impl_from_time!(Htop => Uptime, UptimeFull);
+#[cfg(feature = "time")]
+impl_from_time!(Htop => TimeUnit);
 
 //---------------------------------------------------------------------------------------------------- "u*" impl
 // Implementation Macro.

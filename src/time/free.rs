@@ -155,12 +155,10 @@ pub fn time_utc() -> u32 {
 
 //---------------------------------------------------------------------------------------------------- DateTime
 use chrono::Timelike;
-#[allow(unused_imports)] // docs
-use crate::date::date;
 
 #[inline]
 #[must_use]
-/// Combines [`date()`] and [`time()`]
+/// Combines [`crate::date::date()`] and [`time()`]
 ///
 /// This returns the system's current (`year`, `month`, `day`, `seconds_passed_today`).
 ///

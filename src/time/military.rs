@@ -1,12 +1,13 @@
-use crate::{time::TimeUnit, num::Unsigned};
 //---------------------------------------------------------------------------------------------------- Use
 use crate::str::Str;
-use crate::time::Time;
+use crate::time::{TimeUnit, Time};
 use crate::macros::{
 	impl_common,impl_const,
 	impl_traits,impl_usize,impl_math,impl_impl_math,
 	handle_over_u32,
 };
+#[cfg(feature = "num")]
+use crate::num::Unsigned;
 
 //---------------------------------------------------------------------------------------------------- Military
 /// Military time - `23:59:59`
@@ -356,7 +357,9 @@ macro_rules! impl_other {
 		)*
 	}
 }
-impl_other!(Time, TimeUnit, Unsigned);
+impl_other!(Time, TimeUnit);
+#[cfg(feature = "num")]
+impl_other!(Unsigned);
 
 //---------------------------------------------------------------------------------------------------- Trait Impl
 impl From<std::time::Duration> for Military {

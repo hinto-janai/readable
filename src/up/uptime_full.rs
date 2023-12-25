@@ -1,6 +1,5 @@
 //---------------------------------------------------------------------------------------------------- Use
 use crate::up::{Uptime,Htop};
-use crate::time::TimeUnit;
 use crate::str::Str;
 use crate::macros::{
 	return_bad_float,impl_common,
@@ -8,6 +7,8 @@ use crate::macros::{
 	impl_usize,impl_traits,handle_over_u32,
 };
 use crate::itoa;
+#[cfg(feature = "time")]
+use crate::time::TimeUnit;
 
 //---------------------------------------------------------------------------------------------------- UptimeFull
 /// [`Uptime`] but with full specified words
@@ -384,7 +385,9 @@ macro_rules! impl_from_time {
 		}
 	)*}
 }
-impl_from_time!(UptimeFull => Uptime, Htop, TimeUnit);
+impl_from_time!(UptimeFull => Uptime, Htop);
+#[cfg(feature = "time")]
+impl_from_time!(UptimeFull => TimeUnit);
 
 //---------------------------------------------------------------------------------------------------- Trait Impl
 impl From<std::time::Duration> for UptimeFull {

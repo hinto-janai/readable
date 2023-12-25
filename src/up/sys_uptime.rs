@@ -4,6 +4,7 @@ use crate::up::{
 	UptimeFull,
 	Htop,
 };
+#[cfg(feature = "time")]
 use crate::time::TimeUnit;
 
 //---------------------------------------------------------------------------------------------------- SysUptime Trait
@@ -125,6 +126,7 @@ mod private {
 	impl Sealed for Uptime {}
 	impl Sealed for UptimeFull {}
 	impl Sealed for Htop {}
+	#[cfg(feature = "time")]
 	impl Sealed for TimeUnit {}
 }
 
@@ -140,4 +142,6 @@ macro_rules! impl_uptime {
 		)*
 	};
 }
-impl_uptime!(Uptime, UptimeFull, Htop, TimeUnit);
+impl_uptime!(Uptime, UptimeFull, Htop);
+#[cfg(feature = "time")]
+impl_uptime!(TimeUnit);

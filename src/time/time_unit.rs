@@ -1,10 +1,12 @@
 //---------------------------------------------------------------------------------------------------- Use
-use crate::up::{Uptime,Htop,UptimeFull};
 use crate::time::{Time,Military};
 use crate::macros::{
 	return_bad_float,impl_impl_math,impl_math,
 };
+#[cfg(feature = "num")]
 use crate::num::Unsigned;
+#[cfg(feature = "up")]
+use crate::up::{Uptime,Htop,UptimeFull};
 
 //---------------------------------------------------------------------------------------------------- Use
 /// Unit of time
@@ -775,7 +777,11 @@ macro_rules! impl_from_time {
 		}
 	)*}
 }
-impl_from_time!(TimeUnit => UptimeFull, Htop, Uptime, Time, Military, Unsigned);
+impl_from_time!(TimeUnit => Time, Military);
+#[cfg(feature = "up")]
+impl_from_time!(TimeUnit => UptimeFull, Htop, Uptime);
+#[cfg(feature = "num")]
+impl_from_time!(TimeUnit => Unsigned);
 
 //---------------------------------------------------------------------------------------------------- Trait Impl
 impl From<std::time::Duration> for TimeUnit {
