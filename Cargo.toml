@@ -1,6 +1,6 @@
 [package]
 name = "readable"
-version = "0.15.0"
+version = "0.16.0"
 edition = "2021"
 authors = ["hinto.janai <hinto.janai@protonmail.com>"]
 description = "Human readable strings"
@@ -13,6 +13,7 @@ exclude = [
 	"inlined",
 	"fuzz",
 	"CHANGELOG.md",
+	"Cargo.lock",
 ]
 categories = ["value-formatting"]
 rust-version = "1.71.0"

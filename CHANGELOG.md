@@ -16,6 +16,12 @@ Types of changes:
 
 
 # readable Unreleased
+
+
+---
+
+
+# readable v0.16.0 - 2023-12-26
 ## Added
 - Impl `TryFrom<[u8]>` for `Str`
 - Impl `borsh::{BorshSerialize, BorshDeserialize}` on most types
