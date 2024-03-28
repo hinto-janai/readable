@@ -719,7 +719,7 @@ impl<const N: usize> Str<N> {
     /// // This fits.
     /// assert_eq!(string.copy_str("abc"), Ok(3));
     /// ```
-    pub fn copy_str(&mut self, s: impl AsRef<str>) -> Result<usize, usize> {
+    pub fn copy_str<S: AsRef<str>>(&mut self, s: S) -> Result<usize, usize> {
         let s = s.as_ref();
         let s_bytes = s.as_bytes();
         let s_len = s.len();
@@ -784,7 +784,7 @@ impl<const N: usize> Str<N> {
     /// string.copy_str_unchecked("abc");
     /// assert_eq!(string, "abc")
     /// ```
-    pub fn copy_str_unchecked(&mut self, s: impl AsRef<str>) -> usize {
+    pub fn copy_str_unchecked<S: AsRef<str>>(&mut self, s: S) -> usize {
         let s = s.as_ref();
         let s_bytes = s.as_bytes();
         let s_len = s.len();
@@ -833,7 +833,7 @@ impl<const N: usize> Str<N> {
     /// assert_eq!(err, Err(1));
     /// assert_eq!(string, "abc");
     /// ```
-    pub fn push_str(&mut self, s: impl AsRef<str>) -> Result<usize, usize> {
+    pub fn push_str<S: AsRef<str>>(&mut self, s: S) -> Result<usize, usize> {
         let s = s.as_ref();
         let s_bytes = s.as_bytes();
         let s_len = s.len();
@@ -892,7 +892,7 @@ impl<const N: usize> Str<N> {
     /// // This won't fit, will panic.
     /// s.push_str_panic("wow");
     /// ```
-    pub fn push_str_panic(&mut self, s: impl AsRef<str>) -> usize {
+    pub fn push_str_panic<S: AsRef<str>>(&mut self, s: S) -> usize {
         let s = s.as_ref();
         let s_bytes = s.as_bytes();
         let s_len = s.len();
@@ -973,7 +973,7 @@ impl<const N: usize> Str<N> {
     /// assert_eq!(0, s.push_str_saturating("🦀"));
     /// assert_eq!(s, "wor");
     /// ```
-    pub fn push_str_saturating(&mut self, s: impl AsRef<str>) -> usize {
+    pub fn push_str_saturating<S: AsRef<str>>(&mut self, s: S) -> usize {
         let s = s.as_ref();
         let s_len = s.len();
 
@@ -1202,7 +1202,7 @@ impl<const N: usize> Str<N> {
     /// // 1 too many characters, will panic.
     /// let s = Str::<4>::from_str_exact("12345");
     /// ```
-    pub fn from_str_exact(string: impl AsRef<str>) -> Self {
+    pub fn from_str_exact<S: AsRef<str>>(string: S) -> Self {
         // SAFETY: `str` is valid UTF-8
         unsafe { Self::from_bytes_exact(string.as_ref().as_bytes()) }
     }
@@ -1230,7 +1230,7 @@ impl<const N: usize> Str<N> {
     /// // 1 too many characters, will panic.
     /// let s = unsafe { Str::<4>::from_bytes_exact(b"12345") };
     /// ```
-    pub unsafe fn from_bytes_exact(bytes: impl AsRef<[u8]>) -> Self {
+    pub unsafe fn from_bytes_exact<B: AsRef<[u8]>>(bytes: B) -> Self {
         let mut buf = [0; N];
         buf.copy_from_slice(bytes.as_ref());
         Self { len: N as u8, buf }
