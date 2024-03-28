@@ -542,8 +542,8 @@ macro_rules! dtoa_inner {
 }
 
 //---------------------------------------------------------------------------------------------------- Const
-const NAN:          &str = "NaN";
-const INFINITY:     &str = "inf";
+const NAN: &str = "NaN";
+const INFINITY: &str = "inf";
 const NEG_INFINITY: &str = "-inf";
 
 //---------------------------------------------------------------------------------------------------- Dtoa
@@ -575,7 +575,7 @@ const NEG_INFINITY: &str = "-inf";
 /// ```
 #[derive(Copy, Clone, Debug)]
 pub struct Dtoa {
-	len: u8,
+    len: u8,
     bytes: [MaybeUninit<u8>; 25],
 }
 
@@ -587,104 +587,101 @@ impl Default for Dtoa {
 }
 
 impl Dtoa {
-	/// Create a new [`Dtoa`].
-	///
-	/// Takes any [`IntoDtoa`] ([`f32`], [`f64`]).
-	///
-	/// This function will properly format non-finite floats.
-	///
-	/// See [`Dtoa::new_finite()`] if you know your float is finite
-	/// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
-	///
-	/// ```rust
-	/// # use readable::toa::Dtoa;
-	/// let dtoa = Dtoa::new(1.0);
-	/// assert_eq!(dtoa, "1.0");
-	///
-	/// let dtoa = Dtoa::new(f64::NAN);
-	/// assert_eq!(dtoa, "NaN");
-	/// let dtoa = Dtoa::new(f64::INFINITY);
-	/// assert_eq!(dtoa, "inf");
-	/// let dtoa = Dtoa::new(f64::NEG_INFINITY);
-	/// assert_eq!(dtoa, "-inf");
-	/// ```
+    /// Create a new [`Dtoa`].
+    ///
+    /// Takes any [`IntoDtoa`] ([`f32`], [`f64`]).
+    ///
+    /// This function will properly format non-finite floats.
+    ///
+    /// See [`Dtoa::new_finite()`] if you know your float is finite
+    /// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
+    ///
+    /// ```rust
+    /// # use readable::toa::Dtoa;
+    /// let dtoa = Dtoa::new(1.0);
+    /// assert_eq!(dtoa, "1.0");
+    ///
+    /// let dtoa = Dtoa::new(f64::NAN);
+    /// assert_eq!(dtoa, "NaN");
+    /// let dtoa = Dtoa::new(f64::INFINITY);
+    /// assert_eq!(dtoa, "inf");
+    /// let dtoa = Dtoa::new(f64::NEG_INFINITY);
+    /// assert_eq!(dtoa, "-inf");
+    /// ```
 
     pub fn new<N: IntoDtoa>(num: N) -> Self {
         if num.is_nonfinite() {
-			let mut bytes = [MaybeUninit::<u8>::uninit(); 25];
+            let mut bytes = [MaybeUninit::<u8>::uninit(); 25];
             let string = num.format_nonfinite();
-			for (i, byte) in string.as_bytes().iter().enumerate() {
-				bytes[i].write(*byte);
-			}
-			Self {
-				len: string.len() as u8,
-				bytes,
-			}
+            for (i, byte) in string.as_bytes().iter().enumerate() {
+                bytes[i].write(*byte);
+            }
+            Self {
+                len: string.len() as u8,
+                bytes,
+            }
         } else {
             Self::new_finite(num)
         }
     }
 
-	/// Create a new [`Dtoa`].
-	///
-	/// Takes any [`IntoDtoa`].
-	///
-	/// This function **will not** properly format non-finite floats.
-	///
-	/// See [`Dtoa::new()`] for non-finite float formatting
-	/// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
-	///
-	/// ```rust
-	/// # use readable::toa::Dtoa;
-	/// let dtoa = Dtoa::new(18.425);
-	/// assert_eq!(dtoa, "18.425");
-	/// let dtoa = Dtoa::new(19.0918);
-	/// assert_eq!(dtoa, "19.0918");
-	///
-	/// // This is safe, but the output strings will be incorrect.
-	/// let dtoa = Dtoa::new_finite(f64::NAN);
-	/// assert_eq!(dtoa, "2.696539702293474e308");
-	/// let dtoa = Dtoa::new_finite(f64::INFINITY);
-	/// assert_eq!(dtoa, "1.797693134862316e308");
-	/// let dtoa = Dtoa::new_finite(f64::NEG_INFINITY);
-	/// assert_eq!(dtoa, "-1.797693134862316e308");
-	/// ```
+    /// Create a new [`Dtoa`].
+    ///
+    /// Takes any [`IntoDtoa`].
+    ///
+    /// This function **will not** properly format non-finite floats.
+    ///
+    /// See [`Dtoa::new()`] for non-finite float formatting
+    /// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
+    ///
+    /// ```rust
+    /// # use readable::toa::Dtoa;
+    /// let dtoa = Dtoa::new(18.425);
+    /// assert_eq!(dtoa, "18.425");
+    /// let dtoa = Dtoa::new(19.0918);
+    /// assert_eq!(dtoa, "19.0918");
+    ///
+    /// // This is safe, but the output strings will be incorrect.
+    /// let dtoa = Dtoa::new_finite(f64::NAN);
+    /// assert_eq!(dtoa, "2.696539702293474e308");
+    /// let dtoa = Dtoa::new_finite(f64::INFINITY);
+    /// assert_eq!(dtoa, "1.797693134862316e308");
+    /// let dtoa = Dtoa::new_finite(f64::NEG_INFINITY);
+    /// assert_eq!(dtoa, "-1.797693134862316e308");
+    /// ```
 
     pub fn new_finite<N: IntoDtoa>(num: N) -> Self {
-		let mut input = [MaybeUninit::<u8>::uninit(); 25];
-		let string = num.write(&mut input);
+        let mut input = [MaybeUninit::<u8>::uninit(); 25];
+        let string = num.write(&mut input);
 
-		let mut bytes = [MaybeUninit::<u8>::uninit(); 25];
+        let mut bytes = [MaybeUninit::<u8>::uninit(); 25];
 
-		for (i, byte) in string.as_bytes().iter().enumerate() {
-			bytes[i].write(*byte);
-		}
+        for (i, byte) in string.as_bytes().iter().enumerate() {
+            bytes[i].write(*byte);
+        }
 
-		Self {
-			len: string.len() as u8,
-			bytes,
-		}
+        Self {
+            len: string.len() as u8,
+            bytes,
+        }
     }
 
-	#[inline]
-	/// Turns [`Dtoa`] into a `&str`.
-	///
-	/// ```rust
-	/// # use readable::toa::Dtoa;
-	/// let dtoa:   Dtoa = Dtoa::new(123.456);
-	/// let string: &str = dtoa.as_str();
-	/// assert_eq!(string, "123.456");
-	/// ```
-	pub const fn as_str(&self) -> &str {
-		// Safety: Constructors must set state correctly.
-		unsafe {
-			let slice = slice::from_raw_parts(
-				self.bytes.as_ptr().cast::<u8>(),
-				self.len as usize
-			);
-			std::str::from_utf8_unchecked(slice)
-		}
-	}
+    #[inline]
+    /// Turns [`Dtoa`] into a `&str`.
+    ///
+    /// ```rust
+    /// # use readable::toa::Dtoa;
+    /// let dtoa:   Dtoa = Dtoa::new(123.456);
+    /// let string: &str = dtoa.as_str();
+    /// assert_eq!(string, "123.456");
+    /// ```
+    pub const fn as_str(&self) -> &str {
+        // Safety: Constructors must set state correctly.
+        unsafe {
+            let slice = slice::from_raw_parts(self.bytes.as_ptr().cast::<u8>(), self.len as usize);
+            std::str::from_utf8_unchecked(slice)
+        }
+    }
 }
 
 //---------------------------------------------------------------------------------------------------- DtoaTmp
@@ -723,68 +720,70 @@ impl Dtoa {
 /// ```
 #[derive(Copy, Clone, Debug)]
 pub struct DtoaTmp {
-	bytes: [MaybeUninit<u8>; 25],
+    bytes: [MaybeUninit<u8>; 25],
 }
 
 impl DtoaTmp {
-	/// Create a new [`DtoaTmp`].
-	#[inline]
-	pub const fn new() -> Self {
-		Self { bytes: [MaybeUninit::<u8>::uninit(); 25] }
-	}
+    /// Create a new [`DtoaTmp`].
+    #[inline]
+    pub const fn new() -> Self {
+        Self {
+            bytes: [MaybeUninit::<u8>::uninit(); 25],
+        }
+    }
 
-	/// Format an [`IntoDtoa`] into a [`&str`] with an existing [`DtoaTmp`]
-	///
-	/// This function will properly format non-finite floats.
-	///
-	/// See [`DtoaTmp::format_finite()`] if you know your float is finite
-	/// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
-	///
-	/// ```rust
-	/// # use readable::toa::DtoaTmp;
-	/// // We can cheaply reuse this.
-	/// let mut dtoa = DtoaTmp::new();
-	///
-	/// assert_eq!(dtoa.format(18.425),  "18.425");
-	/// assert_eq!(dtoa.format(19.0918), "19.0918");
-	/// assert_eq!(dtoa.format(1.0),     "1.0");
-	///
-	/// assert_eq!(dtoa.format(f32::NAN),          "NaN");
-	/// assert_eq!(dtoa.format(f32::INFINITY),     "inf");
-	/// assert_eq!(dtoa.format(f32::NEG_INFINITY), "-inf");
-	/// ```
-	pub fn format<N: IntoDtoa>(&mut self, num: N) -> &str {
-		if num.is_nonfinite() {
-			num.format_nonfinite()
-		} else {
-			num.write(&mut self.bytes)
-		}
-	}
+    /// Format an [`IntoDtoa`] into a [`&str`] with an existing [`DtoaTmp`]
+    ///
+    /// This function will properly format non-finite floats.
+    ///
+    /// See [`DtoaTmp::format_finite()`] if you know your float is finite
+    /// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
+    ///
+    /// ```rust
+    /// # use readable::toa::DtoaTmp;
+    /// // We can cheaply reuse this.
+    /// let mut dtoa = DtoaTmp::new();
+    ///
+    /// assert_eq!(dtoa.format(18.425),  "18.425");
+    /// assert_eq!(dtoa.format(19.0918), "19.0918");
+    /// assert_eq!(dtoa.format(1.0),     "1.0");
+    ///
+    /// assert_eq!(dtoa.format(f32::NAN),          "NaN");
+    /// assert_eq!(dtoa.format(f32::INFINITY),     "inf");
+    /// assert_eq!(dtoa.format(f32::NEG_INFINITY), "-inf");
+    /// ```
+    pub fn format<N: IntoDtoa>(&mut self, num: N) -> &str {
+        if num.is_nonfinite() {
+            num.format_nonfinite()
+        } else {
+            num.write(&mut self.bytes)
+        }
+    }
 
-	#[inline]
-	/// Format an [`IntoDtoa`] into a [`&str`] with an existing [`DtoaTmp`]
-	///
-	/// This function **will not** properly format non-finite floats.
-	///
-	/// See [`DtoaTmp::format()`] for non-finite float formatting
-	/// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
-	///
-	/// ```rust
-	/// # use readable::toa::DtoaTmp;
-	/// // We can cheaply reuse this.
-	/// let mut dtoa = DtoaTmp::new();
-	///
-	/// assert_eq!(dtoa.format_finite(18.425),  "18.425");
-	/// assert_eq!(dtoa.format_finite(19.0918), "19.0918");
-	///
-	/// // This is safe, but the output strings will be incorrect.
-	/// assert_eq!(dtoa.format_finite(f64::NAN),          "2.696539702293474e308");
-	/// assert_eq!(dtoa.format_finite(f64::INFINITY),     "1.797693134862316e308");
-	/// assert_eq!(dtoa.format_finite(f64::NEG_INFINITY), "-1.797693134862316e308");
-	/// ```
-	pub fn format_finite<N: IntoDtoa>(&mut self, num: N) -> &str {
-		num.write(&mut self.bytes)
-	}
+    #[inline]
+    /// Format an [`IntoDtoa`] into a [`&str`] with an existing [`DtoaTmp`]
+    ///
+    /// This function **will not** properly format non-finite floats.
+    ///
+    /// See [`DtoaTmp::format()`] for non-finite float formatting
+    /// (not [`f32::NAN`], [`f32::INFINITY`], [`f32::NEG_INFINITY`]).
+    ///
+    /// ```rust
+    /// # use readable::toa::DtoaTmp;
+    /// // We can cheaply reuse this.
+    /// let mut dtoa = DtoaTmp::new();
+    ///
+    /// assert_eq!(dtoa.format_finite(18.425),  "18.425");
+    /// assert_eq!(dtoa.format_finite(19.0918), "19.0918");
+    ///
+    /// // This is safe, but the output strings will be incorrect.
+    /// assert_eq!(dtoa.format_finite(f64::NAN),          "2.696539702293474e308");
+    /// assert_eq!(dtoa.format_finite(f64::INFINITY),     "1.797693134862316e308");
+    /// assert_eq!(dtoa.format_finite(f64::NEG_INFINITY), "-1.797693134862316e308");
+    /// ```
+    pub fn format_finite<N: IntoDtoa>(&mut self, num: N) -> &str {
+        num.write(&mut self.bytes)
+    }
 }
 
 #[macro_export]
@@ -833,60 +832,60 @@ impl DtoaTmp {
 /// readable::toa::DtoaTmp::new().format(1.0);
 /// ```
 macro_rules! dtoa {
-	($into_dtoa:expr) => {{
-		$crate::toa::DtoaTmp::new().format($into_dtoa)
-	}};
+    ($into_dtoa:expr) => {{
+        $crate::toa::DtoaTmp::new().format($into_dtoa)
+    }};
 }
 
 //---------------------------------------------------------------------------------------------------- Dtoa Traits
 impl std::ops::Deref for Dtoa {
-	type Target = str;
+    type Target = str;
 
-	fn deref(&self) -> &Self::Target {
-		self.as_str()
-	}
+    fn deref(&self) -> &Self::Target {
+        self.as_str()
+    }
 }
 
 impl AsRef<str> for Dtoa {
-	fn as_ref(&self) -> &str {
-		self.as_str()
-	}
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
 }
 
 impl std::borrow::Borrow<str> for Dtoa {
-	fn borrow(&self) -> &str {
-		self.as_str()
-	}
+    fn borrow(&self) -> &str {
+        self.as_str()
+    }
 }
 
 impl PartialEq<str> for Dtoa {
-	fn eq(&self, other: &str) -> bool {
-		self.as_str() == other
-	}
+    fn eq(&self, other: &str) -> bool {
+        self.as_str() == other
+    }
 }
 
 impl PartialEq<&str> for Dtoa {
-	fn eq(&self, other: &&str) -> bool {
-		self.as_str() == *other
-	}
+    fn eq(&self, other: &&str) -> bool {
+        self.as_str() == *other
+    }
 }
 
 impl PartialEq<String> for Dtoa {
-	fn eq(&self, other: &String) -> bool {
-		self.as_str() == other
-	}
+    fn eq(&self, other: &String) -> bool {
+        self.as_str() == other
+    }
 }
 
 impl<T: IntoDtoa> std::convert::From<T> for Dtoa {
-	fn from(float: T) -> Self {
-		Self::new(float)
-	}
+    fn from(float: T) -> Self {
+        Self::new(float)
+    }
 }
 
 impl std::fmt::Display for Dtoa {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{}", self.as_str())
-	}
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
 }
 
 //---------------------------------------------------------------------------------------------------- IntoDtoa
@@ -939,14 +938,7 @@ impl std::fmt::Display for Dtoa {
 /// ```
 pub trait IntoDtoa: private::Sealed {}
 
-use std::num::{
-	NonZeroI8,
-	NonZeroI16,
-	NonZeroI32,
-	NonZeroU8,
-	NonZeroU16,
-	NonZeroU32,
-};
+use std::num::{NonZeroI16, NonZeroI32, NonZeroI8, NonZeroU16, NonZeroU32, NonZeroU8};
 
 macro_rules! impl_float {
 	($( $target_type:ty ),* $(,)?) => {
@@ -956,13 +948,13 @@ macro_rules! impl_float {
 	};
 }
 impl_float! {
-	f32,f64,u8,u16,u32,i8,i16,i32,
-	NonZeroI8,
-	NonZeroI16,
-	NonZeroI32,
-	NonZeroU8,
-	NonZeroU16,
-	NonZeroU32,
+    f32,f64,u8,u16,u32,i8,i16,i32,
+    NonZeroI8,
+    NonZeroI16,
+    NonZeroI32,
+    NonZeroU8,
+    NonZeroU16,
+    NonZeroU32,
 }
 
 //---------------------------------------------------------------------------------------------------- Impl
@@ -1018,20 +1010,20 @@ macro_rules! impl_non_zero {
 	)*};
 }
 impl_int! {
-	u8  => f32,
-	u16 => f32,
-	u32 => f64,
-	i8  => f32,
-	i16 => f32,
-	i32 => f64,
+    u8  => f32,
+    u16 => f32,
+    u32 => f64,
+    i8  => f32,
+    i16 => f32,
+    i32 => f64,
 }
 impl_non_zero! {
-	NonZeroI8  => f32,
-	NonZeroI16 => f32,
-	NonZeroI32 => f64,
-	NonZeroU8  => f32,
-	NonZeroU16 => f32,
-	NonZeroU32 => f64,
+    NonZeroI8  => f32,
+    NonZeroI16 => f32,
+    NonZeroI32 => f64,
+    NonZeroU8  => f32,
+    NonZeroU16 => f32,
+    NonZeroU32 => f64,
 }
 
 impl private::Sealed for f32 {

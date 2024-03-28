@@ -35,7 +35,7 @@ pub(super) struct DiyFp<F, E> {
 }
 
 impl<F, E> DiyFp<F, E> {
-	pub(super) const fn new(f: F, e: E) -> Self {
+    pub(super) const fn new(f: F, e: E) -> Self {
         Self { f, e }
     }
 }
@@ -242,10 +242,11 @@ macro_rules! diyfp {
         */
         #[inline]
         fn get_cached_power(e: $expty) -> (DiyFp, isize) {
-            let dk = ((3 - $diy_significand_size - e) as f64).mul_add(0.30102999566398114_f64, -($min_power + 1) as f64);
+            let dk = ((3 - $diy_significand_size - e) as f64)
+                .mul_add(0.30102999566398114_f64, -($min_power + 1) as f64);
             // clippy suggested to use the above instead of the below
             // let dk = (3 - $diy_significand_size - e) as f64 * 0.30102999566398114_f64
-                // - ($min_power + 1) as f64;
+            // - ($min_power + 1) as f64;
 
             let mut k = dk as isize;
             if dk - k as f64 > 0.0 {

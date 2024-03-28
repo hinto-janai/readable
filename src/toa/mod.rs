@@ -32,14 +32,10 @@
 mod diyfp;
 #[macro_use]
 mod dtoa;
-pub use dtoa::{
-	Dtoa,IntoDtoa,DtoaTmp,
-};
+pub use dtoa::{Dtoa, DtoaTmp, IntoDtoa};
 
 //---------------------------------------------------------------------------------------------------- Itoa
 mod itoa;
 mod udiv128;
-pub use itoa::{
-	Itoa,ItoaTmp,Integer
-};
 pub(crate) use itoa::Itoa64;
+pub use itoa::{Integer, Itoa, ItoaTmp};

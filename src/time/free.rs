@@ -7,12 +7,12 @@
 ///
 /// This will return `0` if the underlying system call fails.
 pub fn unix() -> u64 {
-	use std::time::{SystemTime, UNIX_EPOCH};
+    use std::time::{SystemTime, UNIX_EPOCH};
 
-	match SystemTime::now().duration_since(UNIX_EPOCH) {
-		Ok(unix) => unix.as_secs(),
-		_ => 0,
-	}
+    match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(unix) => unix.as_secs(),
+        _ => 0,
+    }
 }
 
 #[inline]
@@ -39,7 +39,7 @@ pub fn unix() -> u64 {
 /// assert_eq!((h, m, s), (22, 18, 30))
 /// ```
 pub const fn unix_clock(seconds_after_unix_epoch: u64) -> u32 {
-	(seconds_after_unix_epoch % 86400) as u32
+    (seconds_after_unix_epoch % 86400) as u32
 }
 
 #[inline]
@@ -72,14 +72,14 @@ pub const fn unix_clock(seconds_after_unix_epoch: u64) -> u32 {
 /// assert_eq!(secs_to_hms(86400), (24, 0, 0));
 /// ```
 pub const fn secs_to_hms(seconds: u64) -> (u64, u8, u8) {
-	let hours   = seconds / 3600;
-	let minutes = (seconds % 3600) / 60;
-	let seconds = (seconds % 3600) % 60;
+    let hours = seconds / 3600;
+    let minutes = (seconds % 3600) / 60;
+    let seconds = (seconds % 3600) % 60;
 
-	debug_assert!(minutes < 60);
-	debug_assert!(seconds < 60);
+    debug_assert!(minutes < 60);
+    debug_assert!(seconds < 60);
 
-	(hours, minutes as u8, seconds as u8)
+    (hours, minutes as u8, seconds as u8)
 }
 
 #[inline]
@@ -117,14 +117,14 @@ pub const fn secs_to_hms(seconds: u64) -> (u64, u8, u8) {
 /// assert_eq!(secs_to_clock(89999), (0, 59, 59));
 /// ```
 pub const fn secs_to_clock(seconds: u32) -> (u8, u8, u8) {
-	let seconds = seconds % 86400;
-	let (h,m,s) = secs_to_hms(seconds as u64);
+    let seconds = seconds % 86400;
+    let (h, m, s) = secs_to_hms(seconds as u64);
 
-	debug_assert!(h < 24);
-	debug_assert!(m < 60);
-	debug_assert!(s < 60);
+    debug_assert!(h < 24);
+    debug_assert!(m < 60);
+    debug_assert!(s < 60);
 
-	(h as u8, m, s)
+    (h as u8, m, s)
 }
 
 //---------------------------------------------------------------------------------------------------- Time
@@ -138,8 +138,8 @@ pub const fn secs_to_clock(seconds: u32) -> (u8, u8, u8) {
 ///
 /// This will return `0` if the underlying system call fails.
 pub fn time() -> u32 {
-	let now = chrono::offset::Local::now().time();
-	(now.hour() * 3600) + (now.minute() * 60) + now.second()
+    let now = chrono::offset::Local::now().time();
+    (now.hour() * 3600) + (now.minute() * 60) + now.second()
 }
 
 #[inline]
@@ -150,7 +150,7 @@ pub fn time() -> u32 {
 ///
 /// This is guaranteed to return a value between `0..=86399`
 pub fn time_utc() -> u32 {
-	unix_clock(chrono::offset::Local::now().timestamp() as u64)
+    unix_clock(chrono::offset::Local::now().timestamp() as u64)
 }
 
 //---------------------------------------------------------------------------------------------------- DateTime
@@ -165,22 +165,22 @@ use chrono::Timelike;
 /// The seconds passed represents how many seconds
 /// have passed in the current day, the same as [`time`].
 pub fn datetime() -> (i16, u8, u8, u32) {
-	let now  = chrono::offset::Local::now();
-	let (y,m,d) = nichi::Date::from_unix(i128::from(now.timestamp())).inner();
-	let time = now.time();
-	let seconds = (time.hour() * 3600) + (time.minute() * 60) + time.second();
+    let now = chrono::offset::Local::now();
+    let (y, m, d) = nichi::Date::from_unix(i128::from(now.timestamp())).inner();
+    let time = now.time();
+    let seconds = (time.hour() * 3600) + (time.minute() * 60) + time.second();
 
-	(y, m, d, seconds)
+    (y, m, d, seconds)
 }
 
 #[inline]
 #[must_use]
 /// [`datetime()`] but in the UTC timezone
 pub fn datetime_utc() -> (i16, u8, u8, u32) {
-	let now  = chrono::offset::Utc::now();
-	let (y,m,d) = nichi::Date::from_unix(i128::from(now.timestamp())).inner();
-	let time = now.time();
-	let seconds = (time.hour() * 3600) + (time.minute() * 60) + time.second();
+    let now = chrono::offset::Utc::now();
+    let (y, m, d) = nichi::Date::from_unix(i128::from(now.timestamp())).inner();
+    let time = now.time();
+    let seconds = (time.hour() * 3600) + (time.minute() * 60) + time.second();
 
-	(y, m, d, seconds)
+    (y, m, d, seconds)
 }

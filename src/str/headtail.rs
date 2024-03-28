@@ -1,5 +1,5 @@
-use std::fmt;
 use std::borrow::Cow;
+use std::fmt;
 #[allow(unused_imports)] // docs
 use std::fmt::Display;
 
@@ -89,209 +89,252 @@ pub const DOT: &str = "...";
 /// assert_eq!(new, "he...ld");
 /// ```
 pub trait HeadTail: AsRef<str> {
-	/// Return the first `head` UTF-8 characters of this [`str`].
-	///
-	/// This will return the full [`str`] if `head` is
-	/// longer than the actual inner [`str`].
-	///
-	/// ```rust
-	/// # use readable::str::HeadTail;
-	/// let string = "hello world";
-	/// assert_eq!(string.head(5), "hello");
-	/// ```
-	fn head(&self, head: usize) -> Head<'_> {
-		let s = self.as_ref();
+    /// Return the first `head` UTF-8 characters of this [`str`].
+    ///
+    /// This will return the full [`str`] if `head` is
+    /// longer than the actual inner [`str`].
+    ///
+    /// ```rust
+    /// # use readable::str::HeadTail;
+    /// let string = "hello world";
+    /// assert_eq!(string.head(5), "hello");
+    /// ```
+    fn head(&self, head: usize) -> Head<'_> {
+        let s = self.as_ref();
 
-		#[allow(clippy::string_slice)]
-		if let Some((index, _)) = s.char_indices().nth(head) {
-			Head { string: &s[..index], cut: true }
-		} else {
-			Head { string: s, cut: false }
-		}
-	}
+        #[allow(clippy::string_slice)]
+        if let Some((index, _)) = s.char_indices().nth(head) {
+            Head {
+                string: &s[..index],
+                cut: true,
+            }
+        } else {
+            Head {
+                string: s,
+                cut: false,
+            }
+        }
+    }
 
-	/// Same as [`HeadTail::head()`] but this will allocate
-	/// a new [`String`] ending with `...`.
-	///
-	/// This will not allocate and will return the input without
-	/// `...` if `head` is longer than the actual inner [`str`].
-	///
-	/// ```rust
-	/// # use readable::str::HeadTail;
-	/// let string = "hello world";
-	/// assert_eq!(string.head_dot(5), "hello...");
-	///
-	/// // No dot appended.
-	/// let string = "hello world";
-	/// assert_eq!(string.head_dot(11), string);
-	/// ```
-	fn head_dot(&self, head: usize) -> HeadDot<'_> {
-		let s = self.as_ref();
+    /// Same as [`HeadTail::head()`] but this will allocate
+    /// a new [`String`] ending with `...`.
+    ///
+    /// This will not allocate and will return the input without
+    /// `...` if `head` is longer than the actual inner [`str`].
+    ///
+    /// ```rust
+    /// # use readable::str::HeadTail;
+    /// let string = "hello world";
+    /// assert_eq!(string.head_dot(5), "hello...");
+    ///
+    /// // No dot appended.
+    /// let string = "hello world";
+    /// assert_eq!(string.head_dot(11), string);
+    /// ```
+    fn head_dot(&self, head: usize) -> HeadDot<'_> {
+        let s = self.as_ref();
 
-		#[allow(clippy::string_slice)]
-		if let Some((index, _)) = s.char_indices().nth(head) {
-			let mut string = String::with_capacity(s.len() + 3);
-			string += &s[..index];
-			string += DOT;
-			HeadDot { cow: Cow::Owned(string) }
-		} else {
-			HeadDot { cow: Cow::Borrowed(s) }
-		}
-	}
+        #[allow(clippy::string_slice)]
+        if let Some((index, _)) = s.char_indices().nth(head) {
+            let mut string = String::with_capacity(s.len() + 3);
+            string += &s[..index];
+            string += DOT;
+            HeadDot {
+                cow: Cow::Owned(string),
+            }
+        } else {
+            HeadDot {
+                cow: Cow::Borrowed(s),
+            }
+        }
+    }
 
-	/// Return the last `tail` UTF-8 characters of this [`str`].
-	///
-	/// This will return the full [`str`] if `tail` is
-	/// longer than the actual inner [`str`].
-	///
-	/// ```rust
-	/// # use readable::str::HeadTail;
-	/// let string = "hello world";
-	/// assert_eq!(string.tail(5), "world");
-	/// ```
-	fn tail(&self, tail: usize) -> Tail<'_> {
-		let s = self.as_ref();
+    /// Return the last `tail` UTF-8 characters of this [`str`].
+    ///
+    /// This will return the full [`str`] if `tail` is
+    /// longer than the actual inner [`str`].
+    ///
+    /// ```rust
+    /// # use readable::str::HeadTail;
+    /// let string = "hello world";
+    /// assert_eq!(string.tail(5), "world");
+    /// ```
+    fn tail(&self, tail: usize) -> Tail<'_> {
+        let s = self.as_ref();
 
-		let end = s.chars().count();
+        let end = s.chars().count();
 
-		if tail >= end {
-			return Tail { string: s, cut: false };
-		}
+        if tail >= end {
+            return Tail {
+                string: s,
+                cut: false,
+            };
+        }
 
-		#[allow(clippy::string_slice)]
-		if let Some((index, _)) = s.char_indices().nth(end - tail) {
-			Tail { string: &s[index..], cut: true }
-		} else {
-			Tail { string: s, cut: false }
-		}
-	}
+        #[allow(clippy::string_slice)]
+        if let Some((index, _)) = s.char_indices().nth(end - tail) {
+            Tail {
+                string: &s[index..],
+                cut: true,
+            }
+        } else {
+            Tail {
+                string: s,
+                cut: false,
+            }
+        }
+    }
 
-	/// Same as [`HeadTail::tail()`] but this allocated
-	/// a new [`String`] ending with `...`.
-	///
-	/// This will return the full string without `...` if
-	/// `tail` is longer than the actual inner [`str`].
-	///
-	/// ```rust
-	/// # use readable::str::HeadTail;
-	/// let string = "hello world";
-	/// assert_eq!(string.tail_dot(5), "...world");
-	///
-	/// // No dot appended.
-	/// let string = "hello world";
-	/// assert_eq!(string.tail_dot(11), string);
-	/// ```
-	fn tail_dot(&self, tail: usize) -> TailDot<'_> {
-		let s = self.as_ref();
+    /// Same as [`HeadTail::tail()`] but this allocated
+    /// a new [`String`] ending with `...`.
+    ///
+    /// This will return the full string without `...` if
+    /// `tail` is longer than the actual inner [`str`].
+    ///
+    /// ```rust
+    /// # use readable::str::HeadTail;
+    /// let string = "hello world";
+    /// assert_eq!(string.tail_dot(5), "...world");
+    ///
+    /// // No dot appended.
+    /// let string = "hello world";
+    /// assert_eq!(string.tail_dot(11), string);
+    /// ```
+    fn tail_dot(&self, tail: usize) -> TailDot<'_> {
+        let s = self.as_ref();
 
-		let end = s.chars().count();
+        let end = s.chars().count();
 
-		if tail >= end {
-			return TailDot { cow: Cow::Borrowed(s) }
-		}
+        if tail >= end {
+            return TailDot {
+                cow: Cow::Borrowed(s),
+            };
+        }
 
-		#[allow(clippy::string_slice)]
-		if let Some((index, _)) = s.char_indices().nth(end - tail) {
-			let mut string = String::with_capacity(end + 3);
-			string += DOT;
-			string += &s[index..];
-			TailDot { cow: Cow::Owned(string) }
-		} else {
-			TailDot { cow: Cow::Borrowed(s) }
-		}
-	}
+        #[allow(clippy::string_slice)]
+        if let Some((index, _)) = s.char_indices().nth(end - tail) {
+            let mut string = String::with_capacity(end + 3);
+            string += DOT;
+            string += &s[index..];
+            TailDot {
+                cow: Cow::Owned(string),
+            }
+        } else {
+            TailDot {
+                cow: Cow::Borrowed(s),
+            }
+        }
+    }
 
-	/// Return the first `head` UTF-8 characters and last `tail`
-	/// UTF-8 characters of this [`str`].
-	///
-	/// ```rust
-	/// # use readable::str::HeadTail;
-	/// let string = "hello world";
-	/// assert_eq!(string.head_tail(5, 5), "helloworld");
-	///
-	/// // No string allocated for this.
-	/// let string = "hello world";
-	/// assert_eq!(string.head_tail(6, 5), string);
-	///
-	/// // Non-ASCII characters.
-	/// let sixteen_chars = "🦀🦀🐸🐸";
-	/// let four_chars    = "ですけど";
-	///
-	/// assert_eq!(sixteen_chars.len(), 16);
-	/// assert_eq!(four_chars.len(),    12);
-	///
-	/// assert_eq!(sixteen_chars.head_tail(1, 1), "🦀🐸");
-	/// assert_eq!(four_chars.head_tail(1, 1),    "でど");
-	///
-	/// assert_eq!(sixteen_chars.head_tail(2, 2), sixteen_chars);
-	/// assert_eq!(four_chars.head_tail(2, 2),    four_chars);
-	/// ```
-	fn head_tail(&self, head: usize, tail: usize) -> HeadTailStr<'_> {
-		let s = self.as_ref();
+    /// Return the first `head` UTF-8 characters and last `tail`
+    /// UTF-8 characters of this [`str`].
+    ///
+    /// ```rust
+    /// # use readable::str::HeadTail;
+    /// let string = "hello world";
+    /// assert_eq!(string.head_tail(5, 5), "helloworld");
+    ///
+    /// // No string allocated for this.
+    /// let string = "hello world";
+    /// assert_eq!(string.head_tail(6, 5), string);
+    ///
+    /// // Non-ASCII characters.
+    /// let sixteen_chars = "🦀🦀🐸🐸";
+    /// let four_chars    = "ですけど";
+    ///
+    /// assert_eq!(sixteen_chars.len(), 16);
+    /// assert_eq!(four_chars.len(),    12);
+    ///
+    /// assert_eq!(sixteen_chars.head_tail(1, 1), "🦀🐸");
+    /// assert_eq!(four_chars.head_tail(1, 1),    "でど");
+    ///
+    /// assert_eq!(sixteen_chars.head_tail(2, 2), sixteen_chars);
+    /// assert_eq!(four_chars.head_tail(2, 2),    four_chars);
+    /// ```
+    fn head_tail(&self, head: usize, tail: usize) -> HeadTailStr<'_> {
+        let s = self.as_ref();
 
-		let end = s.chars().count();
+        let end = s.chars().count();
 
-		if head + tail >= end {
-			return HeadTailStr { head: s, tail: None }
-		}
+        if head + tail >= end {
+            return HeadTailStr {
+                head: s,
+                tail: None,
+            };
+        }
 
-		// Iterator is consumed, must create twice.
-		let head = s.char_indices().nth(head);
-		let tail = s.char_indices().nth(end - tail);
+        // Iterator is consumed, must create twice.
+        let head = s.char_indices().nth(head);
+        let tail = s.char_indices().nth(end - tail);
 
-		#[allow(clippy::string_slice)]
-		if let (Some((head, _)), Some((tail, _))) = (head, tail) {
-			HeadTailStr { head: &s[..head], tail: Some(&s[tail..]) }
-		} else {
-			HeadTailStr { head: s, tail: None }
-		}
-	}
+        #[allow(clippy::string_slice)]
+        if let (Some((head, _)), Some((tail, _))) = (head, tail) {
+            HeadTailStr {
+                head: &s[..head],
+                tail: Some(&s[tail..]),
+            }
+        } else {
+            HeadTailStr {
+                head: s,
+                tail: None,
+            }
+        }
+    }
 
-	/// Return the first `head` UTF-8 characters and last `tail`
-	/// UTF-8 characters of this [`str`] separated with `...`.
-	///
-	/// ```rust
-	/// # use readable::str::HeadTail;
-	/// let string = "hello world";
-	/// assert_eq!(string.head_tail_dot(5, 5), "hello...world");
-	///
-	/// // No dot appended.
-	/// let string = "hello world";
-	/// assert_eq!(string.head_tail_dot(6, 5), string);
-	///
-	/// // Non-ASCII characters.
-	/// let sixteen_chars = "🦀🦀🐸🐸";
-	/// let four_chars    = "ですけど";
-	///
-	/// assert_eq!(sixteen_chars.len(), 16);
-	/// assert_eq!(four_chars.len(),    12);
-	///
-	/// assert_eq!(sixteen_chars.head_tail_dot(1, 1), "🦀...🐸");
-	/// assert_eq!(four_chars.head_tail_dot(1, 1),    "で...ど");
-	///
-	/// assert_eq!(sixteen_chars.head_tail_dot(3, 3), sixteen_chars);
-	/// assert_eq!(four_chars.head_tail_dot(2, 2),    four_chars);
-	/// ```
-	fn head_tail_dot(&self, head: usize, tail: usize) -> HeadTailDot<'_> {
-		let s = self.as_ref();
+    /// Return the first `head` UTF-8 characters and last `tail`
+    /// UTF-8 characters of this [`str`] separated with `...`.
+    ///
+    /// ```rust
+    /// # use readable::str::HeadTail;
+    /// let string = "hello world";
+    /// assert_eq!(string.head_tail_dot(5, 5), "hello...world");
+    ///
+    /// // No dot appended.
+    /// let string = "hello world";
+    /// assert_eq!(string.head_tail_dot(6, 5), string);
+    ///
+    /// // Non-ASCII characters.
+    /// let sixteen_chars = "🦀🦀🐸🐸";
+    /// let four_chars    = "ですけど";
+    ///
+    /// assert_eq!(sixteen_chars.len(), 16);
+    /// assert_eq!(four_chars.len(),    12);
+    ///
+    /// assert_eq!(sixteen_chars.head_tail_dot(1, 1), "🦀...🐸");
+    /// assert_eq!(four_chars.head_tail_dot(1, 1),    "で...ど");
+    ///
+    /// assert_eq!(sixteen_chars.head_tail_dot(3, 3), sixteen_chars);
+    /// assert_eq!(four_chars.head_tail_dot(2, 2),    four_chars);
+    /// ```
+    fn head_tail_dot(&self, head: usize, tail: usize) -> HeadTailDot<'_> {
+        let s = self.as_ref();
 
-		let end = s.chars().count();
+        let end = s.chars().count();
 
-		if head + tail >= end {
-			return HeadTailDot { head: s, tail: None }
-		}
+        if head + tail >= end {
+            return HeadTailDot {
+                head: s,
+                tail: None,
+            };
+        }
 
-		// Iterator is consumed, must create twice.
-		let head = s.char_indices().nth(head);
-		let tail = s.char_indices().nth(end - tail);
+        // Iterator is consumed, must create twice.
+        let head = s.char_indices().nth(head);
+        let tail = s.char_indices().nth(end - tail);
 
-		#[allow(clippy::string_slice)]
-		if let (Some((head, _)), Some((tail, _))) = (head, tail) {
-			HeadTailDot { head: &s[..head], tail: Some(&s[tail..]) }
-		} else {
-			HeadTailDot { head: s, tail: None }
-		}
-	}
+        #[allow(clippy::string_slice)]
+        if let (Some((head, _)), Some((tail, _))) = (head, tail) {
+            HeadTailDot {
+                head: &s[..head],
+                tail: Some(&s[tail..]),
+            }
+        } else {
+            HeadTailDot {
+                head: s,
+                tail: None,
+            }
+        }
+    }
 }
 
 //---------------------------------------------------------------------------------------------------- HeadTail structs
@@ -304,8 +347,8 @@ pub trait HeadTail: AsRef<str> {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct Head<'a> {
-	string: &'a str,
-	cut: bool,
+    string: &'a str,
+    cut: bool,
 }
 
 /// Struct returned from [`HeadTail::tail()`]
@@ -317,8 +360,8 @@ pub struct Head<'a> {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct Tail<'a> {
-	string: &'a str,
-	cut: bool,
+    string: &'a str,
+    cut: bool,
 }
 
 macro_rules! impl_string {
@@ -412,7 +455,7 @@ impl_string!(Head, Tail);
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct HeadDot<'a> {
-	cow: Cow<'a, str>,
+    cow: Cow<'a, str>,
 }
 
 /// Struct returned from [`HeadTail::tail_dot()`]
@@ -425,7 +468,7 @@ pub struct HeadDot<'a> {
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
 #[derive(Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct TailDot<'a> {
-	cow: Cow<'a, str>,
+    cow: Cow<'a, str>,
 }
 
 macro_rules! impl_cow {
@@ -535,39 +578,39 @@ impl_cow!(HeadDot, TailDot);
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct HeadTailStr<'a> {
-	// This holds the whole string if `head + tail > input_len`
-	head: &'a str,
-	tail: Option<&'a str>,
+    // This holds the whole string if `head + tail > input_len`
+    head: &'a str,
+    tail: Option<&'a str>,
 }
 impl fmt::Display for HeadTailStr<'_> {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		match self.tail {
-			Some(t) => write!(f, "{}{t}", self.head),
-			None    => write!(f, "{}", self.head),
-		}
-	}
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.tail {
+            Some(t) => write!(f, "{}{t}", self.head),
+            None => write!(f, "{}", self.head),
+        }
+    }
 }
 impl HeadTailStr<'_> {
-	#[inline]
-	fn str_cmp(&self, other: &str) -> bool {
-		match self.tail {
-			Some(t) => {
-				let head_bytes = self.head.as_bytes();
-				let tail_bytes = t.as_bytes();
-				let str_bytes  = other.as_bytes();
+    #[inline]
+    fn str_cmp(&self, other: &str) -> bool {
+        match self.tail {
+            Some(t) => {
+                let head_bytes = self.head.as_bytes();
+                let tail_bytes = t.as_bytes();
+                let str_bytes = other.as_bytes();
 
-				let head_len  = head_bytes.len();
-				let tail_len  = tail_bytes.len();
-				let total_len = head_len + tail_len;
+                let head_len = head_bytes.len();
+                let tail_len = tail_bytes.len();
+                let total_len = head_len + tail_len;
 
-				total_len == str_bytes.len() &&
-				head_bytes == &str_bytes[..head_len] &&
-				tail_bytes == &str_bytes[tail_len..]
-			},
+                total_len == str_bytes.len()
+                    && head_bytes == &str_bytes[..head_len]
+                    && tail_bytes == &str_bytes[tail_len..]
+            }
 
-			None => self.head == other,
-		}
-	}
+            None => self.head == other,
+        }
+    }
 }
 
 /// Struct returned from [`HeadTail::head_tail_dot()`]
@@ -600,42 +643,41 @@ impl HeadTailStr<'_> {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Copy, Clone, PartialEq, PartialOrd, Eq, Ord, Hash, Debug)]
 pub struct HeadTailDot<'a> {
-	// This holds the whole string if `head + tail > input_len`
-	head: &'a str,
-	tail: Option<&'a str>,
+    // This holds the whole string if `head + tail > input_len`
+    head: &'a str,
+    tail: Option<&'a str>,
 }
 impl fmt::Display for HeadTailDot<'_> {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		match self.tail {
-			Some(t) => write!(f, "{}{DOT}{t}", self.head),
-			None    => write!(f, "{}", self.head),
-		}
-	}
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.tail {
+            Some(t) => write!(f, "{}{DOT}{t}", self.head),
+            None => write!(f, "{}", self.head),
+        }
+    }
 }
 impl HeadTailDot<'_> {
-	#[inline]
-	fn str_cmp(&self, other: &str) -> bool {
-		match self.tail {
+    #[inline]
+    fn str_cmp(&self, other: &str) -> bool {
+        match self.tail {
+            Some(t) => {
+                let head_bytes = self.head.as_bytes();
+                let tail_bytes = t.as_bytes();
+                let str_bytes = other.as_bytes();
 
-			Some(t) => {
-				let head_bytes = self.head.as_bytes();
-				let tail_bytes = t.as_bytes();
-				let str_bytes  = other.as_bytes();
+                let head_len = head_bytes.len();
+                let tail_len = tail_bytes.len();
+                let total_len = head_len + tail_len;
 
-				let head_len  = head_bytes.len();
-				let tail_len  = tail_bytes.len();
-				let total_len = head_len + tail_len;
+                // Tail exists, that means the string was
+                // cut so we should be expecting `...`
+                (total_len + 3) == str_bytes.len()
+                    && head_bytes == &str_bytes[..head_len]
+                    && tail_bytes == &str_bytes[tail_len + 3..]
+            }
 
-				// Tail exists, that means the string was
-				// cut so we should be expecting `...`
-				(total_len + 3) == str_bytes.len() &&
-				head_bytes == &str_bytes[..head_len] &&
-				tail_bytes == &str_bytes[tail_len + 3..]
-			},
-
-			None => self.head == other,
-		}
-	}
+            None => self.head == other,
+        }
+    }
 }
 
 macro_rules! impl_head_tail {

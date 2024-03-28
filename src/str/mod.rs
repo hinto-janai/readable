@@ -9,8 +9,4 @@ mod str;
 pub use self::str::Str;
 
 mod headtail;
-pub use headtail::{
-	DOT,
-	HeadTail,Head,Tail,HeadDot,
-	TailDot,HeadTailStr,HeadTailDot,
-};
+pub use headtail::{Head, HeadDot, HeadTail, HeadTailDot, HeadTailStr, Tail, TailDot, DOT};

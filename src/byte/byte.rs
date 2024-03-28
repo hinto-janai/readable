@@ -1,15 +1,11 @@
 //---------------------------------------------------------------------------------------------------- Use
 use std::num::{
-	NonZeroU8,NonZeroU16,NonZeroU32,NonZeroU64,
-	NonZeroI8,NonZeroI16,NonZeroI32,NonZeroI64,
-	NonZeroUsize,NonZeroIsize,
+    NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize, NonZeroU16, NonZeroU32,
+    NonZeroU64, NonZeroU8, NonZeroUsize,
 };
 
+use crate::macros::{impl_common, impl_const, impl_impl_math, impl_math, impl_traits, impl_usize};
 use crate::str::Str;
-use crate::macros::{
-	impl_traits,impl_impl_math,impl_usize,
-	impl_math, impl_common, impl_const,
-};
 
 //---------------------------------------------------------------------------------------------------- Byte
 /// Human-readable byte formatting
@@ -97,7 +93,10 @@ use crate::macros::{
 /// ```
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "bincode", derive(bincode::Encode, bincode::Decode))]
-#[cfg_attr(feature = "borsh", derive(borsh::BorshSerialize, borsh::BorshDeserialize))]
+#[cfg_attr(
+    feature = "borsh",
+    derive(borsh::BorshSerialize, borsh::BorshDeserialize)
+)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Byte(u64, Str<{ Byte::MAX_LEN }>);
 
@@ -124,214 +123,214 @@ const ZERO: u64 = 0;
 
 //---------------------------------------------------------------------------------------------------- Constants
 impl Byte {
-	/// The maximum string length of a [`Byte`]
-	/// ```rust
-	/// # use readable::byte::Byte;
-	/// assert_eq!("xxx.xxx KB".len(), Byte::MAX_LEN);
-	/// ```
-	pub const MAX_LEN: usize = 10;
+    /// The maximum string length of a [`Byte`]
+    /// ```rust
+    /// # use readable::byte::Byte;
+    /// assert_eq!("xxx.xxx KB".len(), Byte::MAX_LEN);
+    /// ```
+    pub const MAX_LEN: usize = 10;
 
-	/// ```rust
-	/// # use readable::byte::*;
-	/// assert_eq!(Byte::ZERO, "0 B");
-	/// assert_eq!(Byte::ZERO, 0_u64);
-	/// assert_eq!(Byte::ZERO, Byte::from(0_u64));
-	/// ```
-	pub const ZERO: Self = Self(ZERO, Str::from_static_str("0 B"));
+    /// ```rust
+    /// # use readable::byte::*;
+    /// assert_eq!(Byte::ZERO, "0 B");
+    /// assert_eq!(Byte::ZERO, 0_u64);
+    /// assert_eq!(Byte::ZERO, Byte::from(0_u64));
+    /// ```
+    pub const ZERO: Self = Self(ZERO, Str::from_static_str("0 B"));
 
-	/// ```rust
-	/// # use readable::byte::*;
-	/// assert_eq!(Byte::BYTE, "1 B");
-	/// assert_eq!(Byte::BYTE, 1_u64);
-	/// assert_eq!(Byte::BYTE, Byte::from(1_u64));
-	/// ```
-	pub const BYTE: Self = Self(BYTE, Str::from_static_str("1 B"));
+    /// ```rust
+    /// # use readable::byte::*;
+    /// assert_eq!(Byte::BYTE, "1 B");
+    /// assert_eq!(Byte::BYTE, 1_u64);
+    /// assert_eq!(Byte::BYTE, Byte::from(1_u64));
+    /// ```
+    pub const BYTE: Self = Self(BYTE, Str::from_static_str("1 B"));
 
-	/// ```rust
-	/// # use readable::byte::*;
-	/// assert_eq!(Byte::KILOBYTE, "1.000 KB");
-	/// assert_eq!(Byte::KILOBYTE, 1_000_u64);
-	/// assert_eq!(Byte::KILOBYTE, Byte::from(1_000_u64));
-	/// ```
-	pub const KILOBYTE: Self = Self(KILOBYTE, Str::from_static_str("1.000 KB"));
+    /// ```rust
+    /// # use readable::byte::*;
+    /// assert_eq!(Byte::KILOBYTE, "1.000 KB");
+    /// assert_eq!(Byte::KILOBYTE, 1_000_u64);
+    /// assert_eq!(Byte::KILOBYTE, Byte::from(1_000_u64));
+    /// ```
+    pub const KILOBYTE: Self = Self(KILOBYTE, Str::from_static_str("1.000 KB"));
 
-	/// ```rust
-	/// # use readable::byte::*;
-	/// assert_eq!(Byte::MEGABYTE, "1.000 MB");
-	/// assert_eq!(Byte::MEGABYTE, 1_000_000_u64);
-	/// assert_eq!(Byte::MEGABYTE, Byte::from(1_000_000_u64));
-	/// ```
-	pub const MEGABYTE: Self = Self(MEGABYTE, Str::from_static_str("1.000 MB"));
+    /// ```rust
+    /// # use readable::byte::*;
+    /// assert_eq!(Byte::MEGABYTE, "1.000 MB");
+    /// assert_eq!(Byte::MEGABYTE, 1_000_000_u64);
+    /// assert_eq!(Byte::MEGABYTE, Byte::from(1_000_000_u64));
+    /// ```
+    pub const MEGABYTE: Self = Self(MEGABYTE, Str::from_static_str("1.000 MB"));
 
-	/// ```rust
-	/// # use readable::byte::*;
-	/// assert_eq!(Byte::GIGABYTE, "1.000 GB");
-	/// assert_eq!(Byte::GIGABYTE, 1_000_000_000_u64);
-	/// assert_eq!(Byte::GIGABYTE, Byte::from(1_000_000_000_u64));
-	/// ```
-	pub const GIGABYTE: Self = Self(GIGABYTE, Str::from_static_str("1.000 GB"));
+    /// ```rust
+    /// # use readable::byte::*;
+    /// assert_eq!(Byte::GIGABYTE, "1.000 GB");
+    /// assert_eq!(Byte::GIGABYTE, 1_000_000_000_u64);
+    /// assert_eq!(Byte::GIGABYTE, Byte::from(1_000_000_000_u64));
+    /// ```
+    pub const GIGABYTE: Self = Self(GIGABYTE, Str::from_static_str("1.000 GB"));
 
-	/// ```rust
-	/// # use readable::byte::*;
-	/// assert_eq!(Byte::TERABYTE, "1.000 TB");
-	/// assert_eq!(Byte::TERABYTE, 1_000_000_000_000_u64);
-	/// assert_eq!(Byte::TERABYTE, Byte::from(1_000_000_000_000_u64));
-	/// ```
-	pub const TERABYTE: Self = Self(TERABYTE, Str::from_static_str("1.000 TB"));
+    /// ```rust
+    /// # use readable::byte::*;
+    /// assert_eq!(Byte::TERABYTE, "1.000 TB");
+    /// assert_eq!(Byte::TERABYTE, 1_000_000_000_000_u64);
+    /// assert_eq!(Byte::TERABYTE, Byte::from(1_000_000_000_000_u64));
+    /// ```
+    pub const TERABYTE: Self = Self(TERABYTE, Str::from_static_str("1.000 TB"));
 
-	/// ```rust
-	/// # use readable::byte::*;
-	/// assert_eq!(Byte::PETABYTE, "1.000 PB");
-	/// assert_eq!(Byte::PETABYTE, 1_000_000_000_000_000_u64);
-	/// assert_eq!(Byte::PETABYTE, Byte::from(1_000_000_000_000_000_u64));
-	/// ```
-	pub const PETABYTE: Self = Self(PETABYTE, Str::from_static_str("1.000 PB"));
+    /// ```rust
+    /// # use readable::byte::*;
+    /// assert_eq!(Byte::PETABYTE, "1.000 PB");
+    /// assert_eq!(Byte::PETABYTE, 1_000_000_000_000_000_u64);
+    /// assert_eq!(Byte::PETABYTE, Byte::from(1_000_000_000_000_000_u64));
+    /// ```
+    pub const PETABYTE: Self = Self(PETABYTE, Str::from_static_str("1.000 PB"));
 
-	/// ```rust
-	/// # use readable::byte::*;
-	/// assert_eq!(Byte::EXABYTE, "1.000 EB");
-	/// assert_eq!(Byte::EXABYTE, 1_000_000_000_000_000_000_u64);
-	/// assert_eq!(Byte::EXABYTE, Byte::from(1_000_000_000_000_000_000_u64));
-	/// ```
-	pub const EXABYTE: Self = Self(EXABYTE, Str::from_static_str("1.000 EB"));
+    /// ```rust
+    /// # use readable::byte::*;
+    /// assert_eq!(Byte::EXABYTE, "1.000 EB");
+    /// assert_eq!(Byte::EXABYTE, 1_000_000_000_000_000_000_u64);
+    /// assert_eq!(Byte::EXABYTE, Byte::from(1_000_000_000_000_000_000_u64));
+    /// ```
+    pub const EXABYTE: Self = Self(EXABYTE, Str::from_static_str("1.000 EB"));
 
-	/// ```rust
-	/// # use readable::byte::*;
-	/// assert_eq!(Byte::MAX, Byte::from(u64::MAX));
-	/// assert_eq!(Byte::MAX, "18.446 EB");
-	/// assert_eq!(Byte::MAX, u64::MAX);
-	/// ```
-	pub const MAX: Self = Self(u64::MAX, Str::from_static_str("18.446 EB"));
+    /// ```rust
+    /// # use readable::byte::*;
+    /// assert_eq!(Byte::MAX, Byte::from(u64::MAX));
+    /// assert_eq!(Byte::MAX, "18.446 EB");
+    /// assert_eq!(Byte::MAX, u64::MAX);
+    /// ```
+    pub const MAX: Self = Self(u64::MAX, Str::from_static_str("18.446 EB"));
 
-	/// ```rust
-	/// # use readable::byte::*;
-	/// assert_eq!(Byte::UNKNOWN, Byte::from(f32::NAN));
-	/// assert_eq!(Byte::UNKNOWN, Byte::from(-1));
-	/// assert_eq!(Byte::UNKNOWN, "???.??? B");
-	/// ```
-	pub const UNKNOWN: Self = Self(ZERO, Str::from_static_str("???.??? B"));
+    /// ```rust
+    /// # use readable::byte::*;
+    /// assert_eq!(Byte::UNKNOWN, Byte::from(f32::NAN));
+    /// assert_eq!(Byte::UNKNOWN, Byte::from(-1));
+    /// assert_eq!(Byte::UNKNOWN, "???.??? B");
+    /// ```
+    pub const UNKNOWN: Self = Self(ZERO, Str::from_static_str("???.??? B"));
 }
 
 //---------------------------------------------------------------------------------------------------- Byte Impl
 impl Byte {
-	impl_common!(u64);
-	impl_const!();
-	impl_usize!();
+    impl_common!(u64);
+    impl_const!();
+    impl_usize!();
 
-	#[inline]
-	#[must_use]
-	/// ```rust
-	/// # use readable::byte::*;
-	/// assert!(Byte::UNKNOWN.is_unknown());
-	/// assert!(!Byte::ZERO.is_unknown());
-	/// ```
-	pub const fn is_unknown(&self) -> bool {
-		matches!(*self, Self::UNKNOWN)
-	}
+    #[inline]
+    #[must_use]
+    /// ```rust
+    /// # use readable::byte::*;
+    /// assert!(Byte::UNKNOWN.is_unknown());
+    /// assert!(!Byte::ZERO.is_unknown());
+    /// ```
+    pub const fn is_unknown(&self) -> bool {
+        matches!(*self, Self::UNKNOWN)
+    }
 }
 
 //---------------------------------------------------------------------------------------------------- Private Impl
 impl Byte {
-	/// Private constructor
-	fn from_priv(bytes: u64) -> Self {
-		const UNITS: [u8; 6] = [b'K', b'M', b'G', b'T', b'P', b'E'];
-		const LN_KILOBYTE: f64 = 6.931471806; // ln 1024
-		const Z:     u8 = b'0';
-		const SPACE: u8 = b' ';
-		const B:     u8 = b'B';
-		const DOT:   u8 = b'.';
+    /// Private constructor
+    fn from_priv(bytes: u64) -> Self {
+        const UNITS: [u8; 6] = [b'K', b'M', b'G', b'T', b'P', b'E'];
+        const LN_KILOBYTE: f64 = 6.931471806; // ln 1024
+        const Z: u8 = b'0';
+        const SPACE: u8 = b' ';
+        const B: u8 = b'B';
+        const DOT: u8 = b'.';
 
-		// If bytes is a perfect multiple, return literals.
-		match bytes {
-			ZERO     => return Self::ZERO,
-			BYTE     => return Self::BYTE,
-			KILOBYTE => return Self::KILOBYTE,
-			MEGABYTE => return Self::MEGABYTE,
-			GIGABYTE => return Self::GIGABYTE,
-			TERABYTE => return Self::TERABYTE,
-			PETABYTE => return Self::PETABYTE,
-			EXABYTE  => return Self::EXABYTE,
-			_ => (),
-		}
+        // If bytes is a perfect multiple, return literals.
+        match bytes {
+            ZERO => return Self::ZERO,
+            BYTE => return Self::BYTE,
+            KILOBYTE => return Self::KILOBYTE,
+            MEGABYTE => return Self::MEGABYTE,
+            GIGABYTE => return Self::GIGABYTE,
+            TERABYTE => return Self::TERABYTE,
+            PETABYTE => return Self::PETABYTE,
+            EXABYTE => return Self::EXABYTE,
+            _ => (),
+        }
 
-		// Our final string buffer.
-		let mut b = [0; 10];
+        // Our final string buffer.
+        let mut b = [0; 10];
 
-		// If bytes is `999 B` or less.
-		if bytes < Self::KILOBYTE {
-			let mut itoa = crate::toa::ItoaTmp::new();
-			let itoa = itoa.format(bytes).as_bytes();
-			let len = itoa.len();
-			b[..len].copy_from_slice(itoa);
+        // If bytes is `999 B` or less.
+        if bytes < Self::KILOBYTE {
+            let mut itoa = crate::toa::ItoaTmp::new();
+            let itoa = itoa.format(bytes).as_bytes();
+            let len = itoa.len();
+            b[..len].copy_from_slice(itoa);
 
-			b[len] = SPACE;
-			b[len + 1] = B;
+            b[len] = SPACE;
+            b[len + 1] = B;
 
-			// SAFETY: we know the str len.
-			Self(bytes, unsafe { Str::from_raw(b, len as u8 + 2) })
+            // SAFETY: we know the str len.
+            Self(bytes, unsafe { Str::from_raw(b, len as u8 + 2) })
 
-		// Else calculate.
-		} else {
-			let size = bytes as f64;
-			let exp = match (size.ln() / LN_KILOBYTE) as usize {
-				0 => 1,
-				e => e,
-			};
+        // Else calculate.
+        } else {
+            let size = bytes as f64;
+            let exp = match (size.ln() / LN_KILOBYTE) as usize {
+                0 => 1,
+                e => e,
+            };
 
-			// e.g, 111.222
-			// 111
-			let float = size / KILOBYTE.pow(exp as u32) as f64;
-			// 222
-			let fract = (float.fract() * 1_000.0) as u16;
+            // e.g, 111.222
+            // 111
+            let float = size / KILOBYTE.pow(exp as u32) as f64;
+            // 222
+            let fract = (float.fract() * 1_000.0) as u16;
 
-			// 111 float as u16.
-			let base = float as u16;
+            // 111 float as u16.
+            let base = float as u16;
 
-			// Format first 1-3 digits into buffer (111)
-			let mut itoa = crate::toa::ItoaTmp::new();
-			let itoa = itoa.format(base).as_bytes();
-			b[0] = itoa[0];
-			let idx = if base < 10 {
-				b[1] = DOT;
-				2
-			} else if base < 100 {
-				b[1] = itoa[1];
-				b[2] = DOT;
-				3
-			} else {
-				b[1] = itoa[1];
-				b[2] = itoa[2];
-				b[3] = DOT;
-				4
-			};
+            // Format first 1-3 digits into buffer (111)
+            let mut itoa = crate::toa::ItoaTmp::new();
+            let itoa = itoa.format(base).as_bytes();
+            b[0] = itoa[0];
+            let idx = if base < 10 {
+                b[1] = DOT;
+                2
+            } else if base < 100 {
+                b[1] = itoa[1];
+                b[2] = DOT;
+                3
+            } else {
+                b[1] = itoa[1];
+                b[2] = itoa[2];
+                b[3] = DOT;
+                4
+            };
 
-			// Format 3 fractional digits into buffer (222)
-			let mut itoa = crate::toa::ItoaTmp::new();
-			let itoa = itoa.format(fract).as_bytes();
-			if fract < 10 {
-				b[idx    ] = Z;
-				b[idx + 1] = Z;
-				b[idx + 2] = itoa[0];
-			} else if fract < 100 {
-				b[idx    ] = Z;
-				b[idx + 1] = itoa[0];
-				b[idx + 2] = itoa[1];
-			} else {
-				b[idx    ] = itoa[0];
-				b[idx + 1] = itoa[1];
-				b[idx + 2] = itoa[2];
-			}
+            // Format 3 fractional digits into buffer (222)
+            let mut itoa = crate::toa::ItoaTmp::new();
+            let itoa = itoa.format(fract).as_bytes();
+            if fract < 10 {
+                b[idx] = Z;
+                b[idx + 1] = Z;
+                b[idx + 2] = itoa[0];
+            } else if fract < 100 {
+                b[idx] = Z;
+                b[idx + 1] = itoa[0];
+                b[idx + 2] = itoa[1];
+            } else {
+                b[idx] = itoa[0];
+                b[idx + 1] = itoa[1];
+                b[idx + 2] = itoa[2];
+            }
 
-			// Format ending ` uB` into ending
-			// where `u` is the specific unit (K, G, T, etc).
-			b[idx + 3] = SPACE;
-			b[idx + 4] = UNITS[exp - 1];
-			b[idx + 5] = B;
+            // Format ending ` uB` into ending
+            // where `u` is the specific unit (K, G, T, etc).
+            b[idx + 3] = SPACE;
+            b[idx + 4] = UNITS[exp - 1];
+            b[idx + 5] = B;
 
-			// SAFETY: we know the str len.
-			Self(bytes, unsafe { Str::from_raw(b, idx as u8 + 6)})
-		}
-	}
+            // SAFETY: we know the str len.
+            Self(bytes, unsafe { Str::from_raw(b, idx as u8 + 6) })
+        }
+    }
 }
 
 //---------------------------------------------------------------------------------------------------- From `u*`
@@ -355,7 +354,7 @@ macro_rules! impl_u {
 		)*
 	}
 }
-impl_u!(u8,u16,u32,u64);
+impl_u!(u8, u16, u32, u64);
 #[cfg(target_pointer_width = "64")]
 impl_u!(usize);
 
@@ -386,30 +385,30 @@ macro_rules! impl_i {
 		)*
 	}
 }
-impl_i!(i8,i16,i32,i64,isize);
+impl_i!(i8, i16, i32, i64, isize);
 
 //---------------------------------------------------------------------------------------------------- From `f32/f64`
 macro_rules! impl_f {
-	($from:ty) => {
-		/// This will return [`Self::UNKNOWN`]
-		/// if the input float is `NAN`, `INFINITY`, or negative.
-		impl From<$from> for Byte {
-			fn from(float: $from) -> Self {
-				match float.classify() {
-					std::num::FpCategory::Normal   => (),
-					std::num::FpCategory::Nan      => return Self::UNKNOWN,
-					std::num::FpCategory::Infinite => return Self::UNKNOWN,
-					_ => (),
-				}
+    ($from:ty) => {
+        /// This will return [`Self::UNKNOWN`]
+        /// if the input float is `NAN`, `INFINITY`, or negative.
+        impl From<$from> for Byte {
+            fn from(float: $from) -> Self {
+                match float.classify() {
+                    std::num::FpCategory::Normal => (),
+                    std::num::FpCategory::Nan => return Self::UNKNOWN,
+                    std::num::FpCategory::Infinite => return Self::UNKNOWN,
+                    _ => (),
+                }
 
-				if float.is_sign_negative() {
-					return Self::UNKNOWN;
-				}
+                if float.is_sign_negative() {
+                    return Self::UNKNOWN;
+                }
 
-				Self::from_priv(float as u64)
-			}
-		}
-	}
+                Self::from_priv(float as u64)
+            }
+        }
+    };
 }
 impl_f!(f32);
 impl_f!(f64);
@@ -428,11 +427,11 @@ macro_rules! impl_nonu {
 	}
 }
 impl_nonu! {
-	NonZeroU8,NonZeroU16,NonZeroU32,NonZeroU64,
-	&NonZeroU8,&NonZeroU16,&NonZeroU32,&NonZeroU64,
+    NonZeroU8,NonZeroU16,NonZeroU32,NonZeroU64,
+    &NonZeroU8,&NonZeroU16,&NonZeroU32,&NonZeroU64,
 }
 #[cfg(target_pointer_width = "64")]
-impl_nonu!(NonZeroUsize,&NonZeroUsize);
+impl_nonu!(NonZeroUsize, &NonZeroUsize);
 
 //---------------------------------------------------------------------------------------------------- From `NonZeroU*`
 macro_rules! impl_noni {
@@ -452,69 +451,69 @@ macro_rules! impl_noni {
 	}
 }
 impl_noni! {
-	NonZeroI8,NonZeroI16,NonZeroI32,NonZeroI64,
-	&NonZeroI8,&NonZeroI16,&NonZeroI32,&NonZeroI64,
-	NonZeroIsize,&NonZeroIsize,
+    NonZeroI8,NonZeroI16,NonZeroI32,NonZeroI64,
+    &NonZeroI8,&NonZeroI16,&NonZeroI32,&NonZeroI64,
+    NonZeroIsize,&NonZeroIsize,
 }
 
 //---------------------------------------------------------------------------------------------------- Tests
 #[cfg(test)]
 mod tests {
-	use super::*;
+    use super::*;
 
-	#[test]
-	#[cfg(feature = "serde")]
-	fn serde() {
-		let this: Byte = Byte::from(1000);
-		let json = serde_json::to_string(&this).unwrap();
-		assert_eq!(json, r#"[1000,"1.000 KB"]"#);
+    #[test]
+    #[cfg(feature = "serde")]
+    fn serde() {
+        let this: Byte = Byte::from(1000);
+        let json = serde_json::to_string(&this).unwrap();
+        assert_eq!(json, r#"[1000,"1.000 KB"]"#);
 
-		let this: Byte = serde_json::from_str(&json).unwrap();
-		assert_eq!(this, 1000);
-		assert_eq!(this, "1.000 KB");
+        let this: Byte = serde_json::from_str(&json).unwrap();
+        assert_eq!(this, 1000);
+        assert_eq!(this, "1.000 KB");
 
-		// Bad bytes.
-		assert!(serde_json::from_str::<Byte>(&"---").is_err());
+        // Bad bytes.
+        assert!(serde_json::from_str::<Byte>(&"---").is_err());
 
-		// Unknown.
-		let json = serde_json::to_string(&Byte::UNKNOWN).unwrap();
-		assert_eq!(json, r#"[0,"???.??? B"]"#);
-		assert!(serde_json::from_str::<Byte>(&json).unwrap().is_unknown());
-	}
+        // Unknown.
+        let json = serde_json::to_string(&Byte::UNKNOWN).unwrap();
+        assert_eq!(json, r#"[0,"???.??? B"]"#);
+        assert!(serde_json::from_str::<Byte>(&json).unwrap().is_unknown());
+    }
 
-	#[test]
-	#[cfg(feature = "bincode")]
-	fn bincode() {
-		let this: Byte = Byte::from(1000);
-		let config = bincode::config::standard();
-		let bytes = bincode::encode_to_vec(&this, config).unwrap();
+    #[test]
+    #[cfg(feature = "bincode")]
+    fn bincode() {
+        let this: Byte = Byte::from(1000);
+        let config = bincode::config::standard();
+        let bytes = bincode::encode_to_vec(&this, config).unwrap();
 
-		let this: Byte = bincode::decode_from_slice(&bytes, config).unwrap().0;
-		assert_eq!(this, 1000);
-		assert_eq!(this, "1.000 KB");
+        let this: Byte = bincode::decode_from_slice(&bytes, config).unwrap().0;
+        assert_eq!(this, 1000);
+        assert_eq!(this, "1.000 KB");
 
-		// Unknown.
-		let bytes = bincode::encode_to_vec(&Byte::UNKNOWN, config).unwrap();
-		let this: Byte = bincode::decode_from_slice(&bytes, config).unwrap().0;
-		assert!(this.is_unknown());
-	}
+        // Unknown.
+        let bytes = bincode::encode_to_vec(&Byte::UNKNOWN, config).unwrap();
+        let this: Byte = bincode::decode_from_slice(&bytes, config).unwrap().0;
+        assert!(this.is_unknown());
+    }
 
-	#[test]
-	#[cfg(feature = "borsh")]
-	fn borsh() {
-		let this: Byte = Byte::from(1000);
-		let bytes = borsh::to_vec(&this).unwrap();
+    #[test]
+    #[cfg(feature = "borsh")]
+    fn borsh() {
+        let this: Byte = Byte::from(1000);
+        let bytes = borsh::to_vec(&this).unwrap();
 
-		let this: Byte = borsh::from_slice(&bytes).unwrap();
-		assert_eq!(this, 1000);
-		assert_eq!(this, "1.000 KB");
+        let this: Byte = borsh::from_slice(&bytes).unwrap();
+        assert_eq!(this, 1000);
+        assert_eq!(this, "1.000 KB");
 
-		// Bad bytes.
-		assert!(borsh::from_slice::<Byte>(b"bad .-;[]124/ bytes").is_err());
+        // Bad bytes.
+        assert!(borsh::from_slice::<Byte>(b"bad .-;[]124/ bytes").is_err());
 
-		// Unknown.
-		let bytes = borsh::to_vec(&Byte::UNKNOWN).unwrap();
-		let this: Byte = borsh::from_slice(&bytes).unwrap();
-		assert!(this.is_unknown());
-	}
+        // Unknown.
+        let bytes = borsh::to_vec(&Byte::UNKNOWN).unwrap();
+        let this: Byte = borsh::from_slice(&bytes).unwrap();
+        assert!(this.is_unknown());
+    }
 }

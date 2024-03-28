@@ -46,76 +46,79 @@ use std::borrow::Borrow;
 /// ```
 #[derive(Copy, Clone, Debug)]
 pub struct Itoa {
-	len: u8,
-	offset: u8,
-	bytes: [MaybeUninit<u8>; I128_MAX_LEN],
+    len: u8,
+    offset: u8,
+    bytes: [MaybeUninit<u8>; I128_MAX_LEN],
 }
 
 impl Itoa {
     #[inline]
-	#[allow(clippy::ptr_as_ptr, clippy::borrow_as_ptr)]
-	/// Create a new [`Itoa`].
-	///
-	/// Takes any [`Integer`] from the standard library (but not floats).
-	///
-	/// ```rust
-	/// # use readable::toa::Itoa;
-	/// let itoa = Itoa::new(u128::MAX);
-	/// assert_eq!(itoa, "340282366920938463463374607431768211455");
-	///
-	/// let itoa = Itoa::new(i128::MIN);
-	/// assert_eq!(itoa, "-170141183460469231731687303715884105728");
-	/// ```
+    #[allow(clippy::ptr_as_ptr, clippy::borrow_as_ptr)]
+    /// Create a new [`Itoa`].
+    ///
+    /// Takes any [`Integer`] from the standard library (but not floats).
+    ///
+    /// ```rust
+    /// # use readable::toa::Itoa;
+    /// let itoa = Itoa::new(u128::MAX);
+    /// assert_eq!(itoa, "340282366920938463463374607431768211455");
+    ///
+    /// let itoa = Itoa::new(i128::MIN);
+    /// assert_eq!(itoa, "-170141183460469231731687303715884105728");
+    /// ```
     pub fn new<I: Integer>(i: I) -> Self {
         let mut bytes = [MaybeUninit::<u8>::uninit(); I128_MAX_LEN];
 
-		// SAFETY: dtolnay
+        // SAFETY: dtolnay
         let (len, offset) = i.write(unsafe {
             &mut *(&mut bytes as *mut [MaybeUninit<u8>; I128_MAX_LEN]
                 as *mut <I as private::Sealed>::Itoa)
         });
 
-		Self {
-			len: len as u8,
-			offset: offset as u8,
-			bytes,
-		}
+        Self {
+            len: len as u8,
+            offset: offset as u8,
+            bytes,
+        }
     }
 
-	#[inline]
-	/// Turns [`Itoa`] into a `&str`.
-	///
-	/// ```rust
-	/// # use readable::toa::Itoa;
-	/// let itoa = Itoa::new(u128::MAX);
-	/// assert_eq!(itoa, "340282366920938463463374607431768211455");
-	///
-	/// let itoa = Itoa::new(i128::MIN);
-	/// assert_eq!(itoa, "-170141183460469231731687303715884105728");
-	/// ```
-	pub const fn as_str(&self) -> &str {
-		// Safety: Constructors must set state correctly.
-		unsafe {
-			let slice = slice::from_raw_parts(
-				self.bytes.as_ptr().offset(self.offset as isize).cast::<u8>(),
-				self.len as usize
-			);
-			std::str::from_utf8_unchecked(slice)
-		}
-	}
+    #[inline]
+    /// Turns [`Itoa`] into a `&str`.
+    ///
+    /// ```rust
+    /// # use readable::toa::Itoa;
+    /// let itoa = Itoa::new(u128::MAX);
+    /// assert_eq!(itoa, "340282366920938463463374607431768211455");
+    ///
+    /// let itoa = Itoa::new(i128::MIN);
+    /// assert_eq!(itoa, "-170141183460469231731687303715884105728");
+    /// ```
+    pub const fn as_str(&self) -> &str {
+        // Safety: Constructors must set state correctly.
+        unsafe {
+            let slice = slice::from_raw_parts(
+                self.bytes
+                    .as_ptr()
+                    .offset(self.offset as isize)
+                    .cast::<u8>(),
+                self.len as usize,
+            );
+            std::str::from_utf8_unchecked(slice)
+        }
+    }
 
-	#[inline]
-	#[allow(clippy::len_without_is_empty)]
-	/// Returns the `str` byte length of this [`Itoa`]
-	///
-	/// ```rust
-	/// # use readable::toa::Itoa;
-	/// let itoa = Itoa::new(1000);
-	/// assert_eq!(itoa.len(), 4);
-	/// ```
-	pub const fn len(&self) -> u8 {
-		self.len
-	}
+    #[inline]
+    #[allow(clippy::len_without_is_empty)]
+    /// Returns the `str` byte length of this [`Itoa`]
+    ///
+    /// ```rust
+    /// # use readable::toa::Itoa;
+    /// let itoa = Itoa::new(1000);
+    /// assert_eq!(itoa.len(), 4);
+    /// ```
+    pub const fn len(&self) -> u8 {
+        self.len
+    }
 }
 
 //---------------------------------------------------------------------------------------------------- ItoaTmp
@@ -154,91 +157,86 @@ impl Itoa {
 /// ```
 #[derive(Copy, Clone, Debug)]
 pub struct ItoaTmp {
-	bytes: [MaybeUninit<u8>; I128_MAX_LEN],
+    bytes: [MaybeUninit<u8>; I128_MAX_LEN],
 }
 
 impl ItoaTmp {
-	#[inline]
-	/// Create a new [`ItoaTmp`].
-	pub const fn new() -> Self {
-		Self { bytes: [MaybeUninit::<u8>::uninit(); I128_MAX_LEN] }
-	}
+    #[inline]
+    /// Create a new [`ItoaTmp`].
+    pub const fn new() -> Self {
+        Self {
+            bytes: [MaybeUninit::<u8>::uninit(); I128_MAX_LEN],
+        }
+    }
 
-	#[inline]
-	#[allow(clippy::ptr_as_ptr, clippy::borrow_as_ptr)]
-	/// Format an [`Integer`] into a [`&str`] with an existing [`ItoaTmp`]
-	///
-	/// ```rust
-	/// # use readable::toa::ItoaTmp;
-	/// // We can cheaply reuse this.
-	/// let mut itoa = ItoaTmp::new();
-	///
-	/// assert_eq!(itoa.format(1),    "1");
-	/// assert_eq!(itoa.format(10),   "10");
-	/// assert_eq!(itoa.format(100),  "100");
-	/// assert_eq!(itoa.format(1000), "1000");
-	/// ```
-	pub fn format<I: Integer>(&mut self, integer: I) -> &str {
-		// SAFETY: dtolnay
-		unsafe {
-			let (len, offset) = integer.write(
-				&mut *(&mut self.bytes as *mut [MaybeUninit<u8>; I128_MAX_LEN]
-					as *mut <I as private::Sealed>::Itoa)
-			);
-			let slice = slice::from_raw_parts(
-				self.bytes.as_ptr().offset(offset) as *const u8,
-				len,
-			);
-			std::str::from_utf8_unchecked(slice)
-		}
-	}
+    #[inline]
+    #[allow(clippy::ptr_as_ptr, clippy::borrow_as_ptr)]
+    /// Format an [`Integer`] into a [`&str`] with an existing [`ItoaTmp`]
+    ///
+    /// ```rust
+    /// # use readable::toa::ItoaTmp;
+    /// // We can cheaply reuse this.
+    /// let mut itoa = ItoaTmp::new();
+    ///
+    /// assert_eq!(itoa.format(1),    "1");
+    /// assert_eq!(itoa.format(10),   "10");
+    /// assert_eq!(itoa.format(100),  "100");
+    /// assert_eq!(itoa.format(1000), "1000");
+    /// ```
+    pub fn format<I: Integer>(&mut self, integer: I) -> &str {
+        // SAFETY: dtolnay
+        unsafe {
+            let (len, offset) = integer.write(
+                &mut *(&mut self.bytes as *mut [MaybeUninit<u8>; I128_MAX_LEN]
+                    as *mut <I as private::Sealed>::Itoa),
+            );
+            let slice = slice::from_raw_parts(self.bytes.as_ptr().offset(offset) as *const u8, len);
+            std::str::from_utf8_unchecked(slice)
+        }
+    }
 }
 
 //---------------------------------------------------------------------------------------------------- Private Itoa
 // This is for usage in `Unsigned` and `Int`.
 #[derive(Copy, Clone, Debug)]
 pub(crate) struct Itoa64 {
-	bytes: [MaybeUninit<u8>; U64_MAX_LEN],
+    bytes: [MaybeUninit<u8>; U64_MAX_LEN],
 }
 
 impl Itoa64 {
-	#[inline]
-	pub(crate) const fn new() -> Self {
-		Self { bytes: [MaybeUninit::<u8>::uninit(); U64_MAX_LEN] }
-	}
+    #[inline]
+    pub(crate) const fn new() -> Self {
+        Self {
+            bytes: [MaybeUninit::<u8>::uninit(); U64_MAX_LEN],
+        }
+    }
 
-	#[inline]
-	#[allow(clippy::ptr_as_ptr, clippy::borrow_as_ptr)]
-	pub(crate) fn format_str<I: Integer>(&mut self, integer: I) -> &str {
-		// SAFETY: dtolnay
-		unsafe {
-			let (len, offset) = integer.write(
-				&mut *(&mut self.bytes as *mut [MaybeUninit<u8>; U64_MAX_LEN]
-					as *mut <I as private::Sealed>::Itoa)
-			);
-			let slice = slice::from_raw_parts(
-				self.bytes.as_ptr().offset(offset) as *const u8,
-				len,
-			);
-			std::str::from_utf8_unchecked(slice)
-		}
-	}
+    #[inline]
+    #[allow(clippy::ptr_as_ptr, clippy::borrow_as_ptr)]
+    pub(crate) fn format_str<I: Integer>(&mut self, integer: I) -> &str {
+        // SAFETY: dtolnay
+        unsafe {
+            let (len, offset) = integer.write(
+                &mut *(&mut self.bytes as *mut [MaybeUninit<u8>; U64_MAX_LEN]
+                    as *mut <I as private::Sealed>::Itoa),
+            );
+            let slice = slice::from_raw_parts(self.bytes.as_ptr().offset(offset) as *const u8, len);
+            std::str::from_utf8_unchecked(slice)
+        }
+    }
 
-	#[inline]
-	#[allow(clippy::ptr_as_ptr, clippy::borrow_as_ptr)]
-	pub(crate) fn format<I: Integer>(&mut self, integer: I) -> &[u8] {
-		// SAFETY: dtolnay
-		unsafe {
-			let (len, offset) = integer.write(
-				&mut *(&mut self.bytes as *mut [MaybeUninit<u8>; U64_MAX_LEN]
-					as *mut <I as private::Sealed>::Itoa)
-			);
-			slice::from_raw_parts(
-				self.bytes.as_ptr().offset(offset) as *const u8,
-				len,
-			)
-		}
-	}
+    #[inline]
+    #[allow(clippy::ptr_as_ptr, clippy::borrow_as_ptr)]
+    pub(crate) fn format<I: Integer>(&mut self, integer: I) -> &[u8] {
+        // SAFETY: dtolnay
+        unsafe {
+            let (len, offset) = integer.write(
+                &mut *(&mut self.bytes as *mut [MaybeUninit<u8>; U64_MAX_LEN]
+                    as *mut <I as private::Sealed>::Itoa),
+            );
+            slice::from_raw_parts(self.bytes.as_ptr().offset(offset) as *const u8, len)
+        }
+    }
 }
 
 /// Quickly format an integer to a [`&str`]
@@ -287,60 +285,60 @@ impl Itoa64 {
 /// ```
 #[macro_export]
 macro_rules! itoa {
-	($into_dtoa:expr) => {{
-		$crate::toa::ItoaTmp::new().format($into_dtoa)
-	}};
+    ($into_dtoa:expr) => {{
+        $crate::toa::ItoaTmp::new().format($into_dtoa)
+    }};
 }
 
 //---------------------------------------------------------------------------------------------------- Itoa Traits
 impl std::ops::Deref for Itoa {
-	type Target = str;
+    type Target = str;
 
-	fn deref(&self) -> &Self::Target {
-		self.as_str()
-	}
+    fn deref(&self) -> &Self::Target {
+        self.as_str()
+    }
 }
 
 impl AsRef<str> for Itoa {
-	fn as_ref(&self) -> &str {
-		self.as_str()
-	}
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
 }
 
 impl Borrow<str> for Itoa {
-	fn borrow(&self) -> &str {
-		self.as_str()
-	}
+    fn borrow(&self) -> &str {
+        self.as_str()
+    }
 }
 
 impl PartialEq<str> for Itoa {
-	fn eq(&self, other: &str) -> bool {
-		self.as_str() == other
-	}
+    fn eq(&self, other: &str) -> bool {
+        self.as_str() == other
+    }
 }
 
 impl PartialEq<&str> for Itoa {
-	fn eq(&self, other: &&str) -> bool {
-		self.as_str() == *other
-	}
+    fn eq(&self, other: &&str) -> bool {
+        self.as_str() == *other
+    }
 }
 
 impl PartialEq<String> for Itoa {
-	fn eq(&self, other: &String) -> bool {
-		self.as_str() == other
-	}
+    fn eq(&self, other: &String) -> bool {
+        self.as_str() == other
+    }
 }
 
 impl<T: Integer> std::convert::From<T> for Itoa {
-	fn from(integer: T) -> Self {
-		Self::new(integer)
-	}
+    fn from(integer: T) -> Self {
+        Self::new(integer)
+    }
 }
 
 impl std::fmt::Display for Itoa {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{}", self.as_str())
-	}
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
 }
 
 //---------------------------------------------------------------------------------------------------- Integer
@@ -488,16 +486,8 @@ impl_Integer!(
 impl_Integer!(I64_MAX_LEN => i64, U64_MAX_LEN => u64 as u64);
 
 use std::num::{
-	NonZeroI8,
-	NonZeroU8,
-	NonZeroI16,
-	NonZeroU16,
-	NonZeroI32,
-	NonZeroU32,
-	NonZeroI128,
-	NonZeroU128,
-	NonZeroIsize,
-	NonZeroUsize,
+    NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI8, NonZeroIsize, NonZeroU128, NonZeroU16,
+    NonZeroU32, NonZeroU8, NonZeroUsize,
 };
 
 impl_non_zero! {
@@ -597,142 +587,142 @@ impl_non_zero!(I128_MAX_LEN => NonZeroI128 => i128, U128_MAX_LEN => NonZeroU128 
 //---------------------------------------------------------------------------------------------------- TESTS
 #[cfg(test)]
 mod tests {
-	use super::*;
+    use super::*;
 
-	#[test]
-	fn all_u128_lengths() {
-		for i in [
-			0_u128,
-			1_u128,
-			10_u128,
-			100_u128,
-			1000_u128,
-			10000_u128,
-			100000_u128,
-			1000000_u128,
-			10000000_u128,
-			100000000_u128,
-			1000000000_u128,
-			10000000000_u128,
-			100000000000_u128,
-			1000000000000_u128,
-			10000000000000_u128,
-			100000000000000_u128,
-			1000000000000000_u128,
-			10000000000000000_u128,
-			100000000000000000_u128,
-			1000000000000000000_u128,
-			10000000000000000000_u128,
-			100000000000000000000_u128,
-			1000000000000000000000_u128,
-			10000000000000000000000_u128,
-			100000000000000000000000_u128,
-			1000000000000000000000000_u128,
-			10000000000000000000000000_u128,
-			100000000000000000000000000_u128,
-			1000000000000000000000000000_u128,
-			10000000000000000000000000000_u128,
-			100000000000000000000000000000_u128,
-			1000000000000000000000000000000_u128,
-			10000000000000000000000000000000_u128,
-			100000000000000000000000000000000_u128,
-			1000000000000000000000000000000000_u128,
-			10000000000000000000000000000000000_u128,
-			100000000000000000000000000000000000_u128,
-			1000000000000000000000000000000000000_u128,
-			10000000000000000000000000000000000000_u128,
-			100000000000000000000000000000000000000_u128,
-		] {
-			let fmt = format!("{i}");
-			assert_eq!(Itoa::new(i), fmt);
-		}
-	}
+    #[test]
+    fn all_u128_lengths() {
+        for i in [
+            0_u128,
+            1_u128,
+            10_u128,
+            100_u128,
+            1000_u128,
+            10000_u128,
+            100000_u128,
+            1000000_u128,
+            10000000_u128,
+            100000000_u128,
+            1000000000_u128,
+            10000000000_u128,
+            100000000000_u128,
+            1000000000000_u128,
+            10000000000000_u128,
+            100000000000000_u128,
+            1000000000000000_u128,
+            10000000000000000_u128,
+            100000000000000000_u128,
+            1000000000000000000_u128,
+            10000000000000000000_u128,
+            100000000000000000000_u128,
+            1000000000000000000000_u128,
+            10000000000000000000000_u128,
+            100000000000000000000000_u128,
+            1000000000000000000000000_u128,
+            10000000000000000000000000_u128,
+            100000000000000000000000000_u128,
+            1000000000000000000000000000_u128,
+            10000000000000000000000000000_u128,
+            100000000000000000000000000000_u128,
+            1000000000000000000000000000000_u128,
+            10000000000000000000000000000000_u128,
+            100000000000000000000000000000000_u128,
+            1000000000000000000000000000000000_u128,
+            10000000000000000000000000000000000_u128,
+            100000000000000000000000000000000000_u128,
+            1000000000000000000000000000000000000_u128,
+            10000000000000000000000000000000000000_u128,
+            100000000000000000000000000000000000000_u128,
+        ] {
+            let fmt = format!("{i}");
+            assert_eq!(Itoa::new(i), fmt);
+        }
+    }
 
-	#[test]
-	fn all_i128_lengths() {
-		for i in [
-			0_i128,
-			1_i128,
-			10_i128,
-			100_i128,
-			1000_i128,
-			10000_i128,
-			100000_i128,
-			1000000_i128,
-			10000000_i128,
-			100000000_i128,
-			1000000000_i128,
-			10000000000_i128,
-			100000000000_i128,
-			1000000000000_i128,
-			10000000000000_i128,
-			100000000000000_i128,
-			1000000000000000_i128,
-			10000000000000000_i128,
-			100000000000000000_i128,
-			1000000000000000000_i128,
-			10000000000000000000_i128,
-			100000000000000000000_i128,
-			1000000000000000000000_i128,
-			10000000000000000000000_i128,
-			100000000000000000000000_i128,
-			1000000000000000000000000_i128,
-			10000000000000000000000000_i128,
-			100000000000000000000000000_i128,
-			1000000000000000000000000000_i128,
-			10000000000000000000000000000_i128,
-			100000000000000000000000000000_i128,
-			1000000000000000000000000000000_i128,
-			10000000000000000000000000000000_i128,
-			100000000000000000000000000000000_i128,
-			1000000000000000000000000000000000_i128,
-			10000000000000000000000000000000000_i128,
-			100000000000000000000000000000000000_i128,
-			1000000000000000000000000000000000000_i128,
-			10000000000000000000000000000000000000_i128,
-			100000000000000000000000000000000000000_i128,
-			-1_i128,
-			-10_i128,
-			-100_i128,
-			-1000_i128,
-			-10000_i128,
-			-100000_i128,
-			-1000000_i128,
-			-10000000_i128,
-			-100000000_i128,
-			-1000000000_i128,
-			-10000000000_i128,
-			-100000000000_i128,
-			-1000000000000_i128,
-			-10000000000000_i128,
-			-100000000000000_i128,
-			-1000000000000000_i128,
-			-10000000000000000_i128,
-			-100000000000000000_i128,
-			-1000000000000000000_i128,
-			-10000000000000000000_i128,
-			-100000000000000000000_i128,
-			-1000000000000000000000_i128,
-			-10000000000000000000000_i128,
-			-100000000000000000000000_i128,
-			-1000000000000000000000000_i128,
-			-10000000000000000000000000_i128,
-			-100000000000000000000000000_i128,
-			-1000000000000000000000000000_i128,
-			-10000000000000000000000000000_i128,
-			-100000000000000000000000000000_i128,
-			-1000000000000000000000000000000_i128,
-			-10000000000000000000000000000000_i128,
-			-100000000000000000000000000000000_i128,
-			-1000000000000000000000000000000000_i128,
-			-10000000000000000000000000000000000_i128,
-			-100000000000000000000000000000000000_i128,
-			-1000000000000000000000000000000000000_i128,
-			-10000000000000000000000000000000000000_i128,
-			-100000000000000000000000000000000000000_i128,
-		] {
-			let fmt = format!("{i}");
-			assert_eq!(Itoa::new(i), fmt);
-		}
-	}
+    #[test]
+    fn all_i128_lengths() {
+        for i in [
+            0_i128,
+            1_i128,
+            10_i128,
+            100_i128,
+            1000_i128,
+            10000_i128,
+            100000_i128,
+            1000000_i128,
+            10000000_i128,
+            100000000_i128,
+            1000000000_i128,
+            10000000000_i128,
+            100000000000_i128,
+            1000000000000_i128,
+            10000000000000_i128,
+            100000000000000_i128,
+            1000000000000000_i128,
+            10000000000000000_i128,
+            100000000000000000_i128,
+            1000000000000000000_i128,
+            10000000000000000000_i128,
+            100000000000000000000_i128,
+            1000000000000000000000_i128,
+            10000000000000000000000_i128,
+            100000000000000000000000_i128,
+            1000000000000000000000000_i128,
+            10000000000000000000000000_i128,
+            100000000000000000000000000_i128,
+            1000000000000000000000000000_i128,
+            10000000000000000000000000000_i128,
+            100000000000000000000000000000_i128,
+            1000000000000000000000000000000_i128,
+            10000000000000000000000000000000_i128,
+            100000000000000000000000000000000_i128,
+            1000000000000000000000000000000000_i128,
+            10000000000000000000000000000000000_i128,
+            100000000000000000000000000000000000_i128,
+            1000000000000000000000000000000000000_i128,
+            10000000000000000000000000000000000000_i128,
+            100000000000000000000000000000000000000_i128,
+            -1_i128,
+            -10_i128,
+            -100_i128,
+            -1000_i128,
+            -10000_i128,
+            -100000_i128,
+            -1000000_i128,
+            -10000000_i128,
+            -100000000_i128,
+            -1000000000_i128,
+            -10000000000_i128,
+            -100000000000_i128,
+            -1000000000000_i128,
+            -10000000000000_i128,
+            -100000000000000_i128,
+            -1000000000000000_i128,
+            -10000000000000000_i128,
+            -100000000000000000_i128,
+            -1000000000000000000_i128,
+            -10000000000000000000_i128,
+            -100000000000000000000_i128,
+            -1000000000000000000000_i128,
+            -10000000000000000000000_i128,
+            -100000000000000000000000_i128,
+            -1000000000000000000000000_i128,
+            -10000000000000000000000000_i128,
+            -100000000000000000000000000_i128,
+            -1000000000000000000000000000_i128,
+            -10000000000000000000000000000_i128,
+            -100000000000000000000000000000_i128,
+            -1000000000000000000000000000000_i128,
+            -10000000000000000000000000000000_i128,
+            -100000000000000000000000000000000_i128,
+            -1000000000000000000000000000000000_i128,
+            -10000000000000000000000000000000000_i128,
+            -100000000000000000000000000000000000_i128,
+            -1000000000000000000000000000000000000_i128,
+            -10000000000000000000000000000000000000_i128,
+            -100000000000000000000000000000000000000_i128,
+        ] {
+            let fmt = format!("{i}");
+            assert_eq!(Itoa::new(i), fmt);
+        }
+    }
 }
